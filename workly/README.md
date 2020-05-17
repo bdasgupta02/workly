@@ -1,16 +1,20 @@
-# workly
+# Workly
 
-A new Flutter project.
+*Your handy project management buddy!*
 
-## Getting Started
+## Our Story
 
-This project is a starting point for a Flutter application.
+**Motivation**
+For most student groups and small teams which are embarking on a project, they often lack the necessary tools for effective project management. They mostly rely on chat platforms because the common enterprise-level managment tools are expensive to implemenet and are meant for larger teams. 
 
-A few resources to get you started if this is your first Flutter project:
+**Solution**
+Our aim is to combine the simplicity of a chat platform with the effectiveness of collaboration tools to significantly better manage small-scale projects, through a mobile platform.
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+### Workly Features and Functions
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+**Core features**
+- Chat
+- Idea Board
+- Task Board
+
+![Workly poster](/assets/workly_landscape-1.png "Workly poster)
