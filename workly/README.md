@@ -19,4 +19,4 @@ Our aim is to combine the simplicity of a chat platform with the effectiveness o
 - Idea Board
 - Task Board
 
-![Workly poster](/assets/workly_landscape-1.png "Workly poster")
+![Workly poster](/workly/assets/workly_landscape-1.png "Workly poster")
