@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workly/resuable_widgets/CustomRaisedButton.dart';
 
 class SignInPage extends StatelessWidget {
   @override
@@ -10,7 +11,7 @@ class SignInPage extends StatelessWidget {
         elevation: 10.0, //shadow of appBar, default is 4.0
       ),
       body: _bodyContent(),
-      backgroundColor: Colors.grey[200], //colors to be decided
+      backgroundColor: Colors.grey[200], //[Action needed] Update colour
     );
   }
 }
@@ -19,8 +20,8 @@ Widget _bodyContent() {
   return Padding(
     padding: EdgeInsets.all(45.0),
     child: Column(
-      mainAxisAlignment: MainAxisAlignment.center, //similar to y-axis
-      crossAxisAlignment: CrossAxisAlignment.stretch, //similar to x-axis
+      mainAxisAlignment: MainAxisAlignment.center, 
+      crossAxisAlignment: CrossAxisAlignment.stretch, 
       children: <Widget>[
         Text(
           'Sign in',
@@ -28,20 +29,12 @@ Widget _bodyContent() {
           style: TextStyle(fontSize: 28.0, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 50.0), //Separation between above text and below box
-        RaisedButton(
-          child: Text(
-            "Sign in with email",
-            style: TextStyle(fontSize: 16.0),
-          ),
-          color: Colors.tealAccent[100], //Colours to be decided
-          elevation: 5.0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(16.0),
-            ),
-          ),
-          onPressed: () {},
-        )
+        SignInButton(
+          text: "Sign in with email",
+          textColor: Colors.black, //[Action needed] Update colour
+          buttonColor: Colors.tealAccent[100], //[Action needed] Update colour
+          onPressed: () {}, //[Action needed] Update onPressed action
+        ),
       ],
     ),
   );

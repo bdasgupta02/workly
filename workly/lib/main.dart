@@ -11,7 +11,7 @@ class Workly extends StatelessWidget {
     return MaterialApp(
       title: 'Workly',
       theme: ThemeData(
-        primarySwatch: Colors.deepPurpleAccent[300], //Need to update colour
+        primarySwatch: Colors.deepPurpleAccent[300], //[Action needed] Update colour
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: SignInPage(),
