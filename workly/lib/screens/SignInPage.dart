@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:workly/resuable_widgets/CustomRaisedButton.dart';
+import 'package:workly/screens/home.dart';
 
 class SignInPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Workly"),
-        centerTitle: true,
-        elevation: 10.0, //shadow of appBar, default is 4.0
-      ),
-      body: _bodyContent(),
+      body: _bodyContent(context),
       backgroundColor: Colors.grey[200], //[Action needed] Update colour
     );
   }
 }
 
-Widget _bodyContent() {
+Widget _bodyContent(BuildContext context) {
   return Padding(
     padding: EdgeInsets.all(45.0),
     child: Column(
@@ -28,12 +24,17 @@ Widget _bodyContent() {
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 28.0, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 50.0), //Separation between above text and below box
+        SizedBox(height: 70.0), //Separation between above text and below box
         SignInButton(
           text: "Sign in with email",
-          textColor: Colors.black, //[Action needed] Update colour
-          buttonColor: Colors.tealAccent[100], //[Action needed] Update colour
-          onPressed: () {}, //[Action needed] Update onPressed action
+          textColor: Colors.white, //[Action needed] Update colour
+          buttonColor: Color(0xFF43425A), //[Action needed] Update colour
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Home()),
+            );
+          }, //[Action needed] Update onPressed action
         ),
       ],
     ),
