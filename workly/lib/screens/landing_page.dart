@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:workly/screens/home.dart';
 import 'package:workly/screens/sign_in_page.dart';
 import 'package:workly/services/auth.dart';
+import 'package:workly/wrappers/navbar_wrapper.dart';
 
 class LandingPage extends StatelessWidget {
   final AuthBase auth;
@@ -22,7 +23,7 @@ class LandingPage extends StatelessWidget {
               auth: auth,
             );
           } else {
-            return Home(
+            return NavbarWrapper(
               auth: auth,
             );
           }

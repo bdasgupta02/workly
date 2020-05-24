@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:workly/screens/home.dart';
 import 'package:workly/screens/calendar.dart';
 import 'package:workly/screens/main_settings.dart';
+import 'package:workly/services/auth.dart';
 
 _NavbarWrapperState navState; //[Action] Better to use a Provider than a global variable to change this state externally.
 
 class NavbarWrapper extends StatefulWidget {
+  final AuthBase auth;
+  NavbarWrapper({this.auth});
+
   @override
-  _NavbarWrapperState createState() { 
+  _NavbarWrapperState createState() {
+    _NavbarWrapperState.authentication = auth;
     navState = _NavbarWrapperState();
     return navState;
   }
@@ -16,8 +21,9 @@ class NavbarWrapper extends StatefulWidget {
 class _NavbarWrapperState extends State<NavbarWrapper> {
   static int _selectedPage = 0;
   var _pageController = PageController(initialPage: _selectedPage);
+  static AuthBase authentication;
   final _pageOptions = [
-    Home(),
+    Home(auth: authentication),
     Calendar(),
     Calendar(),
     MainSettings(),
