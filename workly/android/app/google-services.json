@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "532552582109",
+    "firebase_url": "https://workly-7af57.firebaseio.com",
+    "project_id": "workly-7af57",
+    "storage_bucket": "workly-7af57.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532552582109:android:eb3eb3cd295af4eefb6c34",
+        "android_client_info": {
+          "package_name": "com.squalllabs.workly"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "532552582109-h3ma4umhn9nqsgboam4rqjan54o6g9vo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.squalllabs.workly",
+            "certificate_hash": "c7f79e8ede9b780f8e4d35fdbf86eac34d7d34f3"
+          }
+        },
+        {
+          "client_id": "532552582109-au38gvugits5edurdcu1k3btjdgt20td.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNGKSbDmocUEP5REbU8Jis_4_tUOV7uJ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532552582109-au38gvugits5edurdcu1k3btjdgt20td.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

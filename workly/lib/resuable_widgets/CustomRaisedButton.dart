@@ -40,10 +40,10 @@ class SignInButton extends CustomRaisedButton {
           color: buttonColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(
-              Radius.circular(16.0),
+              Radius.circular(50.0),
             ),
           ),
-          height: 35.0, //[Action needed] Decide button height
+          height: 45.0, //[Action needed] Decide button height
           onPressedAction: onPressed,
         );
 }
