@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workly/screens/home.dart';
 import 'package:workly/screens/sign_in_page.dart';
 import 'package:workly/services/auth.dart';
 
@@ -21,17 +22,19 @@ class LandingPage extends StatelessWidget {
               auth: auth,
             );
           } else {
-            return Container (
+            return Home(
+              auth: auth,
+            );
+          }
+            /*
+            Container (
               color: Colors.white,
               child: RaisedButton(
                 child: Text("Log out"),
                 onPressed: _signOut,
               ),
-             ); //[Action needed] Replace with homepage
-            /*
-            HomePage();
-            */
-          }
+             );
+             */
         } else {
           return Scaffold(
             body: Center(
@@ -42,12 +45,12 @@ class LandingPage extends StatelessWidget {
       }
     );
   }
-
+  /*
   Future<void> _signOut() async {
     try {
       await auth.signOut();
     } catch (e) {
       print(e.toString);
     }
-  }
+  }*/
 }

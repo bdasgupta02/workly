@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:workly/services/auth.dart';
 import 'package:workly/wrappers/navbar_wrapper.dart';
 
 /*
@@ -9,6 +10,13 @@ Overall notes: places that need replacing after database:
 */
 
 class Home extends StatefulWidget {
+  final AuthBase auth;
+  
+  Home({
+    this.auth,
+  });
+//Above codes temporay for signout button
+
   @override
   _HomeState createState() => _HomeState();
 }
@@ -113,7 +121,7 @@ class _HomeState extends State<Home> {
               Container(
                 child: (FlatButton(
                   onPressed: () {
-                    //[Action] Here's the temporary button.
+                    _signOut();//[Action] Here's the temporary button.
                   },
                   child: Text('Temp Logout'),
                   shape: RoundedRectangleBorder(
@@ -139,6 +147,14 @@ class _HomeState extends State<Home> {
         ],
       ),
     );
+  }
+
+  Future<void> _signOut() async {
+    try {
+      await widget.auth.signOut();
+    } catch (e) {
+      print(e.toString);
+    }
   }
 }
 
