@@ -109,6 +109,31 @@ class _HomeState extends State<Home> {
                 padding: EdgeInsets.only(bottom: 20),
               ),
               BackBoxNotifs(),
+              Padding(padding: EdgeInsets.only(top:20),),
+              Container(
+                child: (FlatButton(
+                  onPressed: () {
+                    //[Action] Here's the temporary button.
+                  },
+                  child: Text('Temp Logout'),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(34.0),
+                  ),
+                )),
+                margin: EdgeInsets.only(left:40, right:40,),
+                decoration: BoxDecoration(
+                  color: Color(0xFFFCFCFC),
+                  borderRadius: BorderRadius.all(Radius.circular(34)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      spreadRadius: 2,
+                      blurRadius: 15,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
@@ -288,7 +313,7 @@ class BackBoxButtons extends StatelessWidget {
                     Container(
                       margin: EdgeInsets.only(bottom: 22),
                       child: Text(
-                        'Deadlines \nMissed',
+                        'Missed \nDeadlines',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white60,
