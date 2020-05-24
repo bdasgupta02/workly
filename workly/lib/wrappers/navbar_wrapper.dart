@@ -50,7 +50,7 @@ class _NavbarWrapperState extends State<NavbarWrapper> {
           onTap: (int index) {
             setState(() {
               _selectedPage = index;
-              _pageController.animateToPage(_selectedPage, duration: Duration(milliseconds: 200), curve: Curves.linear);
+              _pageController.jumpToPage(_selectedPage);
             });
           },
           items: [
