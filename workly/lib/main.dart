@@ -14,7 +14,9 @@ class Workly extends StatelessWidget {
         primarySwatch: Colors.deepPurpleAccent[300], //[Action needed] Update colour
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: SignInPage(),
+      home: LandingPage(
+        auth: Auth(),
+      ),
     );
   }
 }
