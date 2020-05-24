@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workly/resuable_widgets/CustomRaisedButton.dart';
-import 'package:workly/screens/home.dart';
+import 'package:workly/wrappers/navbar_wrapper.dart';
 
 class SignInPage extends StatelessWidget {
   @override
@@ -32,7 +32,7 @@ Widget _bodyContent(BuildContext context) {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => Home()),
+              MaterialPageRoute(builder: (context) => NavbarWrapper()),
             );
           }, //[Action needed] Update onPressed action
         ),
