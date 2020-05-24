@@ -3,20 +3,32 @@ import 'package:workly/screens/home.dart';
 import 'package:workly/screens/calendar.dart';
 import 'package:workly/screens/main_settings.dart';
 
+_NavbarWrapperState navState; //[Action] Better to use a Provider than a global variable to change this state externally.
+
 class NavbarWrapper extends StatefulWidget {
   @override
-  NavbarWrapperState createState() => NavbarWrapperState();
+  _NavbarWrapperState createState() { 
+    navState = _NavbarWrapperState();
+    return navState;
+  }
 }
 
-class NavbarWrapperState extends State<NavbarWrapper> { //[Note] Public to be accessed by other screens
-  static int selectedPage = 0;
+class _NavbarWrapperState extends State<NavbarWrapper> {
+  static int _selectedPage = 0;
+  var _pageController = PageController(initialPage: _selectedPage);
   final _pageOptions = [
     Home(),
     Calendar(),
     Calendar(),
     MainSettings(),
   ];
-  var _pageController = PageController(initialPage: selectedPage);
+
+  void customPage(int i) {
+    this.setState(() {
+      _selectedPage = i;
+      _pageController.jumpToPage(_selectedPage);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +38,7 @@ class NavbarWrapperState extends State<NavbarWrapper> { //[Note] Public to be ac
         children: _pageOptions,
         onPageChanged: (index) {
           setState(() {
-            selectedPage = index;
+            _selectedPage = index;
           });
         },
         controller: _pageController,
@@ -34,11 +46,11 @@ class NavbarWrapperState extends State<NavbarWrapper> { //[Note] Public to be ac
       bottomNavigationBar: ClipRRect(
         borderRadius: BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
         child: BottomNavigationBar(
-          currentIndex: selectedPage,
+          currentIndex: _selectedPage,
           onTap: (int index) {
             setState(() {
-              selectedPage = index;
-              _pageController.animateToPage(selectedPage, duration: Duration(milliseconds: 200), curve: Curves.linear);
+              _selectedPage = index;
+              _pageController.animateToPage(_selectedPage, duration: Duration(milliseconds: 200), curve: Curves.linear);
             });
           },
           items: [

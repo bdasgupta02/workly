@@ -78,14 +78,15 @@ class _HomeState extends State<Home> {
                 child: Column(
                   children: <Widget>[
                     BackBoxWhiteNoMargin(),
-                    Container(
-                      padding: EdgeInsets.all(8),
+                    FlatButton(
                       child: Text(
-                        //[Action] Need to change this to a button with a transparent background for OnPressed to Project screen
-                        'Swipe for projects!',
+                        'My projects',
                         style:
                             TextStyle(color: Color(0xFFFCFCFC), fontSize: 17),
                       ),
+                      onPressed: () {
+                        navState.customPage(1);
+                      },
                     ),
                   ],
                 ),
@@ -95,16 +96,6 @@ class _HomeState extends State<Home> {
                 padding: EdgeInsets.only(bottom: 20),
               ),
               BackBoxWhite(),
-              RaisedButton(
-                onPressed: () {
-                  //
-                  NavbarWrapperState.selectedPage = 1;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => NavbarWrapper()),
-                  );
-                },
-              )
             ],
           ),
         ],
