@@ -14,11 +14,6 @@ class SignInPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Workly"),
-        centerTitle: true,
-        elevation: 10.0, //shadow of appBar, default is 4.0
-      ),
       body: _bodyContent(context),
       backgroundColor: Colors.grey[200], //[Action needed] Update colour
     );
@@ -38,7 +33,7 @@ class SignInPage extends StatelessWidget {
           ),
           SizedBox(height: 50.0), //Separation between above text and below box
           SignInButton(
-            text: "Email sign in",
+            text: "Sign in with email",
             textColor: Colors.black, //[Action needed] Update colour
             buttonColor: Colors.tealAccent[100], //[Action needed] Update colour
             onPressed: () => _signInWithEmail(context),

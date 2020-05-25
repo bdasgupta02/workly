@@ -12,27 +12,20 @@ class EmailLoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Workly"),
-        centerTitle: true,
-        elevation: 10.0, //shadow of appBar, default is 4.0
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Card(
-            child: EmailLoginForm(
-              auth: auth,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(
-                Radius.circular(36.0),
+      body: Container( //[Note] Now it's at the center of the screen which automatically gets lifted by a keyboard
+        alignment: Alignment.center,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Container(
+              child: EmailLoginForm(
+                auth: auth,
               ),
             ),
           ),
         ),
       ),
-      backgroundColor: Colors.grey[200], //[Action needed] Update colour
+      backgroundColor: Color(0xFFFCFCFC), //[Action needed] Update colour
     );
   }
 }
@@ -80,7 +73,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(25),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,7 +85,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   List<Widget> _buildChildren() {
     final String raisedButtonText = _formType == EmailLoginFormType.signIn
         ? "Sign in"
-        : "Create my account now!";
+        : "Create an account";
     final String flatButtonText = _formType == EmailLoginFormType.signIn
         ? "New to Workly? Create a new account now!"
         : "Have an account? Sign in here";
@@ -104,20 +97,20 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       _emailTextField(),
       SizedBox(height: 8.0),
       _passwordTextField(),
-      SizedBox(height: 8.0),
-      CustomRaisedButton(
+      SizedBox(height: 20.0),
+      FlatButton(
         child: Text(
           raisedButtonText,
           style: TextStyle(
               color: Colors.white, fontSize: 18.0, fontWeight: FontWeight.bold),
         ),
-        color: Colors.lightBlue, //[Action needed] Update colors
+        color: Color(0xFF43425A), //[Action needed] Update colors
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(
-            Radius.circular(12.0),
+            Radius.circular(24.0),
           ),
         ),
-        onPressedAction: () => enableSignInButton ? _submit() : null,
+        onPressed: () => enableSignInButton ? _submit() : null,
       ),
       SizedBox(height: 4.0),
       FlatButton(
@@ -185,9 +178,10 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     });
     try {
       if (_formType == EmailLoginFormType.signIn) {
-        await widget.auth.signInWithEmailAndPassword(_email, _password);
+        await widget.auth.signInWithEmailAndPassword(_email.trim(), _password);
       } else {
-        await widget.auth.createUserWithEmailAndPassword(_email, _password);
+        await widget.auth
+            .createUserWithEmailAndPassword(_email.trim(), _password);
       }
       Navigator.of(context).pop();
     } catch (e) {
