@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:workly/screens/home.dart';
 import 'package:workly/screens/sign_in_page.dart';
 import 'package:workly/services/auth.dart';
 import 'package:workly/wrappers/navbar_wrapper.dart';
