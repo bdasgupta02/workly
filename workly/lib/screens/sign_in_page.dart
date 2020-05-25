@@ -15,7 +15,7 @@ class SignInPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _bodyContent(context),
-      backgroundColor: Colors.grey[200], //[Action needed] Update colour
+      backgroundColor: Color(0xFFE9E9E9), //[Action needed] Update colour
     );
   }
 
@@ -34,8 +34,8 @@ class SignInPage extends StatelessWidget {
           SizedBox(height: 50.0), //Separation between above text and below box
           SignInButton(
             text: "Sign in with email",
-            textColor: Colors.black, //[Action needed] Update colour
-            buttonColor: Colors.tealAccent[100], //[Action needed] Update colour
+            textColor: Colors.white, //[Action needed] Update colour
+            buttonColor: Color(0xFF43425A), //[Action needed] Update colour
             onPressed: () => _signInWithEmail(context),
           ),
           SizedBox(height: 25.0),

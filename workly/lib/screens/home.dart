@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:workly/resuable_widgets/clipped_header_bg.dart';
 import 'package:workly/services/auth.dart';
 import 'package:workly/wrappers/navbar_wrapper.dart';
 
@@ -29,35 +30,7 @@ class _HomeState extends State<Home> {
       body: Stack(
         fit: StackFit.loose,
         children: <Widget>[
-          Container(
-            child: ClipPath(
-              clipper: MyClipper(),
-              child: Container(
-                height: 400,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                    colors: [
-                      Color(0xFF43425A),
-                      Color(0xFF43425A),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 2,
-                  blurRadius: 60,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-          ),
+          ClippedHeader(),
           ListView(
             //[Note] ListView because for phones with shitty screens, it will exceed below; this enables them to scroll down
             children: <Widget>[
@@ -155,25 +128,6 @@ class _HomeState extends State<Home> {
     } catch (e) {
       print(e.toString);
     }
-  }
-}
-
-class MyClipper extends CustomClipper<Path> {
-  //[Note] Can move this to reusables if it's gonna be used in the tabbars
-  @override
-  Path getClip(Size size) {
-    var path = Path();
-    path.lineTo(0, size.height - 80);
-    path.quadraticBezierTo(
-        size.width / 2, size.height, size.width, size.height - 80);
-    path.lineTo(size.width, 0);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) {
-    return false;
   }
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workly/resuable_widgets/CustomRaisedButton.dart';
+import 'package:workly/resuable_widgets/clipped_header_bg.dart';
 import 'package:workly/services/auth.dart';
 
 class EmailLoginPage extends StatelessWidget {
@@ -12,20 +13,44 @@ class EmailLoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container( //[Note] Now it's at the center of the screen which automatically gets lifted by a keyboard
-        alignment: Alignment.center,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Container(
-              child: EmailLoginForm(
-                auth: auth,
+      body: Stack(
+        children: <Widget>[
+          ClippedHeader(),
+          ListView(
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.only(
+                  top: 110,
+                  bottom: 70,
+                ),
+                child: Text(
+                  'Sign in with email',
+                  style: TextStyle(
+                    fontSize: 25,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
+              Container(
+                //[Note] Now it's at the center of the screen which automatically gets lifted by a keyboard
+                alignment: Alignment.center,
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.all(5),
+                    child: Container(
+                      child: EmailLoginForm(
+                        auth: auth,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
+        ],
       ),
-      backgroundColor: Color(0xFFFCFCFC), //[Action needed] Update colour
+      backgroundColor: Color(0xFFE9E9E9), //[Action needed] Update colour
     );
   }
 }
@@ -73,21 +98,38 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(25),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: _buildChildren(),
+      padding: const EdgeInsets.all(20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Color(0xFFFCFCFC),
+          borderRadius: BorderRadius.all(Radius.circular(34)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 15,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: _buildChildren(),
+          ),
+        ),
       ),
     );
   }
 
   List<Widget> _buildChildren() {
-    final String raisedButtonText = _formType == EmailLoginFormType.signIn
+    final String flatButtonText = _formType == EmailLoginFormType.signIn
         ? "Sign in"
         : "Create an account";
-    final String flatButtonText = _formType == EmailLoginFormType.signIn
-        ? "New to Workly? Create a new account now!"
+    final String outlineButtonText = _formType == EmailLoginFormType.signIn
+        ? "New? Create a new account now!"
         : "Have an account? Sign in here";
     bool enableSignInButton = widget.emailValidator.isValid(_email) &&
         widget.passwordValidator.isValid(_password) &&
@@ -100,9 +142,12 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       SizedBox(height: 20.0),
       FlatButton(
         child: Text(
-          raisedButtonText,
+          flatButtonText,
           style: TextStyle(
-              color: Colors.white, fontSize: 18.0, fontWeight: FontWeight.bold),
+            color: Colors.white,
+            fontSize: 18.0,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         color: Color(0xFF43425A), //[Action needed] Update colors
         shape: RoundedRectangleBorder(
@@ -113,8 +158,19 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
         onPressed: () => enableSignInButton ? _submit() : null,
       ),
       SizedBox(height: 4.0),
-      FlatButton(
-        child: Text(flatButtonText),
+      OutlineButton(
+        borderSide: BorderSide(color: Color(0xFF777777)),
+        child: Text(
+          outlineButtonText,
+          style: TextStyle(
+            color: Color(0xFF777777),
+          ),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(24.0),
+          ),
+        ),
         onPressed: () => !_isLoading ? _toggleFormType() : null,
       ),
     ];
