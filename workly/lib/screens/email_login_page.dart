@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:workly/resuable_widgets/CustomRaisedButton.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
+import 'package:workly/screens/forget_password_page.dart';
 import 'package:workly/services/auth.dart';
 
 class EmailLoginPage extends StatelessWidget {
@@ -82,6 +82,8 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   final FocusNode _passwordFocusNode = FocusNode();
   bool _submitted = false;
   bool _isLoading = false;
+  bool _incorrectEmailFormat = false;
+  bool _incorrectEmailOrPassword = false;
 
   EmailLoginFormType _formType = EmailLoginFormType.signIn;
 
@@ -89,6 +91,8 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     //To toggle between different state, either sign in or register
     setState(() {
       _submitted = false;
+      _incorrectEmailFormat = false;
+      _incorrectEmailOrPassword = false;
       _formType = _formType == EmailLoginFormType.signIn
           ? EmailLoginFormType.register
           : EmailLoginFormType.signIn;
@@ -147,7 +151,38 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       _emailTextField(),
       SizedBox(height: 8.0),
       _passwordTextField(),
-      SizedBox(height: 20.0),
+      SizedBox(height: 2.0),
+      Opacity(
+        opacity: _incorrectEmailOrPassword ? 1.0 : 0.0,
+        child: Column(
+          children: [
+            Container(
+              alignment: Alignment.center,
+              child: Text("Email or password is incorrect",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 14.0,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            SizedBox(height: 4.0),
+            FlatButton(
+              child: Text(" I forgot my password ",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 18.0,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+              onPressed: () => _forgetMyPassword(context),
+            ),
+          ],
+        ),
+      ),
       Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -201,7 +236,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
 
   TextField _emailTextField() {
     bool showErrorText =
-        _submitted && !widget.emailValidator.isValid(_email.trim());
+        _submitted && (!widget.emailValidator.isValid(_email.trim()) || _incorrectEmailFormat || _incorrectEmailOrPassword);
     return TextField(
       decoration: InputDecoration(
         labelText: "Email",
@@ -220,7 +255,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
 
   TextField _passwordTextField() {
     bool showErrorText =
-        _submitted && !widget.passwordValidator.isValid(_password);
+        _submitted && (!widget.passwordValidator.isValid(_password) || _incorrectEmailOrPassword);
     return TextField(
       decoration: InputDecoration(
         labelText: "Password",
@@ -255,6 +290,8 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     setState(() {
       _submitted = true;
       _isLoading = true;
+      _incorrectEmailOrPassword = false;
+      _incorrectEmailFormat = false;
     });
     try {
       if (_formType == EmailLoginFormType.signIn) {
@@ -265,12 +302,44 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       }
       Navigator.of(context).pop();
     } catch (e) {
-      print(e.toString());
+      switch(e.code) {
+        case "ERROR_INVALID_EMAIL": {
+          setState(() {
+            _incorrectEmailFormat = true;
+          });
+          widget.invalidEmailFormatText();
+        }
+        break;
+        default: {
+          setState(() {
+            _incorrectEmailOrPassword = true;
+          });
+          widget.invalidEmailOrPasswordText();
+        }
+        break;
+      }
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  void _forgetMyPassword(BuildContext context) {
+    setState(() {
+      _submitted = false;
+      _isLoading = false;
+      _incorrectEmailFormat = false;
+      _incorrectEmailOrPassword = false;
+       _emailController.clear();
+      _passwordController.clear();
+    });
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (context) => ForgetPasswordPage(
+        auth: widget.auth,
+      ),
+    ));
   }
 }
 
@@ -288,6 +357,16 @@ class NonEmptyStringValidator implements StringValidator {
 class EmailAndPasswordValidators {
   final StringValidator emailValidator = NonEmptyStringValidator();
   final StringValidator passwordValidator = NonEmptyStringValidator();
-  final String invalidEmailErrorText = "Email can\'t be empty";
-  final String invalidPasswordErrorText = "Password can\'t be empty";
+  String invalidEmailErrorText;
+  String invalidPasswordErrorText;
+
+  void invalidEmailFormatText() {
+    invalidEmailErrorText = "Invalid email format";
+    invalidPasswordErrorText = "";
+  }
+
+  void invalidEmailOrPasswordText() {
+    invalidEmailErrorText = "Incorrect";
+    invalidPasswordErrorText = "Incorrect";
+  }
 }

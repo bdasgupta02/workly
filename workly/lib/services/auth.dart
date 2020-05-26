@@ -7,6 +7,7 @@ abstract class AuthBase {
   Future<User> signInWithEmailAndPassword(String email, String password);
   Future<User> createUserWithEmailAndPassword(String email, String password);
   Future<void> signOut();
+  Future<void> sendPasswordResetEmail(String email);
 }
 
 class Auth implements AuthBase{
@@ -47,6 +48,11 @@ class Auth implements AuthBase{
   @override
   Future<void> signOut() async {
     await FirebaseAuth.instance.signOut();
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
   }
 }
 
