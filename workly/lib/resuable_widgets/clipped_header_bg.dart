@@ -15,8 +15,8 @@ class ClippedHeader extends StatelessWidget {
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
               colors: [
-                Color(0xFF43425A),
-                Color(0xFF43425A),
+                Color(0xFF141336),
+                Color(0xFF141336),
               ],
             ),
           ),

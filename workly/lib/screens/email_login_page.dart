@@ -28,6 +28,9 @@ class EmailLoginPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 25,
                     color: Colors.white,
+                    fontFamily: 'Khula',
+                    fontWeight: FontWeight.w400,
+                    height: 1.5
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -113,7 +116,12 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
           ],
         ),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.only(
+            top: 25,
+            left: 25,
+            right: 25,
+            bottom: 12,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -131,7 +139,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     final String outlineButtonText = _formType == EmailLoginFormType.signIn
         ? "New? Create a new account now!"
         : "Have an account? Sign in here";
-    bool enableSignInButton = widget.emailValidator.isValid(_email) &&
+    bool enableSignInButton = widget.emailValidator.isValid(_email.trim()) &&
         widget.passwordValidator.isValid(_password) &&
         !_isLoading;
 
@@ -140,30 +148,45 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       SizedBox(height: 8.0),
       _passwordTextField(),
       SizedBox(height: 20.0),
-      FlatButton(
-        child: Text(
-          flatButtonText,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18.0,
-            fontWeight: FontWeight.bold,
-          ),
+      Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Color(0xFF33CFEE).withOpacity(0.25),
+              spreadRadius: 2,
+              blurRadius: 15,
+              offset: Offset(0, 3),
+            ),
+          ],
         ),
-        color: Color(0xFF43425A), //[Action needed] Update colors
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(24.0),
+        child: FlatButton(
+          child: Text(
+            flatButtonText,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18.0,
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w600,
+            ),
           ),
+          color: Color(0xFF04C9F1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(24.0),
+            ),
+          ),
+          onPressed: () => enableSignInButton ? _submit() : null,
         ),
-        onPressed: () => enableSignInButton ? _submit() : null,
       ),
       SizedBox(height: 4.0),
       OutlineButton(
-        borderSide: BorderSide(color: Color(0xFF777777)),
+        borderSide: BorderSide(color: Color(0xFF31BCD8)),
         child: Text(
           outlineButtonText,
           style: TextStyle(
-            color: Color(0xFF777777),
+            color: Color(0xFF31BCD8),
+            fontFamily: 'Roboto',
+            fontWeight: FontWeight.w600,
           ),
         ),
         shape: RoundedRectangleBorder(
@@ -177,7 +200,8 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   }
 
   TextField _emailTextField() {
-    bool showErrorText = _submitted && !widget.emailValidator.isValid(_email);
+    bool showErrorText =
+        _submitted && !widget.emailValidator.isValid(_email.trim());
     return TextField(
       decoration: InputDecoration(
         labelText: "Email",
@@ -213,7 +237,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   }
 
   void _emailEditingComplete() {
-    final newFocus = widget.emailValidator.isValid(_email)
+    final newFocus = widget.emailValidator.isValid(_email.trim())
         ? _passwordFocusNode
         : _emailFocusNode;
     FocusScope.of(context).requestFocus(newFocus);

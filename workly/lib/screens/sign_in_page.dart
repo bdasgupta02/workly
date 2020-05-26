@@ -3,7 +3,6 @@ import 'package:workly/resuable_widgets/CustomRaisedButton.dart';
 import 'package:workly/screens/email_login_page.dart';
 import 'package:workly/services/auth.dart';
 
-
 class SignInPage extends StatelessWidget {
   final AuthBase auth;
 
@@ -23,8 +22,8 @@ class SignInPage extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.all(45.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center, 
-        crossAxisAlignment: CrossAxisAlignment.stretch, 
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Text(
             'Sign in',
@@ -32,11 +31,35 @@ class SignInPage extends StatelessWidget {
             style: TextStyle(fontSize: 28.0, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 50.0), //Separation between above text and below box
-          SignInButton(
-            text: "Sign in with email",
-            textColor: Colors.white, //[Action needed] Update colour
-            buttonColor: Color(0xFF43425A), //[Action needed] Update colour
-            onPressed: () => _signInWithEmail(context),
+          Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF33CFEE).withOpacity(0.25),
+                  spreadRadius: 2,
+                  blurRadius: 15,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: FlatButton(
+              child: Text(
+                'Sign in with email',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onPressed: () => _signInWithEmail(context),
+              color: Color(0xFF04C9F1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(24.0),
+                ),
+              ),
+            ),
           ),
           SizedBox(height: 25.0),
           /*
@@ -52,13 +75,11 @@ class SignInPage extends StatelessWidget {
   }
 
   void _signInWithEmail(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        fullscreenDialog: true,
-        builder: (context) => EmailLoginPage(
-          auth: auth,
-        ),
-      )
-    );
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (context) => EmailLoginPage(
+        auth: auth,
+      ),
+    ));
   }
 }

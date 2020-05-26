@@ -12,7 +12,7 @@ Overall notes: places that need replacing after database:
 
 class Home extends StatefulWidget {
   final AuthBase auth;
-  
+
   Home({
     this.auth,
   });
@@ -43,6 +43,8 @@ class _HomeState extends State<Home> {
                     color: Colors.white,
                     fontSize: 25,
                     fontFamily: 'Khula',
+                    height: 1.5,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ),
@@ -56,7 +58,7 @@ class _HomeState extends State<Home> {
                 alignment: Alignment.topCenter,
                 margin: EdgeInsets.only(left: 40, right: 40),
                 decoration: BoxDecoration(
-                  color: Color(0xFF32313E),
+                  color: Color(0xFF20293B),
                   borderRadius: BorderRadius.all(Radius.circular(34)),
                   boxShadow: [
                     BoxShadow(
@@ -76,6 +78,8 @@ class _HomeState extends State<Home> {
                         style: TextStyle(
                           color: Color(0xFFFCFCFC),
                           fontSize: 17,
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       onPressed: () {
@@ -90,18 +94,30 @@ class _HomeState extends State<Home> {
                 padding: EdgeInsets.only(bottom: 20),
               ),
               BackBoxNotifs(),
-              Padding(padding: EdgeInsets.only(top:20),),
+              Padding(
+                padding: EdgeInsets.only(top: 20),
+              ),
               Container(
                 child: (FlatButton(
                   onPressed: () {
-                    _signOut();//[Action] Here's the temporary button.
+                    _signOut(); //[Action] Here's the temporary button.
                   },
-                  child: Text('Temp Logout'),
+                  child: Text(
+                    'Temp Logout',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(34.0),
                   ),
                 )),
-                margin: EdgeInsets.only(left:40, right:40,),
+                margin: EdgeInsets.only(
+                  left: 40,
+                  right: 40,
+                ),
                 decoration: BoxDecoration(
                   color: Color(0xFFFCFCFC),
                   borderRadius: BorderRadius.all(Radius.circular(34)),
@@ -180,7 +196,11 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
         child: Text(
           notifList[i],
           textAlign: TextAlign.start,
-          style: TextStyle(color: Colors.black54),
+          style: TextStyle(
+            color: Colors.black54,
+            fontFamily: 'Roboto',
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ));
     }
@@ -221,7 +241,8 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF4DA7B9),
+                color: Color(0xFF6A7795),
+                fontFamily: 'Khula',
               ),
             ),
           ),
@@ -264,7 +285,7 @@ class BackBoxButtons extends StatelessWidget {
                   navState.customPage(1);
                 },
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(34.0),
+                  borderRadius: BorderRadius.circular(30),
                 ),
                 child: Column(
                   children: <Widget>[
@@ -286,8 +307,11 @@ class BackBoxButtons extends StatelessWidget {
                         'Missed \nDeadlines',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white60,
-                          fontSize: 16,
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontFamily: 'Khula',
+                          height: 1,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ),
@@ -295,11 +319,11 @@ class BackBoxButtons extends StatelessWidget {
                 ),
               ),
               decoration: BoxDecoration(
-                color: Color(0xFFC97788),
-                borderRadius: BorderRadius.all(Radius.circular(34)),
+                color: Color(0xFFF87892),
+                borderRadius: BorderRadius.all(Radius.circular(30)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Color(0xFFF87892).withOpacity(0.9),
                     spreadRadius: 2,
                     blurRadius: 15,
                     offset: Offset(0, 3),
@@ -317,7 +341,7 @@ class BackBoxButtons extends StatelessWidget {
                   navState.customPage(1);
                 },
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(34.0),
+                  borderRadius: BorderRadius.circular(30),
                 ),
                 child: Column(
                   children: <Widget>[
@@ -339,8 +363,11 @@ class BackBoxButtons extends StatelessWidget {
                         'Due \nSoon',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white60,
-                          fontSize: 16,
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontFamily: 'Khula',
+                          height: 1,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ),
@@ -348,11 +375,11 @@ class BackBoxButtons extends StatelessWidget {
                 ),
               ),
               decoration: BoxDecoration(
-                color: Color(0xFF4DA7B9),
-                borderRadius: BorderRadius.all(Radius.circular(34)),
+                color: Color(0xFF04C9F1),
+                borderRadius: BorderRadius.all(Radius.circular(30)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Color(0xFF00CFF8).withOpacity(0.6),
                     spreadRadius: 2,
                     blurRadius: 15,
                     offset: Offset(0, 3),
