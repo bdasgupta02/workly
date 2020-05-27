@@ -151,11 +151,11 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       _emailTextField(),
       SizedBox(height: 8.0),
       _passwordTextField(),
-      SizedBox(height: 2.0),
-      Opacity(
-        opacity: _incorrectEmailOrPassword ? 1.0 : 0.0,
+      SizedBox(height: 12.0),
+      Offstage(
+        offstage: !_incorrectEmailOrPassword,
         child: Column(
-          children: [
+          children: <Widget> [
             Container(
               alignment: Alignment.center,
               child: Text("Email or password is incorrect",
@@ -167,7 +167,6 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
                 ),
               ),
             ),
-            SizedBox(height: 4.0),
             FlatButton(
               child: Text(" I forgot my password ",
                 style: TextStyle(
@@ -366,7 +365,7 @@ class EmailAndPasswordValidators {
   }
 
   void invalidEmailOrPasswordText() {
-    invalidEmailErrorText = "Incorrect";
-    invalidPasswordErrorText = "Incorrect";
+    invalidEmailErrorText = "Email may be incorrect";
+    invalidPasswordErrorText = "Password may be incorrect";
   }
 }
