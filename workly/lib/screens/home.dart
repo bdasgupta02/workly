@@ -16,7 +16,7 @@ class Home extends StatefulWidget {
   Home({
     this.auth,
   });
-//Above codes temporay for signout button
+//Above codes temporary for signout button
 
   @override
   _HomeState createState() => _HomeState();
@@ -82,9 +82,7 @@ class _HomeState extends State<Home> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      onPressed: () {
-                        navState.customPage(1);
-                      },
+                      onPressed: () => navState.customPage(1),
                     ),
                   ],
                 ),
@@ -99,9 +97,8 @@ class _HomeState extends State<Home> {
               ),
               Container(
                 child: (FlatButton(
-                  onPressed: () {
-                    _signOut(); //[Action] Here's the temporary button.
-                  },
+                  onPressed: () =>
+                      _signOut(), //[Action] Here's the temporary button.
                   child: Text(
                     'Temp Logout',
                     style: TextStyle(
@@ -280,10 +277,8 @@ class BackBoxButtons extends StatelessWidget {
             child: Container(
               margin: EdgeInsets.only(top: 10, bottom: 10, right: 5, left: 10),
               child: FlatButton(
-                onPressed: () {
-                  //[Placeholder] Needs to be changed to clone projects pages
-                  navState.customPage(1);
-                },
+                onPressed: () => navState.customPage(1),
+                //[Placeholder] Needs to be changed to clone projects pages
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -336,10 +331,8 @@ class BackBoxButtons extends StatelessWidget {
             child: Container(
               margin: EdgeInsets.only(top: 10, bottom: 10, right: 10, left: 5),
               child: FlatButton(
-                onPressed: () {
-                  //[Placeholder] Needs to be changed to clone projects pages
-                  navState.customPage(1);
-                },
+                onPressed: () => navState.customPage(1),
+                //[Placeholder] Needs to be changed to clone projects pages
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),

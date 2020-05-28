@@ -47,6 +47,7 @@ flutter:
 
   assets:
     - assets/workly_landscape-1.png
+    - assets/workly_logo_nobg.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

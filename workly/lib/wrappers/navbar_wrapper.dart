@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:workly/screens/home.dart';
 import 'package:workly/screens/calendar.dart';
 import 'package:workly/screens/main_settings.dart';
-import 'package:workly/screens/projectscreen_all.dart';
-import 'package:workly/screens/projectscreen_deadlines..dart';
-import 'package:workly/screens/projectscreen_due_soon.dart';
 import 'package:workly/services/auth.dart';
+import 'package:workly/screens/projectscreen_switchboard.dart';
 
 _NavbarWrapperState
     navState; //[Action] Better to use a Provider than a global variable to change this state externally.
@@ -28,20 +26,12 @@ class _NavbarWrapperState extends State<NavbarWrapper> {
   var _pageController = PageController(initialPage: _selectedPage);
   static AuthBase authentication;
   static Home home = Home(auth: authentication);
-  static AllProjects allProjects = AllProjects();
+  static ProjectSwitchboard projects = ProjectSwitchboard(index: 0);
   static Calendar calendar = Calendar();
   static MainSettings mainSettings = MainSettings();
-  static MissedDeadlines missedDeadlines = MissedDeadlines();
-  static DueSoon dueSoon = DueSoon();
   static final _pageOptions = [
     home,
-    allProjects,
-    calendar,
-    mainSettings,
-  ];
-  static final _pageViewPageOptions = [
-    home,
-    allProjects,
+    projects,
     calendar,
     mainSettings,
   ];
@@ -49,9 +39,7 @@ class _NavbarWrapperState extends State<NavbarWrapper> {
   void customPage(int i) {
     this.setState(() {
       _selectedPage = i;
-      if (i < 4) {
-        _pageController.jumpToPage(_selectedPage);
-      }
+      _pageController.jumpToPage(_selectedPage);
     });
   }
 
@@ -59,27 +47,25 @@ class _NavbarWrapperState extends State<NavbarWrapper> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
-      body: /*_selectedPage < 4
-          ? PageView(
-              children: _pageViewPageOptions,
-              onPageChanged: (index) {
-                setState(() {
-                  _selectedPage = index;
-                });
-              },
-              controller: _pageController,
-            )
-          :*/ _pageOptions[_selectedPage],
+      body: PageView(
+        children: _pageOptions,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedPage = index;
+          });
+        },
+        controller: _pageController,
+      ),
       bottomNavigationBar: ClipRRect(
         borderRadius: BorderRadius.only(
             topLeft: Radius.circular(35), topRight: Radius.circular(35)),
         child: BottomNavigationBar(
           type: BottomNavigationBarType.shifting,
-          currentIndex: _selectedPage < 4 ? _selectedPage : 1,
+          currentIndex: _selectedPage,
           onTap: (int index) {
             setState(() {
               _selectedPage = index;
-              //_pageController.jumpToPage(_selectedPage);
+              _pageController.jumpToPage(_selectedPage);
             });
           },
           items: [
