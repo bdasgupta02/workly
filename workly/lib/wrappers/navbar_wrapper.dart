@@ -22,9 +22,7 @@ class NavbarWrapper extends StatefulWidget {
 }
 
 class _NavbarWrapperState extends State<NavbarWrapper> {
-  //[Note] Pages are static to save page states (as an experiment - needs testing)
   static int _selectedPage = 0;
-  var _pageController = PageController(initialPage: _selectedPage);
   static AuthBase authentication;
   static Home _home = Home(auth: authentication);
   static ProjectSwitchboard _projects = ProjectSwitchboard(index: 0);
@@ -38,38 +36,45 @@ class _NavbarWrapperState extends State<NavbarWrapper> {
   ];
   static Queue<int> _history = Queue();
   static int _backLimit = 0;
+  var _pageController = PageController(initialPage: _selectedPage);
 
   void customPage(int i) {
     this.setState(() {
       _pageController.jumpToPage(i);
     });
-    //_backLimit = 0;
+    clearLimit();
   }
 
   //[Note] Custom backward navigation through a custom history system
   Future<bool> _onBackPressed() async {
-    if (_history.length != 0 && _backLimit < 5) {
+    if (_history.length != 0 && _backLimit < 6) {
       setState(() {
         if (_selectedPage == 1) {
           if (!projectSwitchboardState.emptyProjectHistory()) {
             projectSwitchboardState.goBack();
-            //emptysublimit++
           } else {
-            _pageController.jumpToPage(_history.removeLast());
-            _history.removeLast();
-            //_backLimit++;
+            goBackNavbar();
           }
         } else {
-          _pageController.jumpToPage(_history.removeLast());
-          _history.removeLast();
-          //_backLimit++;
+          goBackNavbar();
         }
       });
+      _backLimit++;
+      return null;
     } else {
-      //SystemNavigator.pop();
-      //[WARNING] This is an android system exclusive system
+      return Future.sync(() => true);
     }
-    return null;
+  }
+
+  void goBackNavbar() {
+    int temp = _backLimit;
+    _pageController.jumpToPage(_history.removeLast());
+    _history.removeLast();
+    _backLimit = temp;
+  }
+
+  void clearLimit() {
+    _backLimit = 0;
   }
 
   @override
@@ -85,6 +90,7 @@ class _NavbarWrapperState extends State<NavbarWrapper> {
               _history.add(_selectedPage);
               _selectedPage = index;
             });
+            clearLimit();
           },
           controller: _pageController,
         ),
@@ -98,7 +104,7 @@ class _NavbarWrapperState extends State<NavbarWrapper> {
               setState(() {
                 _pageController.jumpToPage(index);
               });
-              //_backLimit = 0;
+              clearLimit();
             },
             items: [
               BottomNavigationBarItem(

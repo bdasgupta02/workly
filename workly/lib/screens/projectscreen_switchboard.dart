@@ -4,6 +4,8 @@ import 'package:workly/screens/projectscreen_deadlines..dart';
 import 'package:workly/screens/projectscreen_due_soon.dart';
 import 'dart:collection';
 
+import 'package:workly/wrappers/navbar_wrapper.dart';
+
 _ProjectSwitchboardState projectSwitchboardState;
 //[Note] Change to Provider system if possible
 
@@ -38,6 +40,7 @@ class _ProjectSwitchboardState extends State<ProjectSwitchboard> with AutomaticK
       _addProjectHistory();
       stateIndex = newIndex;
     });
+    navState.clearLimit();
   }
 
   void _addProjectHistory() {
