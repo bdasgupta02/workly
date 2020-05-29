@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:workly/screens/projectscreen_all.dart';
 import 'package:workly/screens/projectscreen_deadlines..dart';
 import 'package:workly/screens/projectscreen_due_soon.dart';
+import 'dart:collection';
+
+_ProjectSwitchboardState projectSwitchboardState;
+//[Note] Change to Provider system if possible
 
 class ProjectSwitchboard extends StatefulWidget {
   final int index;
@@ -9,21 +13,49 @@ class ProjectSwitchboard extends StatefulWidget {
   ProjectSwitchboard({this.index});
 
   @override
-  _ProjectSwitchboardState createState() => _ProjectSwitchboardState(index: this.index);
+  _ProjectSwitchboardState createState() {
+    _ProjectSwitchboardState.stateIndex = this.index;
+    projectSwitchboardState = _ProjectSwitchboardState();
+    return projectSwitchboardState;
+  }
 }
 
-class _ProjectSwitchboardState extends State<ProjectSwitchboard> {
-  final int index;
+class _ProjectSwitchboardState extends State<ProjectSwitchboard> with AutomaticKeepAliveClientMixin<ProjectSwitchboard> {
+  static int stateIndex = 0;
+  static Queue _projectHistory = Queue();
   static final List<Widget> _subScreens = [
     AllProjects(),
     MissedDeadlines(),
     DueSoon(),
   ];
 
-  _ProjectSwitchboardState({this.index});
+  bool emptyProjectHistory() {
+    return _projectHistory.length == 0;
+  }
+
+  void changeProjectScreen(int newIndex) {
+    setState(() {
+      _addProjectHistory();
+      stateIndex = newIndex;
+    });
+  }
+
+  void _addProjectHistory() {
+    _projectHistory.add(stateIndex);
+  }
+
+  void goBack() {
+    setState(() {
+      stateIndex = _projectHistory.removeLast();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _subScreens[index];
+    super.build(context);
+    return _subScreens[stateIndex];
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

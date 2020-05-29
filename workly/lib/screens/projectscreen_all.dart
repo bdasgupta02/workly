@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:workly/wrappers/navbar_wrapper.dart';
+import 'package:workly/screens/projectscreen_switchboard.dart';
 
 class AllProjects extends StatefulWidget {
   @override
@@ -13,7 +13,13 @@ class _AllProjectsState extends State<AllProjects> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
-      body: Padding(padding: EdgeInsets.all(100), child: FlatButton(onPressed: () => navState.customPage(4), child: Text('Press'),),),
+      body: Padding(
+        padding: EdgeInsets.all(100),
+        child: FlatButton(
+          onPressed: () => projectSwitchboardState.changeProjectScreen(1),
+          child: Text('All'),
+        ),
+      ),
     );
   }
 }
