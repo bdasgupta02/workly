@@ -26,12 +26,11 @@ class EmailLoginPage extends StatelessWidget {
                 child: Text(
                   'Sign in with email',
                   style: TextStyle(
-                    fontSize: 25,
-                    color: Colors.white,
-                    fontFamily: 'Khula',
-                    fontWeight: FontWeight.w400,
-                    height: 1.5
-                  ),
+                      fontSize: 25,
+                      color: Colors.white,
+                      fontFamily: 'Khula',
+                      fontWeight: FontWeight.w400,
+                      height: 1.5),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -78,6 +77,8 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   final TextEditingController _emailController =
       TextEditingController(); //To store the user input
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final FocusNode _nameFocusNode = FocusNode();
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
   bool _submitted = false;
@@ -100,6 +101,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     _emailController
         .clear(); //Clear the user input when toggling between different state
     _passwordController.clear();
+    _nameController.clear();
   }
 
   @override
@@ -143,11 +145,20 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     final String outlineButtonText = _formType == EmailLoginFormType.signIn
         ? "New? Create a new account now!"
         : "Have an account? Sign in here";
-    bool enableSignInButton = widget.emailValidator.isValid(_email.trim()) &&
-        widget.passwordValidator.isValid(_password) &&
-        !_isLoading;
+    bool enableSignInButton = _formType == EmailLoginFormType.signIn
+        ? widget.emailValidator.isValid(_email.trim()) &&
+            widget.passwordValidator.isValid(_password) &&
+            !_isLoading
+        : widget.emailValidator.isValid(_email.trim()) &&
+            widget.passwordValidator.isValid(_password) &&
+            widget.nameValidator.isValid(_name) &&
+            !_isLoading;
 
     return [
+      Offstage(
+        offstage: _formType == EmailLoginFormType.register ? false : true,
+        child: _nameTextField(),
+      ),
       _emailTextField(),
       SizedBox(height: 8.0),
       _passwordTextField(),
@@ -155,10 +166,11 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       Offstage(
         offstage: !_incorrectEmailOrPassword,
         child: Column(
-          children: <Widget> [
+          children: <Widget>[
             Container(
               alignment: Alignment.center,
-              child: Text("Email or password is incorrect",
+              child: Text(
+                "Email or password is incorrect",
                 style: TextStyle(
                   color: Colors.red,
                   fontSize: 14.0,
@@ -168,7 +180,8 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
               ),
             ),
             FlatButton(
-              child: Text(" I forgot my password ",
+              child: Text(
+                " I forgot my password ",
                 style: TextStyle(
                   color: Colors.red,
                   fontSize: 18.0,
@@ -233,9 +246,29 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     ];
   }
 
-  TextField _emailTextField() {
+  TextField _nameTextField() {
     bool showErrorText =
-        _submitted && (!widget.emailValidator.isValid(_email.trim()) || _incorrectEmailFormat || _incorrectEmailOrPassword);
+        _submitted && !widget.nameValidator.isValid(_name.trim());
+    return TextField(
+      decoration: InputDecoration(
+        labelText: "Username",
+        hintText: "Display name for your account",
+        errorText: showErrorText ? widget.invalidNameErrorText : null,
+        enabled: !_isLoading,
+      ),
+      controller: _nameController,
+      textInputAction: TextInputAction.next,
+      focusNode: _nameFocusNode,
+      onChanged: (name) => _updateState(),
+      onEditingComplete: () => _nameEditingComplete(),
+    );
+  }
+
+  TextField _emailTextField() {
+    bool showErrorText = _submitted &&
+        (!widget.emailValidator.isValid(_email.trim()) ||
+            _incorrectEmailFormat ||
+            _incorrectEmailOrPassword);
     return TextField(
       decoration: InputDecoration(
         labelText: "Email",
@@ -253,8 +286,9 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   }
 
   TextField _passwordTextField() {
-    bool showErrorText =
-        _submitted && (!widget.passwordValidator.isValid(_password) || _incorrectEmailOrPassword);
+    bool showErrorText = _submitted &&
+        (!widget.passwordValidator.isValid(_password) ||
+            _incorrectEmailOrPassword);
     return TextField(
       decoration: InputDecoration(
         labelText: "Password",
@@ -268,6 +302,13 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       onEditingComplete: () => _submit(),
       obscureText: true,
     );
+  }
+
+  void _nameEditingComplete() {
+    final newFocus = widget.nameValidator.isValid(_name.trim())
+        ? _emailFocusNode
+        : _nameFocusNode;
+    FocusScope.of(context).requestFocus(newFocus);
   }
 
   void _emailEditingComplete() {
@@ -285,6 +326,8 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
 
   String get _password => _passwordController.text;
 
+  String get _name => _nameController.text;
+
   void _submit() async {
     setState(() {
       _submitted = true;
@@ -301,21 +344,23 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       }
       Navigator.of(context).pop();
     } catch (e) {
-      switch(e.code) {
-        case "ERROR_INVALID_EMAIL": {
-          setState(() {
-            _incorrectEmailFormat = true;
-          });
-          widget.invalidEmailFormatText();
-        }
-        break;
-        default: {
-          setState(() {
-            _incorrectEmailOrPassword = true;
-          });
-          widget.invalidEmailOrPasswordText();
-        }
-        break;
+      switch (e.code) {
+        case "ERROR_INVALID_EMAIL":
+          {
+            setState(() {
+              _incorrectEmailFormat = true;
+            });
+            widget.invalidEmailFormatText();
+          }
+          break;
+        default:
+          {
+            setState(() {
+              _incorrectEmailOrPassword = true;
+            });
+            widget.invalidEmailOrPasswordText();
+          }
+          break;
       }
     } finally {
       setState(() {
@@ -330,8 +375,9 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       _isLoading = false;
       _incorrectEmailFormat = false;
       _incorrectEmailOrPassword = false;
-       _emailController.clear();
+      _emailController.clear();
       _passwordController.clear();
+      _nameController.clear();
     });
     Navigator.of(context).push(MaterialPageRoute<void>(
       fullscreenDialog: true,
@@ -356,6 +402,8 @@ class NonEmptyStringValidator implements StringValidator {
 class EmailAndPasswordValidators {
   final StringValidator emailValidator = NonEmptyStringValidator();
   final StringValidator passwordValidator = NonEmptyStringValidator();
+  final StringValidator nameValidator = NonEmptyStringValidator();
+  final String invalidNameErrorText = "Username cannot be empty";
   String invalidEmailErrorText;
   String invalidPasswordErrorText;
 
