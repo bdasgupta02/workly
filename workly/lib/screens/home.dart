@@ -100,7 +100,7 @@ class _HomeState extends State<Home> {
                   onPressed: () =>
                       _signOut(), //[Action] Here's the temporary button.
                   child: Text(
-                    'Temp Logout',
+                    'Sign-out',
                     style: TextStyle(
                       color: Colors.grey,
                       fontFamily: 'Roboto',
@@ -238,7 +238,7 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF6A7795),
+                color: Color(0xFF141336),
                 fontFamily: 'Khula',
               ),
             ),
