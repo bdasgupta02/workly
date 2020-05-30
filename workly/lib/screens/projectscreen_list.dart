@@ -113,7 +113,7 @@ class Project {
                     Padding(
                       padding: EdgeInsets.only(
                         top: 15,
-                        right: 10,
+                        right: 0,
                         left: 0,
                         bottom: 3,
                       ),
@@ -130,7 +130,7 @@ class Project {
                     Padding(
                       padding: EdgeInsets.only(
                         top: 3,
-                        right: 10,
+                        right: 0,
                         left: 0,
                         bottom: 15,
                       ),
