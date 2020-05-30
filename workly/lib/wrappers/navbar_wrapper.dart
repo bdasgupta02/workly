@@ -7,7 +7,11 @@ import 'package:workly/screens/projectscreen_switchboard.dart';
 import 'dart:collection';
 
 _NavbarWrapperState navState;
-//[Action] Better to use a Provider than a global variable to change this state externally.
+/*[Action] Better to use a Provider than a global variable to change this state externally.
+  Ideal: Provider
+  Backup: Integration into NavbarWrapper with buffer methods
+  *Same with the project switchboard
+ */
 
 class NavbarWrapper extends StatefulWidget {
   final AuthBase auth;
@@ -24,15 +28,11 @@ class NavbarWrapper extends StatefulWidget {
 class _NavbarWrapperState extends State<NavbarWrapper> {
   static int _selectedPage = 0;
   static AuthBase authentication;
-  static Home _home = Home(auth: authentication);
-  static ProjectSwitchboard _projects = ProjectSwitchboard(index: 0);
-  static Calendar _calendar = Calendar();
-  static MainSettings _mainSettings = MainSettings();
   static final _pageOptions = [
-    _home,
-    _projects,
-    _calendar,
-    _mainSettings,
+    Home(auth:  authentication,),
+    ProjectSwitchboard(index: 0),
+    Calendar(),
+    MainSettings(),
   ];
   static Queue<int> _history = Queue();
   static int _backLimit = 0;
@@ -46,17 +46,17 @@ class _NavbarWrapperState extends State<NavbarWrapper> {
   }
 
   //[Note] Custom backward navigation through a custom history system
-  Future<bool> _onBackPressed() async {
+  Future<bool> onBackPressed() async {
     if (_history.length != 0 && _backLimit < 6) {
       setState(() {
         if (_selectedPage == 1) {
           if (!projectSwitchboardState.emptyProjectHistory()) {
             projectSwitchboardState.goBack();
           } else {
-            goBackNavbar();
+            _goBackNavbar();
           }
         } else {
-          goBackNavbar();
+          _goBackNavbar();
         }
       });
       _backLimit++;
@@ -66,7 +66,7 @@ class _NavbarWrapperState extends State<NavbarWrapper> {
     }
   }
 
-  void goBackNavbar() {
+  void _goBackNavbar() {
     int temp = _backLimit;
     _pageController.jumpToPage(_history.removeLast());
     _history.removeLast();
@@ -80,7 +80,7 @@ class _NavbarWrapperState extends State<NavbarWrapper> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: _onBackPressed,
+      onWillPop: onBackPressed,
       child: Scaffold(
         backgroundColor: Color(0xFFE9E9E9),
         body: PageView(

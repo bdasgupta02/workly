@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:workly/screens/email_login_page.dart';
 import 'package:workly/services/auth.dart';
 
+//[Action] We need to have privacy policy somewhere
+
 class SignInPage extends StatelessWidget {
   final AuthBase auth;
 
@@ -13,63 +15,129 @@ class SignInPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _bodyContent(context),
-      backgroundColor: Color(0xFFE9E9E9), //[Action needed] Update colour
+      backgroundColor: Color(0xFF141336),
     );
   }
 
   Widget _bodyContent(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(45.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Text(
-            'Sign in',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 28.0, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 50.0), //Separation between above text and below box
-          Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xFF33CFEE).withOpacity(0.25),
-                  spreadRadius: 2,
-                  blurRadius: 15,
-                  offset: Offset(0, 3),
-                ),
-              ],
+    return Stack(
+      overflow: Overflow.visible,
+      children: <Widget>[
+        Expanded(
+          child: Container(
+            alignment: Alignment.center,
+            child: Container(
+              margin: EdgeInsets.only(
+                top: 30,
+                bottom: 10,
+              ),
+              child: Image(
+                image: AssetImage('assets/sign_in_graphics_dark_tp.png'),
+              ),
             ),
-            child: FlatButton(
+          ),
+        ),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Container(
+              alignment: Alignment.topCenter,
+              padding: EdgeInsets.only(right: 120, left: 120, top: 120),
+              child: Image(
+                image: AssetImage('assets/workly_logo_nobg.png'),
+                color: Color(0xFF04C9F1),
+              ),
+            ),
+            /*Expanded(
+              child: SizedBox(),
+            ),*/
+            Spacer(),
+            //[Note] Empty spacer which makes it more scalable for more phones
+            Container(
+              margin: EdgeInsets.only(
+                left: 60,
+                right: 60,
+              ),
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.2),
+                    spreadRadius: 2,
+                    blurRadius: 15,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: FlatButton(
+                child: Text(
+                  'Sign in with email',
+                  style: TextStyle(
+                    color: Color(0xFF141336),
+                    fontSize: 18,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onPressed: () => _signInWithEmail(context),
+                color: Color(0xFF04C9F1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(24.0),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 30, bottom: 15),
+              alignment: Alignment.center,
               child: Text(
-                'Sign in with email',
+                'OR',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
+                  fontSize: 15,
                   fontFamily: 'Roboto',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onPressed: () => _signInWithEmail(context),
-              color: Color(0xFF04C9F1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(24.0),
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
-          ),
-          SizedBox(height: 25.0),
-          /*
-          SignInButton(
-            text: "Google sign in",
-            textColor: Colors.black,
-            buttonColor: Colors.white,
-            onPressed: () {},
-          ),*/
-        ],
-      ),
+            Container(
+              margin: EdgeInsets.only(top: 15, left: 90, right: 90, bottom: 45),
+              child: Row(
+                children: <Widget>[
+                  //[Action] These buttons have onPressed placeholders for social media login
+                  Expanded(
+                    child: FlatButton(
+                      onPressed: null,
+                      child: Image(
+                        image: AssetImage('assets/google_icon.png'),
+                        height: 45,
+                        width: 45,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: FlatButton(
+                      onPressed: null,
+                      child: Image(
+                        image: AssetImage('assets/fb_icon.png'),
+                        height: 45,
+                        width: 45,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            /*SignInButton(
+              text: "Google sign in",
+              textColor: Colors.black,
+              buttonColor: Colors.white,
+              onPressed: () {},
+            ),*/
+          ],
+        ),
+      ],
     );
   }
 

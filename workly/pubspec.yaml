@@ -48,6 +48,11 @@ flutter:
   assets:
     - assets/workly_landscape-1.png
     - assets/workly_logo_nobg.png
+    - assets/sign_in_graphics.png
+    - assets/sign_in_graphics_dark.png
+    - assets/sign_in_graphics_dark_tp.png
+    - assets/fb_icon.png
+    - assets/google_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
