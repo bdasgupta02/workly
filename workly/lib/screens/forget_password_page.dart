@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
 import 'package:workly/services/auth.dart';
 
 class ForgetPasswordPage extends StatefulWidget {
-  final AuthBase auth;
-
-  ForgetPasswordPage({
-    @required this.auth,
-  });
 
   @override
   _ForgetPasswordPageState createState() => _ForgetPasswordPageState();
@@ -187,7 +183,8 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
       _activateLink = false;
     });
     try {
-      await widget.auth.sendPasswordResetEmail(_email);
+      final auth = Provider.of<AuthBase>(context, listen: false);
+      await auth.sendPasswordResetEmail(_email);
       await Future.delayed(const Duration(seconds: 5));
       setState(() {
         _activateLink = true;

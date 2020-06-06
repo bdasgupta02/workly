@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:provider/provider.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
 import 'package:workly/services/auth.dart';
 import 'package:workly/wrappers/navbar_wrapper.dart';
@@ -11,12 +12,7 @@ Overall notes: places that need replacing after database:
 */
 
 class Home extends StatefulWidget {
-  final AuthBase auth;
 
-  Home({
-    this.auth,
-  });
-//Above codes temporary for signout button
 
   @override
   _HomeState createState() => _HomeState();
@@ -137,7 +133,8 @@ class _HomeState extends State<Home> {
 
   Future<void> _signOut() async {
     try {
-      await widget.auth.signOut();
+      final auth = Provider.of<AuthBase>(context, listen: false);
+      await auth.signOut();
     } catch (e) {
       print(e.toString);
     }

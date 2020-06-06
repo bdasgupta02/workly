@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:workly/screens/home.dart';
 import 'package:workly/screens/calendar.dart';
 import 'package:workly/screens/main_settings.dart';
-import 'package:workly/services/auth.dart';
 import 'package:workly/screens/projectscreen_switchboard.dart';
 import 'dart:collection';
 
@@ -14,12 +13,9 @@ _NavbarWrapperState navState;
  */
 
 class NavbarWrapper extends StatefulWidget {
-  final AuthBase auth;
-  NavbarWrapper({this.auth});
 
   @override
   _NavbarWrapperState createState() {
-    _NavbarWrapperState.authentication = auth;
     navState = _NavbarWrapperState();
     return navState;
   }
@@ -27,9 +23,8 @@ class NavbarWrapper extends StatefulWidget {
 
 class _NavbarWrapperState extends State<NavbarWrapper> {
   static int _selectedPage = 0;
-  static AuthBase authentication;
   static final _pageOptions = [
-    Home(auth:  authentication,),
+    Home(),
     ProjectSwitchboard(index: 0),
     Calendar(),
     MainSettings(),

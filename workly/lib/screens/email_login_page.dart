@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
 import 'package:workly/screens/forget_password_page.dart';
 import 'package:workly/services/auth.dart';
 
 class EmailLoginPage extends StatelessWidget {
-  final AuthBase auth;
-
-  EmailLoginPage({
-    @required this.auth,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -41,9 +37,7 @@ class EmailLoginPage extends StatelessWidget {
                   child: Padding(
                     padding: EdgeInsets.all(5),
                     child: Container(
-                      child: EmailLoginForm(
-                        auth: auth,
-                      ),
+                      child: EmailLoginForm(),
                     ),
                   ),
                 ),
@@ -63,11 +57,6 @@ enum EmailLoginFormType {
 }
 
 class EmailLoginForm extends StatefulWidget with EmailAndPasswordValidators {
-  final AuthBase auth;
-
-  EmailLoginForm({
-    @required this.auth,
-  });
 
   @override
   _EmailLoginFormState createState() => _EmailLoginFormState();
@@ -336,10 +325,11 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       _incorrectEmailFormat = false;
     });
     try {
+      final auth = Provider.of<AuthBase>(context, listen: false);
       if (_formType == EmailLoginFormType.signIn) {
-        await widget.auth.signInWithEmailAndPassword(_email.trim(), _password);
+        await auth.signInWithEmailAndPassword(_email.trim(), _password);
       } else {
-        await widget.auth
+        await auth
             .createUserWithEmailAndPassword(_email.trim(), _password);
       }
       Navigator.of(context).pop();
@@ -381,9 +371,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     });
     Navigator.of(context).push(MaterialPageRoute<void>(
       fullscreenDialog: true,
-      builder: (context) => ForgetPasswordPage(
-        auth: widget.auth,
-      ),
+      builder: (context) => ForgetPasswordPage(),
     ));
   }
 }

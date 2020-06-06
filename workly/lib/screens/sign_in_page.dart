@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:workly/screens/email_login_page.dart';
-import 'package:workly/services/auth.dart';
 
 //[Action] We need to have privacy policy somewhere
 
 class SignInPage extends StatelessWidget {
-  final AuthBase auth;
-
-  SignInPage({
-    @required this.auth,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -144,9 +138,7 @@ class SignInPage extends StatelessWidget {
   void _signInWithEmail(BuildContext context) {
     Navigator.of(context).push(MaterialPageRoute<void>(
       fullscreenDialog: true,
-      builder: (context) => EmailLoginPage(
-        auth: auth,
-      ),
+      builder: (context) => EmailLoginPage(),
     ));
   }
 }
