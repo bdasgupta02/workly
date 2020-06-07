@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
@@ -74,6 +75,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   bool _isLoading = false;
   bool _incorrectEmailFormat = false;
   bool _incorrectEmailOrPassword = false;
+  bool _weakPassword = false;
 
   EmailLoginFormType _formType = EmailLoginFormType.signIn;
 
@@ -83,6 +85,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       _submitted = false;
       _incorrectEmailFormat = false;
       _incorrectEmailOrPassword = false;
+      _weakPassword = false;
       _formType = _formType == EmailLoginFormType.signIn
           ? EmailLoginFormType.register
           : EmailLoginFormType.signIn;
@@ -91,6 +94,17 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
         .clear(); //Clear the user input when toggling between different state
     _passwordController.clear();
     _nameController.clear();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    _nameFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -232,6 +246,11 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
         ),
         onPressed: () => !_isLoading ? _toggleFormType() : null,
       ),
+      SizedBox(height: 16.0),
+      Offstage(
+        offstage: !_isLoading,
+        child: Center(child: CircularProgressIndicator(),),
+      ),
     ];
   }
 
@@ -281,7 +300,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     return TextField(
       decoration: InputDecoration(
         labelText: "Password",
-        errorText: showErrorText ? widget.invalidPasswordErrorText : null,
+        errorText: _weakPassword ? widget.weakPasswordText : (showErrorText ? widget.invalidPasswordErrorText : null),
         enabled: !_isLoading,
       ),
       controller: _passwordController,
@@ -323,6 +342,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       _isLoading = true;
       _incorrectEmailOrPassword = false;
       _incorrectEmailFormat = false;
+      _weakPassword = false;
     });
     try {
       final auth = Provider.of<AuthBase>(context, listen: false);
@@ -331,6 +351,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       } else {
         await auth
             .createUserWithEmailAndPassword(_email.trim(), _password);
+        _createFireBaseUser();
       }
       Navigator.of(context).pop();
     } catch (e) {
@@ -343,8 +364,16 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
             widget.invalidEmailFormatText();
           }
           break;
+        case "ERROR_WEAK_PASSWORD":
+          {
+            setState(() {
+              _weakPassword = true;
+            });
+          }
+          break;
         default:
           {
+            print(e.toString());
             setState(() {
               _incorrectEmailOrPassword = true;
             });
@@ -359,12 +388,23 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     }
   }
 
+  void _createFireBaseUser() async {
+    final auth = Provider.of<AuthBase>(context, listen: false);
+    User user = await auth.currentUser();
+    Firestore.instance.collection('users').document(user.uid).setData({
+      'name': _name.trim(),
+      'email': _email.trim(),
+      'created': FieldValue.serverTimestamp(),
+    });
+  }
+
   void _forgetMyPassword(BuildContext context) {
     setState(() {
       _submitted = false;
       _isLoading = false;
       _incorrectEmailFormat = false;
       _incorrectEmailOrPassword = false;
+      _weakPassword = false;
       _emailController.clear();
       _passwordController.clear();
       _nameController.clear();
@@ -392,6 +432,7 @@ class EmailAndPasswordValidators {
   final StringValidator passwordValidator = NonEmptyStringValidator();
   final StringValidator nameValidator = NonEmptyStringValidator();
   final String invalidNameErrorText = "Username cannot be empty";
+  final String weakPasswordText = "Password cannot be less than 6 characters";
   String invalidEmailErrorText;
   String invalidPasswordErrorText;
 

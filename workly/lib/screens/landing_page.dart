@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:workly/screens/sign_in_page.dart';
 import 'package:workly/services/auth.dart';
+import 'package:workly/services/database.dart';
 import 'package:workly/wrappers/navbar_wrapper.dart';
 
 class LandingPage extends StatelessWidget {
@@ -17,7 +18,10 @@ class LandingPage extends StatelessWidget {
           if (user == null) {
             return SignInPage();
           } else {
-            return NavbarWrapper();
+            return Provider<Database>(
+              create: (_) => FirestoreDatabase(uid: user.uid),
+              child: NavbarWrapper(),
+            );
           }
             /*
             Container (
