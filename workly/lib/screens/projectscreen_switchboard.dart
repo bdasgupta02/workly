@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:workly/screens/projectscreen_list.dart';
 import 'dart:collection';
-
 import 'package:workly/wrappers/navbar_wrapper.dart';
+import 'package:workly/wrappers/project_tabbar_wrapper.dart';
 
 _ProjectSwitchboardState projectSwitchboardState;
 //[Note] Change to Provider system if possible
@@ -25,6 +25,7 @@ class _ProjectSwitchboardState extends State<ProjectSwitchboard> with AutomaticK
   static Queue _projectHistory = Queue();
   static final List<Widget> _subScreens = [
     AllProjects(),
+    ProjectTabWrapper(),
   ];
 
   bool emptyProjectHistory() {

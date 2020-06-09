@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:workly/models/user_projects.dart';
 import 'package:workly/resuable_widgets/custom_appbar.dart';
+import 'package:workly/screens/projectscreen_switchboard.dart';
 import 'package:workly/services/database.dart';
 
 class AllProjects extends StatefulWidget {
@@ -397,7 +398,7 @@ class Project {
     String newDesc = desc.length > 65 ? desc.substring(0, 65) + ' ...' : desc;
 
     //[Placeholder] To navigate to project sub screens
-    Function _goToSubScreen = () => null;
+    Function _goToSubScreen = () => projectSwitchboardState.changeProjectScreen(1);
 
     return Container(
       margin: EdgeInsets.only(right: 10, left: 10, bottom: 12),
