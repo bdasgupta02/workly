@@ -13,8 +13,20 @@ class AllProjects extends StatefulWidget {
 class _AllProjectsState extends State<AllProjects> {
   //[Note] Make static sub screens
 
+  final FocusNode _projectNameFocusNode = FocusNode();
+  final FocusNode _projectDescriptionFocusNode = FocusNode();
+  final FocusNode _projectDeadlineFocusNode = FocusNode();
+  final TextEditingController _projectNameController = TextEditingController();
+  final TextEditingController _projectDescriptionController =
+      TextEditingController();
+  final TextEditingController _projectDeadlineController =
+      TextEditingController();
+  final TextEditingController _projectCodeController = TextEditingController();
+  bool _joinProject = false;
+
   @override
   Widget build(BuildContext context) {
+    final database = Provider.of<Database>(context, listen: false);
     return Scaffold(
       appBar: CustomAppbar.appBar('Projects'),
       backgroundColor: Color(0xFFE9E9E9),
@@ -22,62 +34,313 @@ class _AllProjectsState extends State<AllProjects> {
       //   padding: EdgeInsets.all(10),
       //   child: ListContructor.test(),
       // ),
-      body: _buildContents(context),
+      body: Padding(
+        padding: EdgeInsets.all(10),
+        child: _buildProjectList(context),
+      ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.note_add),
-        onPressed: () => createProject(context)
+        onPressed: () => {
+          setState(() {
+            _joinProject = false;
+          }),
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return _buildProjectForm(database);
+            },
+            barrierDismissible: true,
+          ),
+        },
       ),
     );
   }
-}
-//Generate a 6digit project id
-String get generateProjectId {
-  var rng = Random();
-  var list = new List(); 
-  var code = "";
-  list.add(rng.nextInt(26) + 97);
-  list.add(rng.nextInt(26) + 65);
-  list.add(rng.nextInt(10) + 48);
-  list.add(rng.nextInt(26) + 65);
-  list.add(rng.nextInt(26) + 97);
-  list.add(rng.nextInt(10) + 48);
-  for (var numGen in list) {
-    code += String.fromCharCode(numGen);
-  }
-  return code;
-} 
 
-//For creating a new project, will need to link the fields to the form, or transfer codes to the form
-Future<void> createProject(BuildContext context) async {
-  final database = Provider.of<Database>(context, listen: false);
-  String code = generateProjectId;
-  while (await database.checkCode(code)) {
-    code = generateProjectId;
+  Widget _buildProjectForm(Database database) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(48.0),
+      ),
+      child: StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return SingleChildScrollView(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(48)),
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(left: 12, right: 12, bottom: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Container(
+                      alignment: Alignment.topLeft,
+                      child: FlatButton.icon(
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: Colors.black,
+                        ),
+                        label: Text(
+                          "Close",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                            fontFamily: 'Roboto',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(34.0),
+                        ),
+                      ),
+                    ),
+                    Offstage(
+                      offstage: _joinProject,
+                      child: Column(
+                        children: <Widget>[
+                          _projectNameField(),
+                          SizedBox(
+                            height: 25,
+                          ),
+                          _projectDescriptionField(),
+                          SizedBox(
+                            height: 5,
+                          ),
+                          _projectDeadlineField(database),
+                        ],
+                      ),
+                    ),
+                    Offstage(
+                      offstage: !_joinProject,
+                      child: _projectCodeField(database),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      child: FlatButton(
+                        onPressed: () => _createProject(database),
+                        child: Text(
+                          _joinProject ? "Join Project!" : 'Create Project!',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontFamily: 'Roboto',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        color: Colors.grey[200],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(34.0),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      alignment: Alignment.center,
+                      child: Text("OR"),
+                    ),
+                    Container(
+                      child: FlatButton(
+                        onPressed: () => {
+                          setState(() {
+                            _joinProject = !_joinProject;
+                          })
+                        },
+                        child: Text(
+                          _joinProject
+                              ? 'Create a Project instead!'
+                              : 'Join a Project instead!',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontFamily: 'Roboto',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        color: Colors.grey[200],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(34.0),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
-  print(code);
-  await database.createUserProject(code, {
-    "name" : "test",
-  });
-}
-//For reading streamdata for projects
-Widget _buildContents(BuildContext context) {
-  final database = Provider.of<Database>(context);
-  return StreamBuilder<List<UserProjects>>(
-    stream: database.userProjectsStream(),
-    builder: (context, snapshot) {
-      if (snapshot.hasData) {
-        final userProjects = snapshot.data;
-        final list = userProjects.map((project) => Project(name: project.name, desc: "TEST", deadline: "01/01/01")).toList();
-        return ListContructor.construct(list);
-      }
-      if (snapshot.hasError) {
-        return Center(child: Text('Error in UserProjects Stream'));
-      }
-      return Center(child: CircularProgressIndicator());
+
+  void _updateState() {
+    setState(() {});
+  }
+
+  String get _projectName => _projectNameController.text;
+  String get _projectDescription => _projectDescriptionController.text;
+  String get _projectDeadline => _projectDeadlineController.text;
+  String get _projectCode => _projectCodeController.text;
+
+  Widget _projectNameField() {
+    return TextField(
+      decoration: InputDecoration(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
+        labelText: "Project Title",
+        hintText: "Title for your project",
+        errorText: null,
+      ),
+      controller: _projectNameController,
+      textInputAction: TextInputAction.next,
+      focusNode: _projectNameFocusNode,
+      onChanged: (name) => _updateState(),
+      onEditingComplete: () => _projectNameEditingComplete(),
+      showCursor: true,
+      textAlign: TextAlign.start,
+    );
+  }
+
+  Widget _projectDescriptionField() {
+    return TextField(
+      decoration: InputDecoration(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
+        labelText: "Project Description",
+        hintText: "Description for your project",
+      ),
+      controller: _projectDescriptionController,
+      textInputAction: TextInputAction.next,
+      focusNode: _projectDescriptionFocusNode,
+      onChanged: (desc) => _updateState(),
+      onEditingComplete: () => _projectDescriptionEditingComplete(),
+      maxLines: null,
+      showCursor: true,
+      maxLengthEnforced: true,
+      maxLength: 300,
+      textAlign: TextAlign.start,
+    );
+  }
+
+  Widget _projectDeadlineField(Database database) {
+    return TextField(
+      decoration: InputDecoration(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
+        labelText: "Project Deadline",
+        hintText: "DD/MM/YYYY",
+        errorText: null,
+      ),
+      controller: _projectDeadlineController,
+      textInputAction: TextInputAction.next,
+      focusNode: _projectDeadlineFocusNode,
+      onChanged: (date) => _updateState(),
+      onEditingComplete: () => _createProject(database),
+      keyboardType: TextInputType.datetime,
+      showCursor: true,
+      textAlign: TextAlign.start,
+    );
+  }
+
+  Widget _projectCodeField(Database database) {
+    return TextField(
+      decoration: InputDecoration(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
+        labelText: "Project Code",
+        hintText: "Unique Project Code",
+        errorText: null,
+      ),
+      controller: _projectCodeController,
+      textInputAction: TextInputAction.next,
+      onChanged: (code) => _updateState(),
+      onEditingComplete: () => _createProject(database),
+      showCursor: true,
+      textAlign: TextAlign.start,
+    );
+  }
+
+  void _projectNameEditingComplete() {
+    final newFocus = _projectName.trim().isNotEmpty
+        ? _projectDescriptionFocusNode
+        : _projectNameFocusNode;
+    FocusScope.of(context).requestFocus(newFocus);
+  }
+
+  void _projectDescriptionEditingComplete() {
+    final newFocus = _projectDescription.trim().isNotEmpty
+        ? _projectDeadlineFocusNode
+        : _projectDescriptionFocusNode;
+    FocusScope.of(context).requestFocus(newFocus);
+  }
+
+  void _createProject(Database database) {
+    if (_joinProject) {
+      print("joinproject");
+    } else {
+      print("createproejct");
+      createProject(database);
     }
-  );
-}
+    Navigator.of(context).pop();
+  }
 
+  //Generate a 6digit project id
+  String get generateProjectId {
+    var rng = Random();
+    var list = new List();
+    var code = "";
+    list.add(rng.nextInt(26) + 97);
+    list.add(rng.nextInt(26) + 65);
+    list.add(rng.nextInt(10) + 48);
+    list.add(rng.nextInt(26) + 65);
+    list.add(rng.nextInt(26) + 97);
+    list.add(rng.nextInt(10) + 48);
+    for (var numGen in list) {
+      code += String.fromCharCode(numGen);
+    }
+    return code;
+  }
+
+  //For creating a new project, will need to link the fields to the form, or transfer codes to the form
+  Future<void> createProject(Database database) async {
+    String code = generateProjectId;
+    while (await database.checkCode(code)) {
+      code = generateProjectId;
+    }
+    print(code);
+    await database.createUserProject(code, {
+      "title": _projectName,
+      "code": code,
+      "description": _projectDescription,
+      "deadline": _projectDeadline,
+    });
+    setState(() {
+      _projectNameController.clear();
+      _projectDescriptionController.clear();
+      _projectDeadlineController.clear();
+      _projectCodeController.clear();
+      _joinProject = false;
+    });
+  }
+
+  //For reading streamdata for projects
+  Widget _buildProjectList(BuildContext context) {
+    final database = Provider.of<Database>(context);
+    return StreamBuilder<List<UserProjects>>(
+        stream: database.userProjectsStream(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final userProjects = snapshot.data;
+            final list = userProjects
+                .map((project) => Project(
+                    name: project.title, desc: project.description, deadline: project.deadline)
+                ).toList();
+            return ListContructor.construct(list);
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error in UserProjects Stream'));
+          }
+          return Center(child: CircularProgressIndicator());
+        });
+  }
+}
 
 //[Note] Constructs the list of widgets based on project objects by calling the construct() method
 class ListContructor {

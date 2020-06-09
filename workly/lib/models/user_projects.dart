@@ -1,23 +1,35 @@
 import 'package:flutter/material.dart';
 
 class UserProjects {
-  final String name;
+  final String title;
+  final String description;
+  final String deadline;
+  final String code;
   
   UserProjects({
-    @required this.name,
+    @required this.title,
+    @required this.description,
+    @required this.deadline,
+    @required this.code,
   });
 
   factory UserProjects.fromMap(Map<String, dynamic> data) {
     if (data == null) {
       return null;
     }
-    final String name = data['name'];
-    return UserProjects(name: name,);
+    final String title = data['title'];
+    final String description = data['description'];
+    final String deadline = data['deadline'];
+    final String code = data['code'];
+    return UserProjects(title: title, description: description, deadline: deadline, code: code);
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'name': name,
+      'title': title,
+      'description': description,
+      'deadline': deadline,
+      'code': code,
     };
   }
 }
