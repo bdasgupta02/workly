@@ -24,6 +24,9 @@ class _AllProjectsState extends State<AllProjects> {
       TextEditingController();
   final TextEditingController _projectCodeController = TextEditingController();
   bool _joinProject = false;
+  bool _titleValid = true;
+  bool _dateValid = true;
+  bool _codeValid = true;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +46,14 @@ class _AllProjectsState extends State<AllProjects> {
         child: Icon(Icons.note_add),
         onPressed: () => {
           setState(() {
+            _projectNameController.clear();
+            _projectDescriptionController.clear();
+            _projectDeadlineController.clear();
+            _projectCodeController.clear();
             _joinProject = false;
+            _codeValid = true;
+            _titleValid = true;
+            _dateValid = true;
           }),
           showDialog(
             context: context,
@@ -92,7 +102,9 @@ class _AllProjectsState extends State<AllProjects> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () => {
+                          Navigator.of(context).pop(),
+                        },
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(34.0),
                         ),
@@ -123,7 +135,18 @@ class _AllProjectsState extends State<AllProjects> {
                     ),
                     Container(
                       child: FlatButton(
-                        onPressed: () => _createProject(database),
+                        onPressed: () => {
+                          if (_joinProject ? _projectCode.isEmpty : (_projectName.isEmpty || _projectDeadline.isEmpty)) {
+                            print("CHECK"),
+                            setState(() {
+                              _codeValid = _joinProject ? _projectCode.isNotEmpty : true;
+                              _titleValid = _joinProject ? true : _projectName.isNotEmpty;
+                              _dateValid = _joinProject ? true : _projectDeadline.isNotEmpty;
+                            }),
+                          } else {
+                            _createProject(database),
+                          }
+                        },
                         child: Text(
                           _joinProject ? "Join Project!" : 'Create Project!',
                           style: TextStyle(
@@ -190,7 +213,7 @@ class _AllProjectsState extends State<AllProjects> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
         labelText: "Project Title",
         hintText: "Title for your project",
-        errorText: null,
+        errorText: _titleValid ? null : "Title cannot be empty",
       ),
       controller: _projectNameController,
       textInputAction: TextInputAction.next,
@@ -228,13 +251,13 @@ class _AllProjectsState extends State<AllProjects> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
         labelText: "Project Deadline",
         hintText: "DD/MM/YYYY",
-        errorText: null,
+        errorText: _dateValid ? null : "Deadline cannot be empty",
       ),
       controller: _projectDeadlineController,
       textInputAction: TextInputAction.next,
       focusNode: _projectDeadlineFocusNode,
       onChanged: (date) => _updateState(),
-      onEditingComplete: () => _createProject(database),
+      //onEditingComplete: () => _createProject(database),
       keyboardType: TextInputType.datetime,
       showCursor: true,
       textAlign: TextAlign.start,
@@ -247,7 +270,7 @@ class _AllProjectsState extends State<AllProjects> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
         labelText: "Project Code",
         hintText: "Unique Project Code",
-        errorText: null,
+        errorText: _codeValid ? null : "Project Code cannot be empty",
       ),
       controller: _projectCodeController,
       textInputAction: TextInputAction.next,
@@ -272,12 +295,23 @@ class _AllProjectsState extends State<AllProjects> {
     FocusScope.of(context).requestFocus(newFocus);
   }
 
-  void _createProject(Database database) {
+  Future<void> _createProject(Database database) async {
     if (_joinProject) {
       print("joinproject");
+      await database.joinProject(_projectCode);
     } else {
-      print("createproejct");
-      createProject(database);
+      print("createproject");
+      String code = generateProjectId;
+      while (await database.checkCode(code)) {
+        code = generateProjectId;
+      }
+      print(code);
+      await database.createUserProject(code, {
+        "title": _projectName,
+        "code": code,
+        "description": _projectDescription,
+        "deadline": _projectDeadline,
+      });
     }
     Navigator.of(context).pop();
   }
@@ -299,28 +333,6 @@ class _AllProjectsState extends State<AllProjects> {
     return code;
   }
 
-  //For creating a new project, will need to link the fields to the form, or transfer codes to the form
-  Future<void> createProject(Database database) async {
-    String code = generateProjectId;
-    while (await database.checkCode(code)) {
-      code = generateProjectId;
-    }
-    print(code);
-    await database.createUserProject(code, {
-      "title": _projectName,
-      "code": code,
-      "description": _projectDescription,
-      "deadline": _projectDeadline,
-    });
-    setState(() {
-      _projectNameController.clear();
-      _projectDescriptionController.clear();
-      _projectDeadlineController.clear();
-      _projectCodeController.clear();
-      _joinProject = false;
-    });
-  }
-
   //For reading streamdata for projects
   Widget _buildProjectList(BuildContext context) {
     final database = Provider.of<Database>(context);
@@ -334,11 +346,11 @@ class _AllProjectsState extends State<AllProjects> {
                     name: project.title, desc: project.description, deadline: project.deadline)
                 ).toList();
             return ListContructor.construct(list);
-          }
-          if (snapshot.hasError) {
+          } else if (snapshot.hasError) {
             return Center(child: Text('Error in UserProjects Stream'));
+          } else {
+            return Center(child: CircularProgressIndicator());
           }
-          return Center(child: CircularProgressIndicator());
         });
   }
 }
