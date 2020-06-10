@@ -395,7 +395,7 @@ class Project {
   //[Note] This generates a SINGLE widget tile based on the project object attributes.
   // If an object is not used, can just use those 3 strings in any way possible.
   Widget makeWidgetTile() {
-    String newDesc = desc.length > 65 ? desc.substring(0, 65) + ' ...' : desc;
+    String newDesc = desc.length > 65 ? desc.substring(0, 65) + '...' : desc;
 
     //[Placeholder] To navigate to project sub screens
     Function _goToSubScreen = () => projectSwitchboardState.changeProjectScreen(1);
