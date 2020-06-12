@@ -36,56 +36,58 @@ class _ProjectChatState extends State<ProjectChat> {
   }
 
   Widget makeTextBar() {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xFFFCFCFC),
-                borderRadius: BorderRadius.all(Radius.circular(35)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black38.withOpacity(0.08),
-                    spreadRadius: 2,
-                    blurRadius: 25,
-                    offset: Offset(0, 7),
+    return Container(
+      margin: EdgeInsets.only(left: 20, bottom: 10),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color(0xFFFCFCFC),
+                  borderRadius: BorderRadius.all(Radius.circular(35)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black38.withOpacity(0.08),
+                      spreadRadius: 2,
+                      blurRadius: 25,
+                      offset: Offset(0, 7),
+                    ),
+                  ],
+                ),
+                padding: EdgeInsets.only(left: 10, right: 10),
+                child: TextField(
+                  maxLines: 1,
+                  decoration: new InputDecoration(
+                    border: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    contentPadding:
+                        EdgeInsets.only(left: 7, right: 7),
+                    hintText: 'Tap to chat',
+                    hintStyle: TextStyle(
+                        fontFamily: 'Roboto',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black38),
                   ),
-                ],
-              ),
-              padding: EdgeInsets.only(left: 10, right: 10),
-              margin: EdgeInsets.only(left: 20, bottom: 10),
-              child: TextField(
-                maxLines: 1,
-                decoration: new InputDecoration(
-                  border: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  errorBorder: InputBorder.none,
-                  disabledBorder: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.only(left: 7, bottom: 8, top: 3, right: 7),
-                  hintText: 'Tap to chat',
-                  hintStyle: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black38),
                 ),
               ),
             ),
-          ),
-          sendButton(),
-        ],
+            sendButton(),
+          ],
+        ),
       ),
     );
   }
 
   Widget sendButton() {
     return Container(
-      margin: EdgeInsets.only(bottom: 7, right: 10, left: 10),
-          child: IconButton(
+      margin: EdgeInsets.only(right: 10, left: 10),
+      child: IconButton(
           icon: Icon(
             Icons.send,
             size: 30,
