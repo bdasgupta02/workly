@@ -11,7 +11,7 @@ class ProjectTabWrapper extends StatefulWidget {
 
 class _ProjectTabWrapperState extends State<ProjectTabWrapper> {
   var _index = 0;
-  final _screens = [
+  static final _screens = [
     ProjectChat(),
     ProjectTaskWrapper(),
     ProjectIdeas(),
@@ -22,12 +22,10 @@ class _ProjectTabWrapperState extends State<ProjectTabWrapper> {
     return Scaffold(
       backgroundColor: _index == 1 ? Color(0xFFFCFCFC) : Color(0xFFE9E9E9),
       appBar: CustomAppbar.appBarDark('Project title goes here'),
-      body: Column(
-        children: <Widget>[
-          tab(),
-          _screens[_index],
-        ],
-      ),
+      body: Column(children: <Widget>[
+        tab(),
+        Expanded(child: _screens[_index]),
+      ],),
     );
   }
 
@@ -58,7 +56,7 @@ class _ProjectTabWrapperState extends State<ProjectTabWrapper> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(30),
       ),
-      color: order == _index ? Color(0xFFF87892) : Color(0xFFFCFCFC),
+      color: order == _index ? Color(0xFF24DCB7) : Color(0xFFFCFCFC),
       onPressed: () => customPage(order),
       child: Padding(
         padding: EdgeInsets.only(top: 2),

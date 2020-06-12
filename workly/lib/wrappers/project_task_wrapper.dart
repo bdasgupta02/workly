@@ -22,36 +22,34 @@ class _ProjectTaskWrapperState extends State<ProjectTaskWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        color: Color(0xFFE9E9E9),
-        child: Column(
-          children: <Widget>[
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(35),
-                  bottomRight: Radius.circular(35)),
-              child: Container(
-                color: Color(0xFFFCFCFC),
-                padding: EdgeInsets.only(left: 50, right: 50),
-                child: Row(
-                  children: <Widget>[
-                    SizedBox(height: 10),
-                    Expanded(child: createButton('All Tasks', 0)),
-                    Container(
-                      color: Colors.black45,
-                      width: 1,
-                      height: 10,
-                    ),
-                    Expanded(child: createButton('My Tasks', 1)),
-                  ],
-                ),
+    return Container(
+      color: Color(0xFFE9E9E9),
+      child: Column(
+        children: <Widget>[
+          ClipRRect(
+            borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(35),
+                bottomRight: Radius.circular(35)),
+            child: Container(
+              color: Color(0xFFFCFCFC),
+              padding: EdgeInsets.only(left: 50, right: 50),
+              child: Row(
+                children: <Widget>[
+                  SizedBox(height: 10),
+                  Expanded(child: createButton('All Tasks', 0)),
+                  Container(
+                    color: Colors.black45,
+                    width: 1,
+                    height: 10,
+                  ),
+                  Expanded(child: createButton('My Tasks', 1)),
+                ],
               ),
             ),
-            SizedBox(height: 10),
-            _screens[_index],
-          ],
-        ),
+          ),
+          SizedBox(height: 10),
+          Expanded(child: _screens[_index]),
+        ],
       ),
     );
   }
@@ -64,7 +62,7 @@ class _ProjectTaskWrapperState extends State<ProjectTaskWrapper> {
       onPressed: () => customPage(order),
       child: Padding(
         padding: EdgeInsets.only(top: 3),
-              child: Text(
+        child: Text(
           tab,
           style: TextStyle(
               fontSize: 16,

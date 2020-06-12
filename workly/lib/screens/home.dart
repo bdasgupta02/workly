@@ -12,8 +12,6 @@ Overall notes: places that need replacing after database:
 */
 
 class Home extends StatefulWidget {
-
-
   @override
   _HomeState createState() => _HomeState();
 }
