@@ -133,7 +133,11 @@ class Message {
       this.sameUserAsNext,
       this.isEvent});
 
-  //[Action] Maybe can make a method to change the same user as next field
+  //[Note] This method changes this msg's properties to indicate if it's from the same user as the next msg.
+  // Once the same user texts another msg after this one, this field for this msg needs to be changed to true;
+  void changeUserAsNext(bool b) {
+    sameUserAsNext = b;
+  }
 
   Widget makeChatTile() {
     if (isEvent) {
