@@ -134,7 +134,8 @@ class Message {
       this.isEvent});
 
   //[Note] This method changes this msg's properties to indicate if it's from the same user as the next msg.
-  // Once the same user texts another msg after this one, this field for this msg needs to be changed to true;
+  // Once the same user texts another msg after this one, this field for this msg needs to be changed to true
+  // and the screen's ListView needs to be rebuilt.
   void changeUserAsNext(bool b) {
     sameUserAsNext = b;
   }
