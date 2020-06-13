@@ -257,7 +257,7 @@ class Message {
                 ? Color(0xFF00CFF8).withOpacity(0.4)
                 : Colors.black38.withOpacity(0.08),
             spreadRadius: 2,
-            blurRadius: 25,
+            blurRadius: 15,
             offset: Offset(0, 3),
           ),
         ],
@@ -265,7 +265,7 @@ class Message {
       padding: EdgeInsets.only(top: 11, bottom: 11, left: 12, right: 12),
       margin: EdgeInsets.only(
         right: 10,
-        bottom: sameUserAsNext ? 12 : 19,
+        bottom: sameUserAsNext ? 8 : 25,
       ),
       child: Column(
         crossAxisAlignment:
