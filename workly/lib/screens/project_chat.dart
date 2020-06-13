@@ -119,7 +119,7 @@ class MessageList {
 class Message {
   var name;
   var msg;
-  var img;
+  ImageProvider<dynamic> img;
   var time; //[Note] For now time is in string format
   bool user; //[Note] If this is the user's own msg
   bool sameUserAsNext; //[Note] If this msg is from the same user as the next
