@@ -40,6 +40,7 @@ class Tester {
         desc: 'Test Desc 3',
         priority: 2,
         state: 2,
+        deadline: '28/07/2020',
         toPress: () => null,
       ),
     ];
