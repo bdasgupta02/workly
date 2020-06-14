@@ -47,7 +47,6 @@ class _ProjectTaskWrapperState extends State<ProjectTaskWrapper> {
               ),
             ),
           ),
-          SizedBox(height: 10),
           Expanded(child: _screens[_index]),
         ],
       ),

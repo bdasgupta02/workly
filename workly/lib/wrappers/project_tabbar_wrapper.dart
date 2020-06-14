@@ -56,7 +56,7 @@ class _ProjectTabWrapperState extends State<ProjectTabWrapper> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(30),
       ),
-      color: order == _index ? Color(0xFF24DCB7) : Color(0xFFFCFCFC),
+      color: order == _index ? Color(0xFF06D8AE) : Color(0xFFFCFCFC),
       onPressed: () => customPage(order),
       child: Padding(
         padding: EdgeInsets.only(top: 2),

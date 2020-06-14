@@ -40,7 +40,8 @@ class _AllProjectsState extends State<AllProjects> {
         child: _buildProjectList(context),
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.note_add),
+        child: Icon(Icons.library_add),
+        backgroundColor: Color(0xFF06D8AE),
         onPressed: () => {
           setState(() {
             _joinProject = false;
