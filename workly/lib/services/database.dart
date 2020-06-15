@@ -97,7 +97,7 @@ class FirestoreDatabase implements Database {
     @required String path,
     @required T builder(Map<String, dynamic> data),
   }) {
-    final reference = Firestore.instance.collection(path);
+    final reference = Firestore.instance.collection(path).orderBy("deadline", descending: false);
     final snapshots = reference.snapshots();
     return snapshots.map((snapshot) => snapshot.documents.map((snapshot) => builder(snapshot.data)).toList());
   }

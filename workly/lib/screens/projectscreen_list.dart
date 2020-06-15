@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:workly/models/user_projects.dart';
@@ -45,6 +46,8 @@ class _AllProjectsState extends State<AllProjects> {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.note_add),
         onPressed: () => {
+          print(_convertFromString("1/2/30").toDate()),
+          //print(Timestamp.fromDate(DateTime.parse("20200202")).toDate().toString().substring(0,10)),
           setState(() {
             _projectNameController.clear();
             _projectDescriptionController.clear();
@@ -136,12 +139,12 @@ class _AllProjectsState extends State<AllProjects> {
                     Container(
                       child: FlatButton(
                         onPressed: () => {
-                          if (_joinProject ? _projectCode.isEmpty : (_projectName.isEmpty || _projectDeadline.isEmpty)) {
+                          if (_joinProject ? _projectCode.isEmpty : (_projectName.isEmpty || _projectDeadline.isEmpty || !_projectDeadline.contains("/"))) {
                             print("CHECK"),
                             setState(() {
                               _codeValid = _joinProject ? _projectCode.isNotEmpty : true;
                               _titleValid = _joinProject ? true : _projectName.isNotEmpty;
-                              _dateValid = _joinProject ? true : _projectDeadline.isNotEmpty;
+                              _dateValid = _joinProject ? true : (_projectDeadline.isNotEmpty && _projectDeadline.contains("/"));
                             }),
                           } else {
                             _createProject(database),
@@ -251,7 +254,7 @@ class _AllProjectsState extends State<AllProjects> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
         labelText: "Project Deadline",
         hintText: "DD/MM/YYYY",
-        errorText: _dateValid ? null : "Deadline cannot be empty",
+        errorText: _dateValid ? null : "Please enter Deadline in this format: DD/MM/YYYY",
       ),
       controller: _projectDeadlineController,
       textInputAction: TextInputAction.next,
@@ -310,10 +313,22 @@ class _AllProjectsState extends State<AllProjects> {
         "title": _projectName,
         "code": code,
         "description": _projectDescription,
-        "deadline": _projectDeadline,
+        "deadline": _convertFromString(_projectDeadline),
       });
     }
     Navigator.of(context).pop();
+  }
+
+  Timestamp _convertFromString(String date) {
+    int indexOfSlash = date.indexOf("/");
+    String _dd = date.substring(0,indexOfSlash);
+    String dd = _dd.length < 2 ? "0" + _dd : _dd;
+    int indexOfSecondSlash = date.substring(indexOfSlash+1).indexOf("/");
+    String _mm = date.substring(indexOfSlash+1).substring(0, indexOfSecondSlash);
+    String mm = _mm.length < 2 ? "0" + _mm : _mm;
+    String _yyyy = date.substring(indexOfSlash+1).substring(indexOfSecondSlash+1);
+    String yyyy = _yyyy.length == 2 ? "20" + _yyyy : _yyyy;
+    return Timestamp.fromDate(DateTime.parse(yyyy+mm+dd));
   }
 
   //Generate a 6digit project id
@@ -431,6 +446,7 @@ class Project {
           Expanded(
             flex: 6,
             child: Container(
+              alignment: Alignment.centerLeft,
               decoration: BoxDecoration(
                 color: Color(0xFFFCFCFC),
                 borderRadius: BorderRadius.all(Radius.circular(30)),
