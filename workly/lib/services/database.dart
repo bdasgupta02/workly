@@ -28,7 +28,7 @@ class FirestoreDatabase implements Database {
     String _code;
     String _title;
     String _description;
-    String _deadline;
+    Timestamp _deadline;
     await Firestore.instance.collection('projects').document(projectId).get().then((value) {
       _code = value.data['code'];
       _title = value.data['title'];
