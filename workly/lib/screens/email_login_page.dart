@@ -395,6 +395,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       'name': _name.trim(),
       'email': _email.trim(),
       'created': FieldValue.serverTimestamp(),
+      'uid': user.uid,
     });
   }
 

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class UserProjects {
@@ -19,9 +20,17 @@ class UserProjects {
     }
     final String title = data['title'];
     final String description = data['description'];
-    final String deadline = data['deadline'];
+    final Timestamp deadline = data['deadline'];
     final String code = data['code'];
-    return UserProjects(title: title, description: description, deadline: deadline, code: code);
+    
+    String date = deadline.toDate().toString().substring(0,10);
+    int indexOfSlash = date.indexOf("-");
+    String _yyyy = date.substring(0,indexOfSlash);
+    int indexOfSecondSlash = date.substring(indexOfSlash+1).indexOf("-");
+    String _mm = date.substring(indexOfSlash+1).substring(0, indexOfSecondSlash);
+    String _dd = date.substring(indexOfSlash+1).substring(indexOfSecondSlash+1);
+    String formattedDeadline =  _dd + "/" + _mm + "/" + _yyyy;
+    return UserProjects(title: title, description: description, deadline: formattedDeadline, code: code);
   }
 
   Map<String, dynamic> toMap() {
