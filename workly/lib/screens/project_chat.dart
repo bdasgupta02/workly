@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:workly/models/chat_message.dart';
+import 'package:workly/services/project_database.dart';
 
 /*
 Functionality add-on: Enter to send (probably a TextField constructor field).
@@ -23,12 +26,15 @@ class ProjectChat extends StatefulWidget {
 }
 
 class _ProjectChatState extends State<ProjectChat> {
+  final TextEditingController _chatMessageController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
         Expanded(
-          child: Tester.test(),
+          //child: Tester.test(),
+          child: _buildProjectList(),
         ),
         makeTextBar(),
       ],
@@ -58,7 +64,6 @@ class _ProjectChatState extends State<ProjectChat> {
                 ),
                 padding: EdgeInsets.only(left: 10, right: 10),
                 child: TextField(
-                  maxLines: 1,
                   decoration: new InputDecoration(
                     border: InputBorder.none,
                     focusedBorder: InputBorder.none,
@@ -74,6 +79,14 @@ class _ProjectChatState extends State<ProjectChat> {
                         fontWeight: FontWeight.w400,
                         color: Colors.black38),
                   ),
+                  controller: _chatMessageController,
+                  onChanged: (message) => {
+                    setState(() {}),
+                  },
+                  maxLines: null,
+                  maxLengthEnforced: true,
+                  maxLength: 500,
+                  textAlign: TextAlign.start,
                 ),
               ),
             ),
@@ -84,18 +97,61 @@ class _ProjectChatState extends State<ProjectChat> {
     );
   }
 
+  String get _message => _chatMessageController.text;
+
   Widget sendButton() {
     return Container(
       margin: EdgeInsets.only(right: 10, left: 10),
       child: IconButton(
-          icon: Icon(
-            Icons.send,
-            size: 30,
-            color: Color(0xFF24DCB7),
-          ),
-          onPressed: () => null),
+        icon: Icon(
+          Icons.send,
+          size: 30,
+          color: Color(0xFF24DCB7),
+        ),
+        onPressed: () => _message.isEmpty ? null : sendMessage(),
+      ),
     );
   }
+
+  void sendMessage() async {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    await database.createNewMessage(_message);
+    setState(() {
+      _chatMessageController.clear();
+    });
+  }
+
+  Widget _buildProjectList() {
+  final database = Provider.of<ProjectDatabase>(context, listen: false);
+    return StreamBuilder<List<ChatMessage>>(
+      stream: database.chatStream(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final chatMessages = snapshot.data;
+          final chatList = chatMessages
+              .map((chat) => Message(
+                  name: chat.name, msg: chat.message, time: chat.time, user: chat.user == database.getUid(), isEvent: chat.event)
+              ).toList();
+          return ListView.builder(
+            shrinkWrap: true,
+            reverse: true,
+            itemCount: chatList.length,
+            itemBuilder: (BuildContext context, int idx) {
+              final Message draftMsg = chatList[chatList.length - 1 - idx];
+              bool _sameUserAsNext = (chatList.length - idx) ==  chatList.length ? false : chatList[chatList.length - idx].user == chatList[chatList.length - 1 - idx].user;
+              final Message msg = Message(name: draftMsg.name, msg: draftMsg.msg, time: draftMsg.time, user: draftMsg.user, sameUserAsNext: _sameUserAsNext, isEvent: draftMsg.isEvent);
+              return msg.makeChatTile();
+            },
+          );
+        } else if (snapshot.hasError) {
+          print(snapshot.error);
+          return Center(child: CircularProgressIndicator());
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      });
+  }
+
 }
 
 class MessageList {
@@ -110,6 +166,14 @@ class MessageList {
       itemCount: messages.length,
       itemBuilder: (BuildContext context, int idx) {
         final Message msg = messages[messages.length - 1 - idx];
+        // print("Next");
+        // bool _sameUserAsNext = (messages.length - idx) ==  messages.length ? false : messages[messages.length - idx].name == messages[messages.length - 1 - idx].name;
+        // print(messages.length - 1 - idx);
+        // print(messages.length - idx);
+        // print(mmsg);
+        // print(messages[messages.length - 1 - idx].sameUserAsNext);
+        // print(messages[messages.length - 1 - idx].msg);
+        //final Message msg = messages[idx];
         return msg.makeChatTile();
       },
     );

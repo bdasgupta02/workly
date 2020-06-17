@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:workly/resuable_widgets/custom_appbar.dart';
 import 'package:workly/screens/project_chat.dart';
 import 'package:workly/screens/project_ideas.dart';
+import 'package:workly/services/project_database.dart';
 import 'package:workly/wrappers/project_task_wrapper.dart';
 
 class ProjectTabWrapper extends StatefulWidget {
@@ -19,9 +21,10 @@ class _ProjectTabWrapperState extends State<ProjectTabWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
     return Scaffold(
       backgroundColor: _index == 1 ? Color(0xFFFCFCFC) : Color(0xFFE9E9E9),
-      appBar: CustomAppbar.appBarDark('Project title goes here'),
+      appBar: CustomAppbar.appBarDark(database.getProjectName()),//'Project title goes here'),
       body: Column(children: <Widget>[
         tab(),
         Expanded(child: _screens[_index]),

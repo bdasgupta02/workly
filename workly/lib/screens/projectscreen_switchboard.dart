@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:workly/screens/projectscreen_list.dart';
+import 'package:workly/services/database.dart';
+import 'package:workly/services/project_database.dart';
 import 'dart:collection';
 import 'package:workly/wrappers/navbar_wrapper.dart';
 import 'package:workly/wrappers/project_tabbar_wrapper.dart';
@@ -23,7 +26,7 @@ class ProjectSwitchboard extends StatefulWidget {
 class _ProjectSwitchboardState extends State<ProjectSwitchboard> with AutomaticKeepAliveClientMixin<ProjectSwitchboard> {
   static int stateIndex = 0;
   static Queue _projectHistory = Queue();
-  static final List<Widget> _subScreens = [
+  static List<Widget> _subScreens = [
     AllProjects(),
     ProjectTabWrapper(),
   ];
@@ -32,10 +35,18 @@ class _ProjectSwitchboardState extends State<ProjectSwitchboard> with AutomaticK
     return _projectHistory.length == 0;
   }
 
-  void changeProjectScreen(int newIndex) {
+  void changeProjectScreen(int newIndex, String projectId, String projectName) {
+    final database = Provider.of<Database>(context, listen: false);
     setState(() {
       _addProjectHistory();
       stateIndex = newIndex;
+      _subScreens = [
+        AllProjects(),   
+        Provider<ProjectDatabase>(
+          create: (_) => FirestoreProjectDatabase(uid: database.getUid(), projectId: projectId, projectName: projectName),
+          child: ProjectTabWrapper(),
+        ),
+      ];
     });
     navState.clearLimit();
   }

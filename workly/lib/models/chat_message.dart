@@ -2,45 +2,48 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class ChatMessage {
-  final String from;
-  final String uid;
+  final String name;
+  final String user;
   final String message;
-  final String date;
   final String time;
+  final bool event;
   
   ChatMessage({
-    @required this.from,
-    @required this.uid,
+    @required this.name,
+    @required this.user,
     @required this.message,
-    @required this.date,
     @required this.time,
+    @required this.event,
   });
 
   factory ChatMessage.fromMap(Map<String, dynamic> data) {
     if (data == null) {
       return null;
     }
-    final String from = data['from'];
-    final String uid = data['uid'];
-    final Timestamp dateSent = data['date'];
+    final String name = data['name'];
+    final String user = data['user'];
     final String message = data['message'];
-    
-    String date = dateSent.toDate().toString().substring(0,10);
-    int indexOfSlash = date.indexOf("-");
-    String _yyyy = date.substring(0,indexOfSlash);
-    int indexOfSecondSlash = date.substring(indexOfSlash+1).indexOf("-");
-    String _mm = date.substring(indexOfSlash+1).substring(0, indexOfSecondSlash);
-    String _dd = date.substring(indexOfSlash+1).substring(indexOfSecondSlash+1);
-    String formattedDeadline =  _dd + "/" + _mm + "/" + _yyyy;
-    return ChatMessage(from: from, uid: uid, message: message, date: formattedDeadline, time:"To be formatted");
+    final Timestamp time = data['time'];
+    final bool event = data['event'];
+
+    DateTime date = DateTime.parse(time.toDate().toString());
+    // String _dd = date.day < 10 ? "0" + date.day.toString() : date.day.toString();
+    // String _mm = date.month < 10 ? "0" + date.month.toString() : date.month.toString();
+    // String _yyyy = date.year.toString();
+    String _hr = date.hour < 10 ? "0" + date.hour.toString() : date.hour.toString();
+    String _min = date.minute < 10 ? "0" + date.minute.toString() : date.minute.toString();
+    // String formattedDateTime = _dd + "/" + _mm + "/" + _yyyy + "    " + _hr + ":" + _min;
+    String formattedTime = _hr + ":" + _min;
+    return ChatMessage(name: name, user: user, message: message, time: formattedTime, event: event);
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'from': from,
-      'uid': uid,
+      'name': name,
+      'user': user,
       'message': message,
-      'date': date,
+      'time': time, 
+      'event': event,
     };
   }
 }

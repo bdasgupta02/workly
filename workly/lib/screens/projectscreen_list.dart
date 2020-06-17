@@ -351,7 +351,7 @@ class _AllProjectsState extends State<AllProjects> {
 
   //For reading streamdata for projects
   Widget _buildProjectList(BuildContext context) {
-    final database = Provider.of<Database>(context);
+    final database = Provider.of<Database>(context, listen: false);
     return StreamBuilder<List<UserProjects>>(
         stream: database.userProjectsStream(),
         builder: (context, snapshot) {
@@ -359,7 +359,7 @@ class _AllProjectsState extends State<AllProjects> {
             final userProjects = snapshot.data;
             final list = userProjects
                 .map((project) => Project(
-                    name: project.title, desc: project.description, deadline: project.deadline)
+                    name: project.title, desc: project.description, deadline: project.deadline, projectId: project.code)
                 ).toList();
             return ListContructor.construct(list);
           } else if (snapshot.hasError) {
@@ -418,7 +418,8 @@ class Project {
   String name;
   String desc;
   String deadline;
-  Project({this.name, this.desc, this.deadline});
+  String projectId;
+  Project({this.name, this.desc, this.deadline, this.projectId});
 
   //[Note] This generates a SINGLE widget tile based on the project object attributes.
   // If an object is not used, can just use those 3 strings in any way possible.
@@ -426,7 +427,7 @@ class Project {
     String newDesc = desc.length > 65 ? desc.substring(0, 65) + '...' : desc;
 
     //[Placeholder] To navigate to project sub screens
-    Function _goToSubScreen = () => projectSwitchboardState.changeProjectScreen(1);
+    Function _goToSubScreen = () => projectSwitchboardState.changeProjectScreen(1, projectId, name);
 
     return Container(
       margin: EdgeInsets.only(right: 10, left: 10, bottom: 12),
