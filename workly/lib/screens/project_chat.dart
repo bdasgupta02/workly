@@ -27,7 +27,7 @@ class ProjectChat extends StatefulWidget {
 
 class _ProjectChatState extends State<ProjectChat> {
   final TextEditingController _chatMessageController = TextEditingController();
-
+  
   @override
   Widget build(BuildContext context) {
     return Column(

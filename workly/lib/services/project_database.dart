@@ -6,24 +6,32 @@ abstract class ProjectDatabase {
   Future<void> createNewMessage(String message);
   Stream<List<ChatMessage>> chatStream();
   String getUid();
+  String getUserName();
   String getProjectName();
   String getProjectId();
 }
 
 class FirestoreProjectDatabase implements ProjectDatabase {
   final String uid;
+  final String userName;
   final String projectId;
   final String projectName;
 
   FirestoreProjectDatabase({
     @required this.uid,
+    @required this.userName,
     @required this.projectId,
     @required this.projectName,
-  }) : assert(uid != null), assert(projectId != null), assert(projectName != null);
+  }) : assert(uid != null), assert(userName != null), assert(projectId != null), assert(projectName != null);
 
   @override
   String getUid() {
     return uid;
+  }
+
+  @override
+  String getUserName() {
+    return userName;
   }
 
   @override
@@ -74,7 +82,9 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     await _setData('projects/$projectId/chat/$_time', {
       "name": _name,
       "message": message,
+      "timesort": FieldValue.serverTimestamp(),
       "time": FieldValue.serverTimestamp(),
+      "chatId": _time,
       "user": uid,
       "event": false,      
     });
@@ -119,7 +129,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     return _collectionStream(
       path: 'projects/$projectId/chat', 
       builder: (data) => ChatMessage.fromMap(data),
-      orderBy: "time",
+      orderBy: "timesort",
       descending: false,
     );
   }

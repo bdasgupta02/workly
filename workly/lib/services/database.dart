@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:workly/models/chat_message.dart';
 import 'package:workly/models/user_projects.dart';
 
 abstract class Database {
@@ -8,9 +7,9 @@ abstract class Database {
   Future<void> joinProject(String projectId);
   Future<void> createNewMessage(String projectId, String message);
   Stream<List<UserProjects>> userProjectsStream();
-  //Stream<List<ChatMessage>> chatStream();
   Future<bool> checkCode(String code);
   String getUid();
+  Future<String> getName();
 }
 
 class FirestoreDatabase implements Database {
@@ -21,8 +20,16 @@ class FirestoreDatabase implements Database {
   }) : assert(uid != null);
 
   @override
-  String  getUid() {
+  String getUid() {
     return uid;
+  }
+
+  Future<String> getName() async {
+    String _name;
+    await Firestore.instance.collection('users').document(uid).get().then((value) {
+      _name = value.data['name'];
+    });
+    return _name;
   }
 
   @override
@@ -34,23 +41,29 @@ class FirestoreDatabase implements Database {
 
   @override
   Future<void> joinProject(String projectId) async {
-    String _code;
-    String _title;
-    String _description;
-    Timestamp _deadline;
-    await Firestore.instance.collection('projects').document(projectId).get().then((value) {
-      _code = value.data['code'];
-      _title = value.data['title'];
-      _description = value.data['description'];
-      _deadline = value.data['deadline'];
-    });
-    await _setData('users/$uid/projects/$projectId', {
-      "title": _title,
-      "code": _code,
-      "description": _description,
-      "deadline": _deadline,
-    });
-    addUserToProject(projectId);
+    var _isUserPresent = await Firestore.instance.collection('projects').document(projectId).collection('users').document(uid).get();
+    if (_isUserPresent == null) {
+        print("ADDING NEW USER TO PROJECT");
+      String _code;
+      String _title;
+      String _description;
+      Timestamp _deadline;
+      await Firestore.instance.collection('projects').document(projectId).get().then((value) {
+        _code = value.data['code'];
+        _title = value.data['title'];
+        _description = value.data['description'];
+        _deadline = value.data['deadline'];
+      });
+      await _setData('users/$uid/projects/$projectId', {
+        "title": _title,
+        "code": _code,
+        "description": _description,
+        "deadline": _deadline,
+      });
+      addUserToProject(projectId);
+    } else {
+      print("USER ALREADY EXIST");
+    }
   }
 
   @override
@@ -87,7 +100,9 @@ class FirestoreDatabase implements Database {
     await _setData('projects/$projectId/chat/$_time', {
       "name": _name,
       "message": "$_name has joined this group",
-      "time": FieldValue.serverTimestamp(),
+      "timesort": FieldValue.serverTimestamp(),
+      "time": FieldValue.serverTimestamp().toString(),
+      "chatId": _time,
       "user": _uid,
       "event": true,
     });
@@ -102,16 +117,6 @@ class FirestoreDatabase implements Database {
       descending: false,
     );
   }
-
-  // @override
-  // Stream<List<ChatMessage>> chatStream() {
-  //   return _collectionStream(
-  //     path: 'projects/$projectId/chat', 
-  //     builder: (data) => ChatMessage.fromMap(data),
-  //     orderBy: "time",
-  //     descending: true,
-  //   );
-  // }
   
   @override
   Future<bool> checkCode(String code) async {
