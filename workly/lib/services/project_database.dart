@@ -6,7 +6,9 @@ import 'package:workly/models/idea.dart';
 abstract class ProjectDatabase {
   Future<void> createIdea(String ideaId, Map<String, dynamic> ideaData);
   Future<void> createNewMessage(String message);
+  Future<void> updateIdeaDetails(String ideaId, String ideaName, String ideaDescription);
   Future<void> updateVotes(String ideaId);
+  Future<void> deleteIdea(String ideaId);
   Stream<List<ChatMessage>> chatStream();
   Stream<List<Idea>> ideaStream();
   String getUid();
@@ -53,27 +55,6 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     await _setData('projects/$projectId/idea/$ideaId', ideaData);
   }
 
-  // @override
-  // Future<void> joinProject(String projectId) async {
-  //   String _code;
-  //   String _title;
-  //   String _description;
-  //   Timestamp _deadline;
-  //   await Firestore.instance.collection('projects').document(projectId).get().then((value) {
-  //     _code = value.data['code'];
-  //     _title = value.data['title'];
-  //     _description = value.data['description'];
-  //     _deadline = value.data['deadline'];
-  //   });
-  //   await _setData('users/$uid/projects/$projectId', {
-  //     "title": _title,
-  //     "code": _code,
-  //     "description": _description,
-  //     "deadline": _deadline,
-  //   });
-  //   addUserToProject(projectId);
-  // }
-
   @override
   Future<void> createNewMessage(String message) async {
     String _time = DateTime.now().toString();
@@ -89,6 +70,14 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       "chatId": _time,
       "user": uid,
       "event": false,      
+    });
+  }
+
+  @override
+  Future<void> updateIdeaDetails(String ideaId, String ideaName, String ideaDescription) async {
+    await Firestore.instance.collection('projects').document(projectId).collection('idea').document(ideaId).updateData({
+      "title": ideaName,
+      "description": ideaDescription,
     });
   }
 
@@ -116,6 +105,11 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       "votes": _votes,
       "voteCount": _voteCount,
     });
+  }
+
+  @override
+  Future<void> deleteIdea(String ideaId) async {
+    await Firestore.instance.collection('projects').document(projectId).collection('idea').document(ideaId).delete();
   }
 
   // Future<void> addUserToProject(String projectId) async {

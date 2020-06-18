@@ -13,11 +13,12 @@ class ProjectIdeas extends StatefulWidget {
 class _ProjectIdeasState extends State<ProjectIdeas> {
   final FocusNode _ideaNameFocusNode = FocusNode();
   final FocusNode _ideaDescriptionFocusNode = FocusNode();
-  final TextEditingController _ideaNameController = TextEditingController();
+  final TextEditingController _ideaTitleController = TextEditingController();
   final TextEditingController _ideaDescriptionController =
       TextEditingController();
   bool _ideaNameValid = true;
   bool _ideaDescValid = true;
+  bool _editingMode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -29,17 +30,18 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         backgroundColor: Color(0xFF06D8AE),
-        onPressed: () => {//updateVote(),//addNewIdea(),
+        onPressed: () => {
           setState(() {
-              _ideaNameController.clear();
+              _ideaTitleController.clear();
               _ideaDescriptionController.clear();
               _ideaNameValid = true;
               _ideaDescValid = true;
+              _editingMode = false;
           }),
           showDialog(
             context: context,
             builder: (BuildContext context) {
-              return _buildIdeaForm(database);
+              return _buildIdeaForm(database, null);
             },
             barrierDismissible: true,
           ),
@@ -48,7 +50,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
     );
   }
 
-  Widget _buildIdeaForm(ProjectDatabase database) {
+  Widget _buildIdeaForm(ProjectDatabase database, String ideaId) {
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(48.0),
@@ -106,17 +108,35 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
                     Container(
                       child: FlatButton(
                         onPressed: () => {
-                          if (_ideaName.isEmpty || _ideaDescription.isEmpty) {
+                          if (_ideaTitle.isEmpty || _ideaDescription.isEmpty) {
                             setState(() {
-                              _ideaNameValid = _ideaName.isNotEmpty;
+                              _ideaNameValid = _ideaTitle.isNotEmpty;
                               _ideaDescValid = _ideaDescription.isNotEmpty;
                             }),
                           } else {
-                            addNewIdea(),
+                            _editingMode ? updateIdeaDetails(ideaId) : addNewIdea(),
                           }
                         },
                         child: Text(
-                          "Add my Idea!",
+                          _editingMode ? "Save" : "Add my Idea!",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontFamily: 'Roboto',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        color: Colors.lightGreen[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(34.0),
+                        ),
+                      ),
+                    ),
+                    Offstage(
+                      offstage: !_editingMode,
+                      child: FlatButton(
+                        onPressed: () => deleteIdea(ideaId),
+                        child: Text(
+                          "Delete idea",
                           style: TextStyle(
                             color: Colors.black,
                             fontFamily: 'Roboto',
@@ -126,7 +146,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
                         color: Colors.red[200],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(34.0),
-                        ),
+                        )
                       ),
                     ),
                   ],
@@ -143,7 +163,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
     setState(() {});
   }
 
-  String get _ideaName => _ideaNameController.text;
+  String get _ideaTitle => _ideaTitleController.text;
   String get _ideaDescription => _ideaDescriptionController.text;
 
   Widget _ideaNameField() {
@@ -154,7 +174,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
         hintText: "Name of your idea",
         errorText: _ideaNameValid ? null : "Please fill in a name",
       ),
-      controller: _ideaNameController,
+      controller: _ideaTitleController,
       textInputAction: TextInputAction.next,
       focusNode: _ideaNameFocusNode,
       onChanged: (name) => _updateState(),
@@ -186,7 +206,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
   }
 
   void _ideaNameEditingComplete() {
-    final newFocus = _ideaName.trim().isNotEmpty
+    final newFocus = _ideaTitle.trim().isNotEmpty
         ? _ideaDescriptionFocusNode
         : _ideaNameFocusNode;
     FocusScope.of(context).requestFocus(newFocus);
@@ -198,12 +218,49 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
     await database.createIdea(_ideaId, {
       "name": database.getUserName(),
       "user": database.getUid(),
-      "title": _ideaName,
+      "title": _ideaTitle,
       "description": _ideaDescription,
       "ideaId": _ideaId,
       "votes": [],
       "voteCount": 0,
     });
+    Navigator.of(context).pop();
+  }
+
+  void updateIdeaDetails(String ideaId) async {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    await database.updateIdeaDetails(ideaId, _ideaTitle, _ideaDescription);//"2020-06-17 14:56:53.873491"
+    Navigator.of(context).pop();
+  }
+  
+  void updateVote(String ideaId) async {
+    print("TESTUPDATE");
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    await database.updateVotes(ideaId);//"2020-06-17 14:56:53.873491"
+  }
+
+  void openEditor(String ideaId, String ideaTitle, String ideaDescription) {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    print("Call editor");
+    setState(() {
+        _ideaTitleController.text = ideaTitle;
+        _ideaDescriptionController.text = ideaDescription;
+        _ideaNameValid = true;
+        _ideaDescValid = true;
+        _editingMode = true;
+    });
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return _buildIdeaForm(database, ideaId);
+      },
+      barrierDismissible: true,
+    );
+  }
+
+  void deleteIdea(String ideaId) async {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    await database.deleteIdea(ideaId);
     Navigator.of(context).pop();
   }
 
@@ -213,7 +270,6 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
       stream: database.ideaStream(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          print("PrinT");
           final ideaItem = snapshot.data;
           final ideas = ideaItem
               .map((idea) => IdeaTile(
@@ -225,13 +281,8 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
         } else {
           return Center(child: CircularProgressIndicator());
         }
-      });
-  }
-
-  void updateVote() async {
-    print("TESTUPDATE");
-    final database = Provider.of<ProjectDatabase>(context, listen: false);
-    await database.updateVotes("2020-06-17 14:56:53.873491");
+      },
+    );
   }
 }
 
@@ -267,7 +318,7 @@ class IdeaTile {
         title.length > 65 ? title.substring(0, 65) + '...' : title;
 
     //[Note] This is for ONPRESSED
-    Function _goToVoteAction = () => projectIdeasState.updateVote();
+    Function _goToVoteAction = () => projectIdeasState.updateVote(ideaId);
     
     return Container(
       margin: EdgeInsets.only(right: 10, left: 10, bottom: 12),
@@ -296,9 +347,9 @@ class IdeaTile {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
-                onPressed: () {
+                onPressed: () {//Need to pass this to openEditor
                   print("BODY");
-                  projectIdeasState.updateVote();
+                  projectIdeasState.updateVote(ideaId);
                 },
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,7 +407,7 @@ class IdeaTile {
           Expanded(
             flex: 2,
             child: GestureDetector(
-              onTap: () => projectIdeasState.updateVote(),
+              onTap: () => projectIdeasState.updateVote(ideaId),//Need to pass this to updateVote
               child: Container(
                 child: Column(
                   children: <Widget>[
