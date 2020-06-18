@@ -7,7 +7,10 @@ _ProjectIdeasState projectIdeasState;
 
 class ProjectIdeas extends StatefulWidget {
   @override
-  _ProjectIdeasState createState() => _ProjectIdeasState();
+  _ProjectIdeasState createState() {
+    projectIdeasState = _ProjectIdeasState();
+    return projectIdeasState;
+  }
 }
 
 class _ProjectIdeasState extends State<ProjectIdeas> {
@@ -298,6 +301,7 @@ class IdeaTile {
                 ),
                 onPressed: () {
                   print("BODY");
+                  //[Note] This should not be update vote cause this leads to the idea page.
                   projectIdeasState.updateVote();
                 },
                 child: Column(
