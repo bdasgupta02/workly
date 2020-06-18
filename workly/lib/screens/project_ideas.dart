@@ -7,7 +7,10 @@ _ProjectIdeasState projectIdeasState;
 
 class ProjectIdeas extends StatefulWidget {
   @override
-  _ProjectIdeasState createState() => _ProjectIdeasState();
+  _ProjectIdeasState createState() {
+    projectIdeasState = _ProjectIdeasState();
+    return projectIdeasState;
+  }
 }
 
 class _ProjectIdeasState extends State<ProjectIdeas> {
@@ -234,14 +237,12 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
   }
   
   void updateVote(String ideaId) async {
-    print("TESTUPDATE");
     final database = Provider.of<ProjectDatabase>(context, listen: false);
     await database.updateVotes(ideaId);//"2020-06-17 14:56:53.873491"
   }
 
   void openEditor(String ideaId, String ideaTitle, String ideaDescription) {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
-    print("Call editor");
     setState(() {
         _ideaTitleController.text = ideaTitle;
         _ideaDescriptionController.text = ideaDescription;
@@ -273,7 +274,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
           final ideaItem = snapshot.data;
           final ideas = ideaItem
               .map((idea) => IdeaTile(
-                 title: idea.title, idea: idea.description, votes: idea.voteCount, ideaId: idea.ideaId, database: database)).toList();
+                 title: idea.title, idea: idea.description, votes: idea.voteCount, ideaId: idea.ideaId)).toList();
           return IdeaList(ideas: ideas).makeList();
         } else if (snapshot.hasError) {
           print(snapshot.error);
@@ -307,10 +308,9 @@ class IdeaTile {
   var title;
   var idea;
   var votes;
-  String ideaId;
-  ProjectDatabase database;
+  var ideaId;
 
-  IdeaTile({@required this.title, @required this.idea, @required this.votes, @required ideaId, @required database});
+  IdeaTile({@required this.title, @required this.idea, @required this.votes, @required this.ideaId});
 
   Widget makeIdeaTile() {
     String newIdea = idea;//idea.length > 65 ? idea.substring(0, 65) + '...' : idea;
@@ -319,6 +319,7 @@ class IdeaTile {
 
     //[Note] This is for ONPRESSED
     Function _goToVoteAction = () => projectIdeasState.updateVote(ideaId);
+    Function _goToEditAction = () => projectIdeasState.openEditor(ideaId, title, idea);
     
     return Container(
       margin: EdgeInsets.only(right: 10, left: 10, bottom: 12),
@@ -347,10 +348,7 @@ class IdeaTile {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
-                onPressed: () {//Need to pass this to openEditor
-                  print("BODY");
-                  projectIdeasState.updateVote(ideaId);
-                },
+                onPressed: _goToEditAction,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -407,7 +405,7 @@ class IdeaTile {
           Expanded(
             flex: 2,
             child: GestureDetector(
-              onTap: () => projectIdeasState.updateVote(ideaId),//Need to pass this to updateVote
+              onTap: _goToVoteAction,
               child: Container(
                 child: Column(
                   children: <Widget>[
