@@ -1,10 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:workly/models/chat_message.dart';
+import 'package:workly/models/idea.dart';
 
 abstract class ProjectDatabase {
+  Future<void> createIdea(String ideaId, Map<String, dynamic> ideaData);
   Future<void> createNewMessage(String message);
+  Future<void> updateVotes(String ideaId);
   Stream<List<ChatMessage>> chatStream();
+  Stream<List<Idea>> ideaStream();
   String getUid();
   String getUserName();
   String getProjectName();
@@ -44,12 +48,10 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     return projectId;
   }
 
-  // @override
-  // Future<void> createUserProject(String projectId, Map<String, dynamic> projectData) async {
-  //   await _setData('users/$uid/projects/$projectId', projectData);
-  //   await _setData('projects/$projectId', projectData);
-  //   addUserToProject(projectId); 
-  // }
+  @override
+  Future<void> createIdea(String ideaId, Map<String, dynamic> ideaData) async {
+    await _setData('projects/$projectId/idea/$ideaId', ideaData);
+  }
 
   // @override
   // Future<void> joinProject(String projectId) async {
@@ -87,6 +89,32 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       "chatId": _time,
       "user": uid,
       "event": false,      
+    });
+  }
+
+  @override
+  Future<void> updateVotes(String ideaId) async {
+    print("CALL UPDATE");
+    bool _containUser;
+    List _votes;
+    int _voteCount;
+    await Firestore.instance.collection('projects').document(projectId).collection('idea').document(ideaId).get().then((value) {
+      _votes = value.data['votes'];
+      _voteCount = value.data['voteCount'];
+      _containUser = _votes.contains(uid);
+    });
+    if (_containUser) {
+      print('CONTAINS');
+      _votes.remove(uid);
+      _voteCount = _voteCount - 1;
+    } else {
+      print("DOES NOT CONTAINS");
+      _votes.add(uid);
+      _voteCount = _voteCount + 1;
+    }
+    await Firestore.instance.collection('projects').document(projectId).collection('idea').document(ideaId).updateData({
+      "votes": _votes,
+      "voteCount": _voteCount,
     });
   }
 
@@ -131,6 +159,16 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       builder: (data) => ChatMessage.fromMap(data),
       orderBy: "timesort",
       descending: false,
+    );
+  }
+
+  @override
+  Stream<List<Idea>> ideaStream() {
+    return _collectionStream(
+      path: 'projects/$projectId/idea', 
+      builder: (data) => Idea.fromMap(data),
+      orderBy: "voteCount",
+      descending: true,
     );
   }
   

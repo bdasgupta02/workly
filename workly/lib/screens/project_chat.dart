@@ -34,7 +34,7 @@ class _ProjectChatState extends State<ProjectChat> {
       children: <Widget>[
         Expanded(
           //child: Tester.test(),
-          child: _buildProjectList(),
+          child: _buildChatList(),
         ),
         makeTextBar(),
       ],
@@ -120,8 +120,8 @@ class _ProjectChatState extends State<ProjectChat> {
       _chatMessageController.clear();
     });
   }
-
-  Widget _buildProjectList() {
+  List<Message> tempMsg = [];
+  Widget _buildChatList() {
   final database = Provider.of<ProjectDatabase>(context, listen: false);
     return StreamBuilder<List<ChatMessage>>(
       stream: database.chatStream(),
@@ -130,7 +130,7 @@ class _ProjectChatState extends State<ProjectChat> {
           final chatMessages = snapshot.data;
           final chatList = chatMessages
               .map((chat) => Message(
-                  name: chat.name, msg: chat.message, time: chat.time, user: chat.user == database.getUid(), isEvent: chat.event)
+                  name: chat.name, msg: chat.message, time: chat.time, user: chat.user == database.getUid(), sameUserAsNext: false, isEvent: chat.event)
               ).toList();
           return ListView.builder(
             shrinkWrap: true,
@@ -151,7 +151,6 @@ class _ProjectChatState extends State<ProjectChat> {
         }
       });
   }
-
 }
 
 class MessageList {
@@ -166,14 +165,6 @@ class MessageList {
       itemCount: messages.length,
       itemBuilder: (BuildContext context, int idx) {
         final Message msg = messages[messages.length - 1 - idx];
-        // print("Next");
-        // bool _sameUserAsNext = (messages.length - idx) ==  messages.length ? false : messages[messages.length - idx].name == messages[messages.length - 1 - idx].name;
-        // print(messages.length - 1 - idx);
-        // print(messages.length - idx);
-        // print(mmsg);
-        // print(messages[messages.length - 1 - idx].sameUserAsNext);
-        // print(messages[messages.length - 1 - idx].msg);
-        //final Message msg = messages[idx];
         return msg.makeChatTile();
       },
     );

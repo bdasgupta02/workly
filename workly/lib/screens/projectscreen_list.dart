@@ -47,8 +47,6 @@ class _AllProjectsState extends State<AllProjects> {
         child: Icon(Icons.library_add),
         backgroundColor: Color(0xFF06D8AE),
         onPressed: () => {
-          print(_convertFromString("1/2/30").toDate()),
-          //print(Timestamp.fromDate(DateTime.parse("20200202")).toDate().toString().substring(0,10)),
           setState(() {
             _projectNameController.clear();
             _projectDescriptionController.clear();
