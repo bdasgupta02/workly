@@ -23,7 +23,7 @@ class CustomAppbar {
     );
   }
 
-  static AppBar appBarDark(String string) {
+  static AppBar appBarDark(String string, Function actionOne, int order, int verification) {
     return AppBar(
       elevation: 0,
       backgroundColor: Color(0xFF141336),
@@ -41,6 +41,14 @@ class CustomAppbar {
           color: Color(0xFFFCFCFC),
         ),
       ),
+      actions: <Widget>[
+        IconButton(
+            icon: Icon(
+              Icons.menu,
+              color: order == verification ? Color(0xFF06D8AE) : Color(0xFFFCFCFC),
+            ),
+            onPressed: actionOne)
+      ],
     );
   }
   //[Action] put tabbars here

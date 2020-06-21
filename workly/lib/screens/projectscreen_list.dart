@@ -138,16 +138,30 @@ class _AllProjectsState extends State<AllProjects> {
                     Container(
                       child: FlatButton(
                         onPressed: () => {
-                          if (_joinProject ? _projectCode.isEmpty : (_projectName.isEmpty || _projectDeadline.isEmpty || !_projectDeadline.contains("/"))) {
-                            print("CHECK"),
-                            setState(() {
-                              _codeValid = _joinProject ? _projectCode.isNotEmpty : true;
-                              _titleValid = _joinProject ? true : _projectName.isNotEmpty;
-                              _dateValid = _joinProject ? true : (_projectDeadline.isNotEmpty && _projectDeadline.contains("/"));
-                            }),
-                          } else {
-                            _createProject(database),
-                          }
+                          if (_joinProject
+                              ? _projectCode.isEmpty
+                              : (_projectName.isEmpty ||
+                                  _projectDeadline.isEmpty ||
+                                  !_projectDeadline.contains("/")))
+                            {
+                              print("CHECK"),
+                              setState(() {
+                                _codeValid = _joinProject
+                                    ? _projectCode.isNotEmpty
+                                    : true;
+                                _titleValid = _joinProject
+                                    ? true
+                                    : _projectName.isNotEmpty;
+                                _dateValid = _joinProject
+                                    ? true
+                                    : (_projectDeadline.isNotEmpty &&
+                                        _projectDeadline.contains("/"));
+                              }),
+                            }
+                          else
+                            {
+                              _createProject(database),
+                            }
                         },
                         child: Text(
                           _joinProject ? "Join Project!" : 'Create Project!',
@@ -253,7 +267,9 @@ class _AllProjectsState extends State<AllProjects> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
         labelText: "Project Deadline",
         hintText: "DD/MM/YYYY",
-        errorText: _dateValid ? null : "Please enter Deadline in this format: DD/MM/YYYY",
+        errorText: _dateValid
+            ? null
+            : "Please enter Deadline in this format: DD/MM/YYYY",
       ),
       controller: _projectDeadlineController,
       textInputAction: TextInputAction.next,
@@ -320,14 +336,16 @@ class _AllProjectsState extends State<AllProjects> {
 
   Timestamp _convertFromString(String date) {
     int indexOfSlash = date.indexOf("/");
-    String _dd = date.substring(0,indexOfSlash);
+    String _dd = date.substring(0, indexOfSlash);
     String dd = _dd.length < 2 ? "0" + _dd : _dd;
-    int indexOfSecondSlash = date.substring(indexOfSlash+1).indexOf("/");
-    String _mm = date.substring(indexOfSlash+1).substring(0, indexOfSecondSlash);
+    int indexOfSecondSlash = date.substring(indexOfSlash + 1).indexOf("/");
+    String _mm =
+        date.substring(indexOfSlash + 1).substring(0, indexOfSecondSlash);
     String mm = _mm.length < 2 ? "0" + _mm : _mm;
-    String _yyyy = date.substring(indexOfSlash+1).substring(indexOfSecondSlash+1);
+    String _yyyy =
+        date.substring(indexOfSlash + 1).substring(indexOfSecondSlash + 1);
     String yyyy = _yyyy.length == 2 ? "20" + _yyyy : _yyyy;
-    return Timestamp.fromDate(DateTime.parse(yyyy+mm+dd));
+    return Timestamp.fromDate(DateTime.parse(yyyy + mm + dd));
   }
 
   //Generate a 6digit project id
@@ -357,8 +375,11 @@ class _AllProjectsState extends State<AllProjects> {
             final userProjects = snapshot.data;
             final list = userProjects
                 .map((project) => Project(
-                    name: project.title, desc: project.description, deadline: project.deadline, projectId: project.code)
-                ).toList();
+                    name: project.title,
+                    desc: project.description,
+                    deadline: project.deadline,
+                    projectId: project.code))
+                .toList();
             return ListContructor.construct(list);
           } else if (snapshot.hasError) {
             return Center(child: Text('Error in UserProjects Stream'));
@@ -425,7 +446,8 @@ class Project {
     String newDesc = desc.length > 65 ? desc.substring(0, 65) + '...' : desc;
 
     //[Placeholder] To navigate to project sub screens
-    Function _goToSubScreen = () => projectSwitchboardState.changeProjectScreen(1, projectId, name);
+    Function _goToSubScreen =
+        () => projectSwitchboardState.changeProjectScreen(1, projectId, name);
 
     return Container(
       margin: EdgeInsets.only(right: 10, left: 10, bottom: 12),
@@ -456,42 +478,47 @@ class Project {
                   borderRadius: BorderRadius.circular(30),
                 ),
                 onPressed: _goToSubScreen,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.only(
-                        top: 15,
-                        right: 0,
-                        left: 0,
-                        bottom: 3,
-                      ),
-                      child: Text(
-                        name,
-                        style: TextStyle(
-                          color: Color(0xFF141336),
-                          fontFamily: 'Roboto',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 19,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.only(
+                            top: 15,
+                            right: 0,
+                            left: 0,
+                            bottom: 3,
+                          ),
+                          child: Text(
+                            name,
+                            style: TextStyle(
+                              color: Color(0xFF141336),
+                              fontFamily: 'Roboto',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 19,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(
-                        top: 3,
-                        right: 0,
-                        left: 0,
-                        bottom: 15,
-                      ),
-                      child: Text(
-                        newDesc,
-                        style: TextStyle(
-                          color: Colors.black45,
-                          fontFamily: 'Roboto',
-                          fontSize: 15,
+                        Padding(
+                          padding: EdgeInsets.only(
+                            top: 3,
+                            right: 0,
+                            left: 0,
+                            bottom: 15,
+                          ),
+                          child: Text(
+                            newDesc,
+                            style: TextStyle(
+                              color: Colors.black45,
+                              fontFamily: 'Roboto',
+                              fontSize: 15,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
+                    Spacer(),
                   ],
                 ),
               ),
