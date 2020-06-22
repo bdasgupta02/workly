@@ -30,8 +30,8 @@ class Idea {
     final String ideaId = data['ideaId'];
     final List votes = data['votes'];
     final int voteCount = data['voteCount'];
-    final String newTitle = title + " [" + name + "]";
-    return Idea(name: name, user: user, title: newTitle, description: description, ideaId: ideaId, votes: votes, voteCount: voteCount);
+    // final String newTitle = title + " [" + name + "]";
+    return Idea(name: name, user: user, title: title, description: description, ideaId: ideaId, votes: votes, voteCount: voteCount);
   }
 
   Map<String, dynamic> toMap() {

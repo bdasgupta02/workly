@@ -275,6 +275,20 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
           final ideas = ideaItem
               .map((idea) => IdeaTile(
                  title: idea.title, idea: idea.description, votes: idea.voteCount, ideaId: idea.ideaId)).toList();
+          if (ideas.isEmpty) {
+            return Center(
+              child: Text(
+                "No ideas contributed yet... \n \n Be the first to add \n your ideas!",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 20,
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            );
+          }
           return IdeaList(ideas: ideas).makeList();
         } else if (snapshot.hasError) {
           print(snapshot.error);
