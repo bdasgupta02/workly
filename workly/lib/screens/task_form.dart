@@ -131,6 +131,7 @@ class _TaskFormState extends State<TaskForm> {
   bool _priorityValid = true;
   bool _stateValid = true;
   bool _assignValid = true;
+  bool _calledEdit = false;
   String _priority;
   String _state;
   String _assign;
@@ -162,7 +163,8 @@ class _TaskFormState extends State<TaskForm> {
   @override
   Widget build(BuildContext context) {
     getUserList();
-    if (widget.edit) {
+    if (widget.edit && !_calledEdit) {
+      print("CALL SET STATE EDIT");
       setStateEdit();
     }
     return Padding(
@@ -356,17 +358,20 @@ class _TaskFormState extends State<TaskForm> {
   }
 
   void setStateEdit() {
-    int priorityIndex = widget.taskPriority - 1;
-    int stateIndex = widget.taskState - 1;
-    setState(() {
-      _taskTitleController.text = widget.taskName;
-      _taskDescriptionController.text = widget.taskDescription;
-      _taskDeadlineController.text = widget.taskDeadline;
-      _priority = _priorityList[priorityIndex];
-      _state = _stateList[stateIndex];
-      _assign = widget.taskAssign;
-      _taskId = widget.taskId;
-    });
+    if (!_calledEdit) {
+      int priorityIndex = widget.taskPriority - 1;
+      int stateIndex = widget.taskState - 1;
+      setState(() {
+        _taskTitleController.text = widget.taskName;
+        _taskDescriptionController.text = widget.taskDescription;
+        _taskDeadlineController.text = widget.taskDeadline;
+        _priority = _priorityList[priorityIndex];
+        _state = _stateList[stateIndex];
+        _assign = widget.taskAssign;
+        _taskId = widget.taskId;
+        _calledEdit = true;
+      });
+    }
   }
 
   void checkFormValid() {
