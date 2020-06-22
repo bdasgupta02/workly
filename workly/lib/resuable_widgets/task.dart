@@ -12,6 +12,7 @@ Making a new TaskListConstructor with a list of given tasks will generate a list
 */
 
 class Task {
+  var taskId;
   var title;
   var desc;
   var priority; //[Note] 1 - Low, 2 - Med, 3 - High
@@ -21,7 +22,8 @@ class Task {
   Function toPress;
 
   Task(
-      {@required this.title,
+      {@required this.taskId,
+      @required this.title,
       @required this.desc,
       @required this.priority,
       @required this.state,
