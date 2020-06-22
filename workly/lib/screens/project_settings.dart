@@ -24,6 +24,8 @@ class _ProjectSettingsState extends State<ProjectSettings> {
       true; //[Action] Need a way to check if the user is the admin for this project.
   bool lastAdmin =
       false; //[Action] Need a way to check if this user is the last remaining admin.
+  List<Member> memberList;
+  String projectDescription;
 
   @override
   Widget build(BuildContext context) {
@@ -33,16 +35,23 @@ class _ProjectSettingsState extends State<ProjectSettings> {
 
   //[Note] This method arranges the screen's main order of items inside a listview
   Widget constructor(ProjectDatabase db) {
+    if (memberList == null) {
+      getUserList(db);
+    }
+    if (projectDescription == null) {
+      getProjectDescription(db);
+    }
     return ListView(
       children: <Widget>[
         textTile(db.getProjectName(), true),
-        textTile(
-            'Test description goes here. More lines for testing going right here to add more text to test wrapping.',
-            false), //[Action] Need to retrieve project description and input here.
+        // textTile(
+        //     'Test description goes here. More lines for testing going right here to add more text to test wrapping.',
+        //     false), //[Action] Need to retrieve project description and input here.
+        textTile(projectDescription == null ? "" : projectDescription, false),
         SizedBox(height: 30),
         headingText('Members'),
         SizedBox(height: 5),
-        MemberTester.testMemberTiles(),
+        memberList == null ? MemberTester.constructor(<Member>[]) : MemberTester.constructor(memberList),
         SizedBox(height: 30),
         headingText('Project Settings'),
         uniqueCode(db.getProjectId()),
@@ -58,9 +67,9 @@ class _ProjectSettingsState extends State<ProjectSettings> {
       ],
     );
   }
-
+      
   Widget buttonTile(
-      Function toPress, String text, String buttonText, Color buttonColor) {
+    Function toPress, String text, String buttonText, Color buttonColor) {
     return Container(
       margin: EdgeInsets.only(top: 5, left: 15, right: 15),
       child: Row(
@@ -182,6 +191,33 @@ class _ProjectSettingsState extends State<ProjectSettings> {
         ),
       ),
     );
+  }
+
+  void getUserList(ProjectDatabase db) async {
+    print("GET USER LIST");
+    List<Map<String, String>> userMapList = await db.getUserList();
+    List<String> userListName = List<String>();
+    List<String> userListUid = List<String>();
+    List<Member> memberListName = List<Member>();
+    for (var ele in userMapList) {
+      userListName.add(ele["name"].toString());
+      userListUid.add(ele["uid"].toString());
+      memberListName.add(Member(name: ele["name"].toString(), image: null, admin: true));
+    }
+    if (mounted) {
+      setState(() {
+        memberList = memberListName;
+      });
+    }
+  }
+
+  void getProjectDescription(ProjectDatabase db) async {
+    String _projectDescription = await db.getProjectDescription();
+    if (mounted) {
+      setState(() {
+        projectDescription = _projectDescription;
+      });
+    }
   }
 }
 

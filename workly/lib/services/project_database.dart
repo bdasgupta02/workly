@@ -14,6 +14,7 @@ abstract class ProjectDatabase {
   Future<void> deleteIdea(String ideaId);
   Future<void> deleteTask(String taskId);
   Future<List<Map<String, String>>> getUserList();
+  Future<String> getProjectDescription();
   Stream<List<ChatMessage>> chatStream();
   Stream<List<Idea>> ideaStream();
   Stream<List<TaskModel>> taskStream();
@@ -146,6 +147,15 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       userList.add(userMap);
     });
     return userList;
+  }
+
+  @override
+  Future<String> getProjectDescription() async {
+    String description = "";
+    await Firestore.instance.collection('projects').document(projectId).get().then((value) {
+      description = value.data['description'];
+    });
+    return description;
   }
 
   @override
