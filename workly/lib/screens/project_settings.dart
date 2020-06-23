@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workly/index.dart';
 import 'package:workly/services/project_database.dart';
+import 'package:workly/resuable_widgets/member_tile.dart';
 
 /*
   Things to note:
@@ -51,7 +52,9 @@ class _ProjectSettingsState extends State<ProjectSettings> {
         SizedBox(height: 30),
         headingText('Members'),
         SizedBox(height: 5),
-        memberList == null ? MemberTester.constructor(<Member>[]) : MemberTester.constructor(memberList),
+        memberList == null
+            ? MemberTester.constructor(<Member>[])
+            : MemberTester.constructor(memberList),
         SizedBox(height: 30),
         headingText('Project Settings'),
         uniqueCode(db.getProjectId()),
@@ -67,9 +70,9 @@ class _ProjectSettingsState extends State<ProjectSettings> {
       ],
     );
   }
-      
+
   Widget buttonTile(
-    Function toPress, String text, String buttonText, Color buttonColor) {
+      Function toPress, String text, String buttonText, Color buttonColor) {
     return Container(
       margin: EdgeInsets.only(top: 5, left: 15, right: 15),
       child: Row(
@@ -202,7 +205,8 @@ class _ProjectSettingsState extends State<ProjectSettings> {
     for (var ele in userMapList) {
       userListName.add(ele["name"].toString());
       userListUid.add(ele["uid"].toString());
-      memberListName.add(Member(name: ele["name"].toString(), image: null, admin: true));
+      memberListName
+          .add(Member(name: ele["name"].toString(), image: null, admin: true));
     }
     if (mounted) {
       setState(() {
@@ -221,127 +225,6 @@ class _ProjectSettingsState extends State<ProjectSettings> {
   }
 }
 
-class Member {
-  String name;
-  ImageProvider<dynamic> image;
-  bool admin;
-
-  Member({@required this.name, this.image, @required this.admin});
-
-  Widget makeMemberTile(Function toPress) {
-    return Container(
-      margin: EdgeInsets.only(
-        left: 15,
-        right: 15,
-        top: 5,
-      ),
-      child: FlatButton(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(35),
-        ),
-        onPressed: toPress,
-        child: Row(
-          children: <Widget>[
-            makeAvatar(),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(
-                    top: 5,
-                    left: 5,
-                    right: 5,
-                    bottom: 2,
-                  ),
-                  child: Text(
-                    name,
-                    style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: 5,
-                    right: 5,
-                    bottom: 5,
-                  ),
-                  child: Text(
-                    admin ? 'Admin' : 'Member',
-                    style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black38,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Spacer(),
-          ],
-        ),
-      ),
-      decoration: BoxDecoration(
-        color: Color(0xFFFCFCFC),
-        borderRadius: BorderRadius.all(Radius.circular(35)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 15,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget makeAvatar() {
-    return Container(
-      margin: EdgeInsets.only(
-        bottom: 12,
-        top: 12,
-        right: 5,
-      ),
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Color(0xFFE5E5E5),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black38.withOpacity(0.15),
-            spreadRadius: 2,
-            blurRadius: 20,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: CircleAvatar(
-        backgroundImage: image,
-        backgroundColor: Color(0xFFFCFCFC),
-        foregroundColor: Colors.black,
-        radius: 20,
-        child: image == null
-            ? Text(
-                name[0].toUpperCase(),
-                style: TextStyle(
-                  color: Colors.black54,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Roboto',
-                  fontSize: 16,
-                ),
-              )
-            : SizedBox(),
-      ),
-    );
-  }
-}
-
 class MemberTester {
   static Widget testMemberTiles() {
     List<Member> members = [
@@ -355,7 +238,7 @@ class MemberTester {
   static Widget constructor(List<Member> members) {
     List<Widget> memberWidgets = [];
     for (int i = 0; i < members.length; i++) {
-      memberWidgets.add(members[i].makeMemberTile(() => null));
+      memberWidgets.add(members[i].makeMemberTile(() => null, false));
     }
     return Column(
       children: memberWidgets,
