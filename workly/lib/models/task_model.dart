@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 class TaskModel {
   final String name;
   final String uid;
-  final String assignedUid;
-  final String assignedName;
+  final List assignedUid;
+  final List assignedName;
   final String title;
   final String description;
   final String taskId;
@@ -34,8 +34,8 @@ class TaskModel {
     }
     final String name = data['name'];
     final String uid = data['uid'];
-    final String assignedUid = data['assignedUid'];
-    final String assignedName = data['assignedName'];
+    final List assignedUid = data['assignedUid'];
+    final List assignedName = data['assignedName'];
     final String title = data['title'];
     final String description = data['description'];
     final String taskId = data['taskId'];

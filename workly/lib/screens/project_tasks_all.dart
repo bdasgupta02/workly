@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:workly/resuable_widgets/task.dart';
 import 'package:workly/screens/task_form.dart';
+import 'package:workly/screens/task_view.dart';
 import 'package:workly/services/project_database.dart';
 import 'package:workly/models/task_model.dart';
 
@@ -50,19 +51,19 @@ class _ProjectTasksAllState extends State<ProjectTasksAll> {
     ));
   }
 
-  void goToEditTaskForm(String taskName, String taskDescription, String taskDeadline, int taskPriority, int taskState, String taskAssign, String taskId) {
+  void goToEditTaskForm(String taskName, String taskDescription, String taskDeadline, int taskPriority, int taskState, List taskAssignName, List taskAssignUid, String taskId) {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
       Navigator.of(context).push(MaterialPageRoute<void>(
       fullscreenDialog: true,
-      builder: (context) => TaskFormPage(
+      builder: (context) => TaskView(
         database: database, 
-        edit: true,
         taskName: taskName,
         taskDescription: taskDescription,
         taskDeadline: taskDeadline,
         taskPriority: taskPriority,
         taskState: taskState,
-        taskAssign: taskAssign,
+        taskAssignName: taskAssignName,
+        taskAssignUid: taskAssignUid,
         taskId: taskId,
       ),
     ));
@@ -77,7 +78,9 @@ class _ProjectTasksAllState extends State<ProjectTasksAll> {
           final taskItem = snapshot.data;
           final tasks = taskItem
               .map((task) => Task(
-                taskId: task.taskId, title: task.title, desc: task.description, priority: task.priority, state: task.state, deadline: task.deadline, toPress: () => projectTasksAllState.goToEditTaskForm(task.title, task.description, task.deadline,task.priority, task.state, task.assignedName, task.taskId))).toList();
+                taskId: task.taskId, title: task.title, desc: task.description, priority: task.priority, state: task.state, deadline: task.deadline, 
+                toPress: () => 
+                  projectTasksAllState.goToEditTaskForm(task.title, task.description, task.deadline, task.priority, task.state, task.assignedName, task.assignedUid,task.taskId))).toList();
           tasks.sort((y,x) => x.priority.compareTo(y.priority));
           return TaskListConstructor(tasks: tasks).construct();
         } else if (snapshot.hasError) {

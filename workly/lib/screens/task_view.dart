@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
 import 'package:workly/resuable_widgets/member_tile.dart';
+import 'package:workly/screens/task_form.dart';
+import 'package:workly/services/project_database.dart';
 
 /*
   Notes:
@@ -8,9 +10,38 @@ import 'package:workly/resuable_widgets/member_tile.dart';
   -I've hardcoded the placeholders. But they're almost all consolidated at the top of the state class.
   -Most data initialization is done in the state class, other than member list, which is a tester class.
  */
+
+_TaskViewState taskViewState;
+
 class TaskView extends StatefulWidget {
+  final ProjectDatabase database;
+  final String taskName;
+  final String taskDescription;
+  final String taskDeadline;
+  final int taskPriority;
+  final int taskState;
+  final List taskAssignName;
+  final List taskAssignUid;
+  final String taskId;
+  
+  TaskView({
+    @required this.database, 
+    @required this.taskName,
+    @required this.taskDescription,
+    @required this.taskDeadline,
+    @required this.taskPriority,
+    @required this.taskState,
+    @required this.taskAssignName,
+    @required this.taskAssignUid,
+    @required this.taskId,
+  });
+
   @override
-  _TaskViewState createState() => _TaskViewState();
+  // _TaskViewState createState() => _TaskViewState();
+    _TaskViewState createState() {
+    taskViewState = _TaskViewState();
+    return taskViewState;
+  }
 }
 
 class _TaskViewState extends State<TaskView> {
@@ -18,22 +49,24 @@ class _TaskViewState extends State<TaskView> {
   //with the exception of the member tiles, which are left null in the
   //MemberTester class, since in theory it would be mostly to view the
   //members.
-  Function onUpgrade = () => null;
-  Function onDowngrade = () => null;
-  Function onOpt = () => null;
-  Function onLeave = () => null;
-  Function onEdit = () => null;
-  String title = "test title 1";
-  String description =
-      "test desc 1. This is a long description to test text wrapping again and see how big descriptions look on the screen";
-  String state = "To Do";
-  String deadline = "10/10/2020";
-  bool mine = false;
+  String title;
+  String description;
+  String state;
+  String deadline;
+  int priority;
+  List<String> _stateList;
+  bool mine;
+  bool resetPage = true;
+  List _taskAssignName;
+  List _taskAssignUid;
   //[Note]This bool value indicates if you're already assigned or not. Need to change with the "work on this task" or "leave task" buttons.
   //[Action] Need to replace this with actual data. These are hardcoded placeholders.
 
   @override
   Widget build(BuildContext context) {
+    if (resetPage) {
+      _resetPage();
+    }
     return Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
       body: Stack(
@@ -133,7 +166,7 @@ class _TaskViewState extends State<TaskView> {
           ],
         ),
         SizedBox(height: 15),
-        MemberTester.testMemberTiles(),
+        MemberTester.constructor(_taskAssignName),
         SizedBox(height: 20),
       ],
     );
@@ -144,7 +177,7 @@ class _TaskViewState extends State<TaskView> {
       margin: EdgeInsets.all(10),
       child: Row(
         children: <Widget>[
-          stateButton(false, onDowngrade),
+          stateButton(false),
           Expanded(
             flex: 6,
             child: Column(
@@ -165,7 +198,7 @@ class _TaskViewState extends State<TaskView> {
               ],
             ),
           ),
-          stateButton(true, onUpgrade),
+          stateButton(true),
         ],
       ),
       decoration: BoxDecoration(
@@ -232,7 +265,7 @@ class _TaskViewState extends State<TaskView> {
     );
   }
 
-  Widget stateButton(bool upgrade, Function func) {
+  Widget stateButton(bool upgrade) {
     return Expanded(
       flex: 6,
       child: Padding(
@@ -240,7 +273,7 @@ class _TaskViewState extends State<TaskView> {
         child: Container(
           child: FlatButton(
             color: upgrade ? Color(0xFF06D8AE) : Colors.redAccent,
-            onPressed: func,
+            onPressed: () => _stateUpdate(upgrade),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(25),
             ),
@@ -298,7 +331,7 @@ class _TaskViewState extends State<TaskView> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
         ),
-        onPressed: mine ? onLeave : onOpt,
+        onPressed: () => _optUpdate(),
         child: Row(
           children: <Widget>[
             Spacer(),
@@ -340,7 +373,7 @@ class _TaskViewState extends State<TaskView> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
         ),
-        onPressed: onEdit,
+        onPressed: () => _goToEditForm(),
         child: Row(
           children: <Widget>[
             Spacer(),
@@ -359,25 +392,135 @@ class _TaskViewState extends State<TaskView> {
       ),
     );
   }
+
+  void _stateUpdate(bool upgrade) async {
+    int newStateIndex = _stateList.indexOf(state) + 1;
+    if (upgrade) {
+      newStateIndex = newStateIndex == 4 ? newStateIndex : newStateIndex + 1;
+    } else {
+      newStateIndex = newStateIndex == 1 ? newStateIndex : newStateIndex - 1;
+    }
+    await widget.database.updateTaskDetails(widget.taskId, {
+      "state": newStateIndex,
+    });
+    setState(() {
+      state = _stateList[newStateIndex - 1];
+    });
+  }
+
+  void _optUpdate() async {
+    List _memberList = _taskAssignName;
+    List _memberListId = _taskAssignUid;
+    if (mine) {
+      //leave
+      _memberListId.remove(widget.database.getUid());
+      _memberList.remove(widget.database.getUserName());
+      await widget.database.updateTaskDetails(widget.taskId, {
+          "assignedUid": _memberListId,
+          "assignedName": _memberList,
+        });
+    } else {
+      //join
+      _memberListId.add(widget.database.getUid());     
+      _memberList.add(widget.database.getUserName()); 
+      await widget.database.updateTaskDetails(widget.taskId, {
+          "assignedUid": _memberListId,
+          "assignedName": _memberList,
+      });
+    }
+    setState(() {
+      _taskAssignName = _memberList;
+      _taskAssignUid = _memberListId;
+      mine = _memberListId.contains(widget.database.getUid());
+    });
+  }
+
+  void _goToEditForm() {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (context) => TaskFormPage(
+        database: widget.database, 
+        edit: true,
+        taskName: title,
+        taskDescription: description,
+        taskDeadline: deadline,
+        taskPriority: priority,
+        // taskState: taskState,
+        // taskAssign: taskAssign,
+        taskId: widget.taskId,
+        refresh: refresh,
+      ),
+    ));
+  }
+
+  void refresh(String newTitle, String newDescription, String newDeadline, int newPriority) {
+    setState(() {
+      title = newTitle;
+      description = newDescription;
+      deadline = newDeadline;
+      priority = newPriority;
+    });
+  }
+
+  void delete() {
+    print("Call delete 2");
+    Navigator.of(context).pop();
+  }
+
+  void _resetPage() {
+    List<String> newStateList = <String>[
+    "To do",
+    "In progress",
+    "To review",
+    "Completed"
+    ];
+    setState(() {
+      title = widget.taskName;
+      description = widget.taskDescription;
+      state = newStateList[widget.taskState - 1];
+      deadline = widget.taskDeadline;
+      priority = widget.taskPriority;
+      _stateList = newStateList;
+      mine = widget.taskAssignUid.contains(widget.database.getUid());
+      resetPage = false;
+      _taskAssignName = widget.taskAssignName;
+      _taskAssignUid = widget.taskAssignUid;
+    });
+  }
 }
 
 class MemberTester {
-  static Widget testMemberTiles() {
-    List<Member> members = [
-      Member(name: 'Test name', image: null),
-      Member(name: 'Second test name', image: null),
-      Member(name: 'Third test name', image: null),
-    ];
-    return constructor(members);
-  }
+  // static Widget testMemberTiles() {
+  //   List<Member> members = [
+  //     Member(name: 'Test name', image: null),
+  //     Member(name: 'Second test name', image: null),
+  //     Member(name: 'Third test name', image: null),
+  //   ];
+  //   return constructor(members);
+  // }
 
-  static Widget constructor(List<Member> members) {
-    List<Widget> memberWidgets = [];
-    for (int i = 0; i < members.length; i++) {
-      memberWidgets.add(members[i].makeMemberTile(null, true));
+  static Widget constructor(List members) {
+    if (members.isNotEmpty) {
+      List<Widget> memberWidgets = [];
+      for (int i = 0; i < members.length; i++) {
+        memberWidgets.add(Member(name: members[i], image: null).makeMemberTile(null, true));
+      }
+      return Column(
+        children: memberWidgets,
+      );
+    } else {
+      return Center(
+        child: Text(
+          "No members assigned yet",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 14,
+            color: Colors.black54,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      );
     }
-    return Column(
-      children: memberWidgets,
-    );
   }
 }

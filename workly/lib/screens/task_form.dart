@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
+import 'package:workly/screens/task_view.dart';
 import 'package:workly/services/project_database.dart';
 
 class TaskFormPage extends StatelessWidget {
@@ -10,9 +11,8 @@ class TaskFormPage extends StatelessWidget {
   final String taskDescription;
   final String taskDeadline;
   final int taskPriority;
-  final int taskState;
-  final String taskAssign;
   final String taskId;
+  final Function refresh;
 
   TaskFormPage({
     @required this.database, 
@@ -21,9 +21,8 @@ class TaskFormPage extends StatelessWidget {
     this.taskDescription,
     this.taskDeadline,
     this.taskPriority,
-    this.taskState,
-    this.taskAssign,
     this.taskId,
+    this.refresh,
   });
 
   @override
@@ -36,8 +35,8 @@ class TaskFormPage extends StatelessWidget {
             children: <Widget>[
               Container(
                 margin: EdgeInsets.only(
-                  top: 50,
-                  bottom: 10,
+                  top: 60,
+                  bottom: 20,
                 ),
                 child: Text(
                   edit ? 'Edit Task' : 'Task Creation',
@@ -64,9 +63,8 @@ class TaskFormPage extends StatelessWidget {
                         taskDescription: taskDescription,
                         taskDeadline: taskDeadline,
                         taskPriority: taskPriority,
-                        taskState: taskState,
-                        taskAssign: taskAssign,
                         taskId: taskId,
+                        refresh: refresh,
                         ),
                     ),
                   ),
@@ -90,9 +88,8 @@ class TaskForm extends StatefulWidget {
   final String taskDescription;
   final String taskDeadline;
   final int taskPriority;
-  final int taskState;
-  final String taskAssign;
   final String taskId;
+  final Function refresh;
 
   TaskForm({
     @required this.database, 
@@ -101,9 +98,8 @@ class TaskForm extends StatefulWidget {
     this.taskDescription,
     this.taskDeadline,
     this.taskPriority,
-    this.taskState,
-    this.taskAssign,
     this.taskId,
+    this.refresh,
   });
 
   @override
@@ -119,7 +115,7 @@ class _TaskFormState extends State<TaskForm> {
   final FocusNode _taskDeadlineFocusNode = FocusNode();
   final FocusNode _taskPriorityFocusNode = FocusNode();
   final FocusNode _taskStateFocusNode = FocusNode();
-  final FocusNode _taskAssignFocusNode = FocusNode();
+  // final FocusNode _taskAssignFocusNode = FocusNode();
   final TextEditingController _taskTitleController = TextEditingController();
   final TextEditingController _taskDescriptionController =
       TextEditingController();
@@ -130,11 +126,11 @@ class _TaskFormState extends State<TaskForm> {
   bool _formValid = true;
   bool _priorityValid = true;
   bool _stateValid = true;
-  bool _assignValid = true;
+  // bool _assignValid = true;
   bool _calledEdit = false;
   String _priority;
   String _state;
-  String _assign;
+  // String _assign;
   String _taskId;
   List<String> _priorityList = <String>["Low", "Medium", "High"];
   List<String> _stateList = <String>[
@@ -143,9 +139,9 @@ class _TaskFormState extends State<TaskForm> {
     "To review",
     "Completed"
   ];
-  List<String> _userNameList;
-  List<String> _userUidList;
-  List<DropdownMenuItem<String>> _userList;
+  // List<String> _userNameList;
+  // List<String> _userUidList;
+  // List<DropdownMenuItem<String>> _userList;
 
   @override
   void dispose() {
@@ -156,19 +152,19 @@ class _TaskFormState extends State<TaskForm> {
     _taskDescriptionFocusNode.dispose();
     _taskPriorityFocusNode.dispose();
     _taskStateFocusNode.dispose();
-    _taskAssignFocusNode.dispose();
+    // _taskAssignFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    getUserList();
+    // getUserList();
     if (widget.edit && !_calledEdit) {
       print("CALL SET STATE EDIT");
       setStateEdit();
     }
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(10),
       child: Container(
         decoration: BoxDecoration(
           color: Color(0xFFFCFCFC),
@@ -228,9 +224,12 @@ class _TaskFormState extends State<TaskForm> {
         ),
       ),
       SizedBox(height: 10.0),
-      _taskStateField(),
       Offstage(
-        offstage: _stateValid,
+        offstage: _calledEdit,
+        child: _taskStateField(),
+      ),
+      Offstage(
+        offstage: _stateValid || _calledEdit,
         child: Container(
           alignment: Alignment.centerLeft,
           padding: EdgeInsets.only(left:10),
@@ -248,26 +247,26 @@ class _TaskFormState extends State<TaskForm> {
         ),
       ),
       SizedBox(height: 10.0),
-      _taskAssignField(),
-      Offstage(
-        offstage: _assignValid,
-        child: Container(
-          alignment: Alignment.centerLeft,
-          padding: EdgeInsets.only(left:10),
-          child: Column(
-            children: <Widget>[
-              SizedBox(height:8.0),
-              Text("Please select a person", 
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.red[800],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      SizedBox(height: 20.0),
+      // _taskAssignField(),
+      // Offstage(
+      //   offstage: _assignValid,
+      //   child: Container(
+      //     alignment: Alignment.centerLeft,
+      //     padding: EdgeInsets.only(left:10),
+      //     child: Column(
+      //       children: <Widget>[
+      //         SizedBox(height:8.0),
+      //         Text("Please select a person", 
+      //           style: TextStyle(
+      //             fontSize: 12,
+      //             color: Colors.red[800],
+      //           ),
+      //         ),
+      //       ],
+      //     ),
+      //   ),
+      // ),
+      // SizedBox(height: 20.0),
       Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -360,14 +359,14 @@ class _TaskFormState extends State<TaskForm> {
   void setStateEdit() {
     if (!_calledEdit) {
       int priorityIndex = widget.taskPriority - 1;
-      int stateIndex = widget.taskState - 1;
+      // int stateIndex = widget.taskState - 1;
       setState(() {
         _taskTitleController.text = widget.taskName;
         _taskDescriptionController.text = widget.taskDescription;
         _taskDeadlineController.text = widget.taskDeadline;
         _priority = _priorityList[priorityIndex];
-        _state = _stateList[stateIndex];
-        _assign = widget.taskAssign;
+        // _state = _stateList[stateIndex];
+        // _assign = widget.taskAssign;
         _taskId = widget.taskId;
         _calledEdit = true;
       });
@@ -379,8 +378,9 @@ class _TaskFormState extends State<TaskForm> {
         (_taskDescription.isNotEmpty) &&
         (_taskDeadline.isNotEmpty && _taskDeadline.contains("/")) &&
         (_priority != null) &&
-        (_state != null) &&
-        (_assign != null);
+        (_state != null || _calledEdit == true);
+        // (_state != null) &&
+        // (_assign != null);
     setState(() {
       _taskNameValid = _taskTitle.isNotEmpty;
       _taskDescValid = _taskDescription.isNotEmpty;
@@ -388,7 +388,7 @@ class _TaskFormState extends State<TaskForm> {
       _formValid = _valid;
       _priorityValid = _priority != null;
       _stateValid = _state != null;
-      _assignValid = _assign != null;
+      // _assignValid = _assign != null;
     });
   }
 
@@ -397,28 +397,32 @@ class _TaskFormState extends State<TaskForm> {
     if (_formValid) {
       print("VALID");
       String newTaskId = DateTime.now().toString();
-      int userIndex = _userNameList.indexOf(_assign);
+      // int userIndex = _userNameList.indexOf(_assign);
       int priorityIndex = _priorityList.indexOf(_priority) + 1;
       int stateIndex = _stateList.indexOf(_state) + 1;
       if (widget.edit) {
         await widget.database.updateTaskDetails(_taskId, {
-          "name": widget.database.getUserName(),
-          "uid": widget.database.getUid(),
-          "assignedUid": _userUidList[userIndex],
-          "assignedName": _assign,
+          // "name": widget.database.getUserName(),
+          // "uid": widget.database.getUid(),
+          // "assignedUid": _userUidList[userIndex],
+          // "assignedName": _assign,
           "title": _taskTitle,
           "description": _taskDescription,
           "taskId": _taskId,
           "priority": priorityIndex,
-          "state": stateIndex,
+          // "state": stateIndex,
           "deadline": _convertFromString(_taskDeadline),
         });
+        widget.refresh(_taskTitle, _taskDescription, _formatStringDate(_taskDeadline), priorityIndex);
+        Navigator.of(context).pop(true);
       } else {
         await widget.database.createTask(newTaskId, {
           "name": widget.database.getUserName(),
           "uid": widget.database.getUid(),
-          "assignedUid": _userUidList[userIndex],
-          "assignedName": _assign,
+          "assignedUid": [],
+          "assignedName": [],
+          // "assignedUid": _userUidList[userIndex],
+          // "assignedName": _assign,
           "title": _taskTitle,
           "description": _taskDescription,
           "taskId": newTaskId,
@@ -426,8 +430,8 @@ class _TaskFormState extends State<TaskForm> {
           "state": stateIndex,
           "deadline": _convertFromString(_taskDeadline),
         });
+        Navigator.of(context).pop();
       }
-      Navigator.of(context).pop();
     } else {
       print("INVALID");
     }
@@ -435,6 +439,8 @@ class _TaskFormState extends State<TaskForm> {
 
   void _deleteTask() async {
     await widget.database.deleteTask(_taskId);
+    taskViewState.delete();
+    print("Call delete");
     Navigator.of(context).pop();
   }
 
@@ -452,13 +458,27 @@ class _TaskFormState extends State<TaskForm> {
     return Timestamp.fromDate(DateTime.parse(yyyy + mm + dd));
   }
 
+  String _formatStringDate(String date) {
+    int indexOfSlash = date.indexOf("/");
+    String _dd = date.substring(0, indexOfSlash);
+    String dd = _dd.length < 2 ? "0" + _dd : _dd;
+    int indexOfSecondSlash = date.substring(indexOfSlash + 1).indexOf("/");
+    String _mm =
+        date.substring(indexOfSlash + 1).substring(0, indexOfSecondSlash);
+    String mm = _mm.length < 2 ? "0" + _mm : _mm;
+    String _yyyy =
+        date.substring(indexOfSlash + 1).substring(indexOfSecondSlash + 1);
+    String yyyy = _yyyy.length == 2 ? "20" + _yyyy : _yyyy;
+    return dd + "/" + mm + "/" + yyyy;
+  }
+
   void _updateState() {
     setState(() {});
   }
 
-  String get _taskTitle => _taskTitleController.text;
-  String get _taskDescription => _taskDescriptionController.text;
-  String get _taskDeadline => _taskDeadlineController.text;
+  String get _taskTitle => _taskTitleController.text.trim();
+  String get _taskDescription => _taskDescriptionController.text.trim();
+  String get _taskDeadline => _taskDeadlineController.text.trim();
 
   Widget _taskNameField() {
     return TextField(
@@ -591,7 +611,7 @@ class _TaskFormState extends State<TaskForm> {
                     setState(() {
                       _state = selected;
                     });
-                    FocusScope.of(context).requestFocus(_taskAssignFocusNode);
+                    // FocusScope.of(context).requestFocus(_taskAssignFocusNode);
                   },
                   items: _stateList.map((value) {
                     return DropdownMenuItem(
@@ -608,49 +628,49 @@ class _TaskFormState extends State<TaskForm> {
     );
   }
 
-  Widget _taskAssignField() {
-    return Container(
-      padding: EdgeInsets.only(left: 15),
-      decoration: ShapeDecoration(
-        shape: RoundedRectangleBorder(
-          side: BorderSide(
-              color: _assignValid ? Colors.black38 : Colors.red[400]),
-          borderRadius: BorderRadius.all(
-            Radius.circular(15.0),
-          ),
-        ),
-      ),
-      child: Row(
-        children: <Widget>[
-          Text("Assign to: ", style: TextStyle(fontSize: 16)),
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: ButtonTheme(
-                alignedDropdown: true,
-                child: DropdownButton(
-                  focusNode: _taskAssignFocusNode,
-                  hint: Text("Person Doing"),
-                  value: _assign,
-                  onChanged: (selected) {
-                    setState(() {
-                      _assign = selected;
-                    });
-                  },
-                  items: _userList,
-                  // _userList.map((value) {
-                  //   return DropdownMenuItem(
-                  //     child: new Text(value, style: TextStyle(fontSize: 16)),
-                  //     value: value,
-                  //   );
-                  // }).toList(),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _taskAssignField() {
+  //   return Container(
+  //     padding: EdgeInsets.only(left: 15),
+  //     decoration: ShapeDecoration(
+  //       shape: RoundedRectangleBorder(
+  //         side: BorderSide(
+  //             color: _assignValid ? Colors.black38 : Colors.red[400]),
+  //         borderRadius: BorderRadius.all(
+  //           Radius.circular(15.0),
+  //         ),
+  //       ),
+  //     ),
+  //     child: Row(
+  //       children: <Widget>[
+  //         Text("Assign to: ", style: TextStyle(fontSize: 16)),
+  //         Expanded(
+  //           child: DropdownButtonHideUnderline(
+  //             child: ButtonTheme(
+  //               alignedDropdown: true,
+  //               child: DropdownButton(
+  //                 focusNode: _taskAssignFocusNode,
+  //                 hint: Text("Person Doing"),
+  //                 value: _assign,
+  //                 onChanged: (selected) {
+  //                   setState(() {
+  //                     _assign = selected;
+  //                   });
+  //                 },
+  //                 items: _userList,
+  //                 // _userList.map((value) {
+  //                 //   return DropdownMenuItem(
+  //                 //     child: new Text(value, style: TextStyle(fontSize: 16)),
+  //                 //     value: value,
+  //                 //   );
+  //                 // }).toList(),
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   void _taskNameEditingComplete() {
     final newFocus = _taskTitle.trim().isNotEmpty
@@ -684,26 +704,26 @@ class _TaskFormState extends State<TaskForm> {
     });
   }
 
-  void getUserList() async {
-    List<Map<String, String>> userMapList = await widget.database.getUserList();
-    List<String> userListName = List<String>();
-    List<String> userListUid = List<String>();
-    for (var ele in userMapList) {
-      userListName.add(ele["name"].toString());
-      userListUid.add(ele["uid"].toString());
-    }
-    List<DropdownMenuItem<String>> userList = userListName.map((value) {
-      return DropdownMenuItem(
-        child: new Text(value, style: TextStyle(fontSize: 16)),
-        value: value,
-      );
-    }).toList();
-    if (mounted) {
-      setState(() {
-        _userList = userList;
-        _userNameList = userListName;
-        _userUidList = userListUid;
-      });
-    }
-  }
+  // void getUserList() async {
+  //   List<Map<String, String>> userMapList = await widget.database.getUserList();
+  //   List<String> userListName = List<String>();
+  //   List<String> userListUid = List<String>();
+  //   for (var ele in userMapList) {
+  //     userListName.add(ele["name"].toString());
+  //     userListUid.add(ele["uid"].toString());
+  //   }
+  //   List<DropdownMenuItem<String>> userList = userListName.map((value) {
+  //     return DropdownMenuItem(
+  //       child: new Text(value, style: TextStyle(fontSize: 16)),
+  //       value: value,
+  //     );
+  //   }).toList();
+  //   if (mounted) {
+  //     setState(() {
+  //        _userList = userList;
+  //        _userNameList = userListName;
+  //        _userUidList = userListUid;
+  //     });
+  //   }
+  // }
 }

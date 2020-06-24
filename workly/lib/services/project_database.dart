@@ -221,7 +221,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     String filterBy,
     String filterValue,
   }) {
-    final reference = Firestore.instance.collection(path).where(filterBy, isEqualTo: filterValue);
+    final reference = Firestore.instance.collection(path).where(filterBy, arrayContains: filterValue);
     final snapshots = reference.snapshots();
     return snapshots.map((snapshot) => snapshot.documents.map((snapshot) => builder(snapshot.data)).toList());
   }
