@@ -61,10 +61,10 @@ class _ProjectSettingsState extends State<ProjectSettings> {
         lastAdmin
             ? SizedBox()
             : buttonTile(
-                () => null, 'Leave Project', 'Leave', Colors.orangeAccent),
+                () => leaveProject(), 'Leave Project', 'Leave', Colors.orangeAccent),
         admin
             ? buttonTile(
-                () => null, 'Delete Project', 'Delete', Colors.redAccent)
+                () => deleteProject(), 'Delete Project', 'Delete', Colors.redAccent)
             : SizedBox(),
         SizedBox(height: 20),
       ],
@@ -222,6 +222,18 @@ class _ProjectSettingsState extends State<ProjectSettings> {
         projectDescription = _projectDescription;
       });
     }
+  }
+
+  void leaveProject() async {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    await database.leaveProject();
+    //Navigator.pop? OR PUSH OR ??
+  }
+
+  void deleteProject() async {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    await database.deleteProject();
+    //Navigator.pop? OR PUSH OR ??
   }
 }
 

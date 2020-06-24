@@ -11,6 +11,8 @@ abstract class ProjectDatabase {
   Future<void> updateIdeaDetails(String ideaId, String ideaName, String ideaDescription);
   Future<void> updateTaskDetails(String taskId, Map<String, dynamic> taskData);
   Future<void> updateVotes(String ideaId);
+  Future<void> deleteProject();
+  Future<void> leaveProject();
   Future<void> deleteIdea(String ideaId);
   Future<void> deleteTask(String taskId);
   Future<List<Map<String, String>>> getUserList();
@@ -123,6 +125,18 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       "votes": _votes,
       "voteCount": _voteCount,
     });
+  }
+
+  @override
+  Future<void> deleteProject() async {
+    await leaveProject();
+    await Firestore.instance.collection('projects').document(projectId).delete();
+  }
+
+  @override
+  Future<void> leaveProject() async {
+    await Firestore.instance.collection('projects').document(projectId).collection('users').document(uid).delete();
+    await Firestore.instance.collection('users').document(uid).collection('projects').document(projectId).delete();
   }
 
   @override
