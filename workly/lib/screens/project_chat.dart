@@ -1,8 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:workly/models/chat_message.dart';
-import 'package:workly/services/database.dart';
 import 'package:workly/services/project_database.dart';
 
 /*
@@ -113,13 +111,7 @@ class _ProjectChatState extends State<ProjectChat> {
           size: 30,
           color: Color(0xFF24DCB7),
         ),
-        onPressed: () {
-          cacheChat
-              .add(Message(msg: _message, user: true, sameUserAsNext: false));
-          print(cacheChat[cacheChat.length - 1].getMsg());
-          changeLastMsgCache();
-          _message.isEmpty ? null : sendMessage();
-        },
+        onPressed: () => _message.isEmpty ? null : sendMessage(),
       ),
     );
   }
@@ -185,6 +177,7 @@ class _ProjectChatState extends State<ProjectChat> {
         sameUserAsNext: true,
         isEvent: false,
         msg: cacheString));
+    changeLastMsgCache();
     return constructChatList(cacheChat);
   }
 
