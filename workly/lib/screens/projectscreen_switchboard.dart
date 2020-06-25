@@ -52,6 +52,14 @@ class _ProjectSwitchboardState extends State<ProjectSwitchboard> with AutomaticK
     navState.clearLimit();
   }
 
+  void changeToDefaultProjectScreen() {
+    setState(() {
+      _addProjectHistory();
+      stateIndex = 0;
+    });
+    navState.clearLimit();
+  }
+
   void _addProjectHistory() {
     _projectHistory.add(stateIndex);
   }

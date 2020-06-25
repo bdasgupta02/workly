@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workly/index.dart';
+import 'package:workly/screens/projectscreen_switchboard.dart';
 import 'package:workly/services/project_database.dart';
 import 'package:workly/resuable_widgets/member_tile.dart';
 
@@ -227,13 +228,14 @@ class _ProjectSettingsState extends State<ProjectSettings> {
   void leaveProject() async {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
     await database.leaveProject();
-    //Navigator.pop? OR PUSH OR ??
+    print("TEST LEAVE PROJECT");
+    projectSwitchboardState.changeToDefaultProjectScreen();
   }
 
   void deleteProject() async {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
     await database.deleteProject();
-    //Navigator.pop? OR PUSH OR ??
+    projectSwitchboardState.changeToDefaultProjectScreen();
   }
 }
 

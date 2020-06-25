@@ -266,6 +266,9 @@ class _TaskViewState extends State<TaskView> {
   }
 
   Widget stateButton(bool upgrade) {
+    int currentStateIndex = _stateList.indexOf(state) + 1;
+    int upStateIndex = currentStateIndex == 4 ? 1 : currentStateIndex + 1;
+    int downStateIndex = currentStateIndex == 1 ? 4 : currentStateIndex - 1;
     return Expanded(
       flex: 6,
       child: Padding(
@@ -273,7 +276,7 @@ class _TaskViewState extends State<TaskView> {
         child: Container(
           child: FlatButton(
             color: upgrade ? Color(0xFF06D8AE) : Colors.redAccent,
-            onPressed: () => _stateUpdate(upgrade),
+            onPressed: () => _stateUpdate(upgrade, upStateIndex, downStateIndex),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(25),
             ),
@@ -284,7 +287,7 @@ class _TaskViewState extends State<TaskView> {
                   size: 55,
                   color: Colors.white,
                 ),
-                textStyling(upgrade ? "Upgrade" : "Downgrade", Colors.white),
+                textStyling(upgrade ? _stateList[upStateIndex - 1] : _stateList[downStateIndex - 1], Colors.white),
                 SizedBox(height: 10),
               ],
             ),
@@ -393,13 +396,8 @@ class _TaskViewState extends State<TaskView> {
     );
   }
 
-  void _stateUpdate(bool upgrade) async {
-    int newStateIndex = _stateList.indexOf(state) + 1;
-    if (upgrade) {
-      newStateIndex = newStateIndex == 4 ? newStateIndex : newStateIndex + 1;
-    } else {
-      newStateIndex = newStateIndex == 1 ? newStateIndex : newStateIndex - 1;
-    }
+  void _stateUpdate(bool upgrade, int upStateIndex, int downStateIndex) async {
+    int newStateIndex = upgrade ? upStateIndex : downStateIndex;
     await widget.database.updateTaskDetails(widget.taskId, {
       "state": newStateIndex,
     });
@@ -511,7 +509,7 @@ class MemberTester {
     } else {
       return Center(
         child: Text(
-          "No members assigned yet",
+          "No members working on it yet",
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'Roboto',
