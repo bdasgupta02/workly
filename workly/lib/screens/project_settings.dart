@@ -235,7 +235,7 @@ class _ProjectSettingsState extends State<ProjectSettings> {
   void deleteProject() async {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
     await database.deleteProject();
-    projectSwitchboardState.changeToDefaultProjectScreen();
+    projectSwitchboardState.goBack();
   }
 }
 

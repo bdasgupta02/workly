@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:workly/models/chat_message.dart';
+import 'package:workly/services/database.dart';
 import 'package:workly/services/project_database.dart';
 
 /*
@@ -27,7 +29,9 @@ class ProjectChat extends StatefulWidget {
 
 class _ProjectChatState extends State<ProjectChat> {
   final TextEditingController _chatMessageController = TextEditingController();
-  
+  String cacheString = "";
+  List<Message> cacheChat = [];
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -70,8 +74,7 @@ class _ProjectChatState extends State<ProjectChat> {
                     enabledBorder: InputBorder.none,
                     errorBorder: InputBorder.none,
                     disabledBorder: InputBorder.none,
-                    contentPadding:
-                        EdgeInsets.only(left: 7, right: 7),
+                    contentPadding: EdgeInsets.only(left: 7, right: 7),
                     hintText: 'Tap to chat',
                     hintStyle: TextStyle(
                         fontFamily: 'Roboto',
@@ -81,7 +84,9 @@ class _ProjectChatState extends State<ProjectChat> {
                   ),
                   controller: _chatMessageController,
                   onChanged: (message) => {
-                    setState(() {}),
+                    setState(() {
+                      cacheString = message;
+                    }),
                   },
                   maxLines: null,
                   maxLengthEnforced: true,
@@ -108,48 +113,102 @@ class _ProjectChatState extends State<ProjectChat> {
           size: 30,
           color: Color(0xFF24DCB7),
         ),
-        onPressed: () => _message.isEmpty ? null : sendMessage(),
+        onPressed: () {
+          cacheChat
+              .add(Message(msg: _message, user: true, sameUserAsNext: false));
+          print(cacheChat[cacheChat.length - 1].getMsg());
+          changeLastMsgCache();
+          _message.isEmpty ? null : sendMessage();
+        },
       ),
     );
   }
 
+  void changeLastMsgCache() {
+    if (cacheChat.length > 1) {
+      if (cacheChat[cacheChat.length - 1]
+          .testPrevious(cacheChat[cacheChat.length - 2])) {
+        cacheChat[cacheChat.length - 2].changeUserAsNext(true);
+      }
+    }
+  }
+
   void sendMessage() async {
+    String extractedMsg = _message;
     final database = Provider.of<ProjectDatabase>(context, listen: false);
-    await database.createNewMessage(_message);
     setState(() {
       _chatMessageController.clear();
     });
+    await database.createNewMessage(extractedMsg);
   }
-  List<Message> tempMsg = [];
+
   Widget _buildChatList() {
-  final database = Provider.of<ProjectDatabase>(context, listen: false);
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
     return StreamBuilder<List<ChatMessage>>(
-      stream: database.chatStream(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          final chatMessages = snapshot.data;
-          final chatList = chatMessages
-              .map((chat) => Message(
-                  name: chat.name, msg: chat.message, time: chat.time, user: chat.user == database.getUid(), sameUserAsNext: false, isEvent: chat.event)
-              ).toList();
-          return ListView.builder(
-            shrinkWrap: true,
-            reverse: true,
-            itemCount: chatList.length,
-            itemBuilder: (BuildContext context, int idx) {
-              final Message draftMsg = chatList[chatList.length - 1 - idx];
-              bool _sameUserAsNext = (chatList.length - idx) ==  chatList.length ? false : chatList[chatList.length - idx].user == chatList[chatList.length - 1 - idx].user;
-              final Message msg = Message(name: draftMsg.name, msg: draftMsg.msg, time: draftMsg.time, user: draftMsg.user, sameUserAsNext: _sameUserAsNext, isEvent: draftMsg.isEvent);
-              return msg.makeChatTile();
-            },
-          );
-        } else if (snapshot.hasError) {
-          print(snapshot.error);
-          return Center(child: CircularProgressIndicator());
-        } else {
-          return Center(child: CircularProgressIndicator());
-        }
-      });
+        stream: database.chatStream(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final chatMessages = snapshot.data;
+            final chatList = chatMessages
+                .map((chat) => Message(
+                    name: chat.name,
+                    msg: chat.message,
+                    time: chat.time,
+                    user: chat.user == database.getUid(),
+                    sameUserAsNext: false,
+                    isEvent: chat.event))
+                .toList();
+            cacheChat = chatList;
+            return constructChatList(chatList);
+          } else if (snapshot.hasError) {
+            print(snapshot.error);
+            return addCache();
+          } else {
+            return addCache();
+          }
+        });
+  }
+
+  Widget addCache() {
+    String hourZero = DateTime.now().hour < 10
+        ? "0" + DateTime.now().hour.toString()
+        : DateTime.now().hour.toString();
+    String minuteZero = DateTime.now().minute < 10
+        ? "0" + DateTime.now().minute.toString()
+        : DateTime.now().minute.toString();
+    String time = hourZero + ":" + minuteZero;
+    cacheChat.add(Message(
+        name: 'Does not matter due to Cache',
+        img: null,
+        time: time,
+        user: true,
+        sameUserAsNext: true,
+        isEvent: false,
+        msg: cacheString));
+    return constructChatList(cacheChat);
+  }
+
+  ListView constructChatList(List<Message> chatList) {
+    return ListView.builder(
+      shrinkWrap: true,
+      reverse: true,
+      itemCount: chatList.length,
+      itemBuilder: (BuildContext context, int idx) {
+        final Message draftMsg = chatList[chatList.length - 1 - idx];
+        bool _sameUserAsNext = (chatList.length - idx) == chatList.length
+            ? false
+            : chatList[chatList.length - idx].user ==
+                chatList[chatList.length - 1 - idx].user;
+        final Message msg = Message(
+            name: draftMsg.name,
+            msg: draftMsg.msg,
+            time: draftMsg.time,
+            user: draftMsg.user,
+            sameUserAsNext: _sameUserAsNext,
+            isEvent: draftMsg.isEvent);
+        return msg.makeChatTile();
+      },
+    );
   }
 }
 
@@ -195,6 +254,14 @@ class Message {
   // and the screen's ListView needs to be rebuilt.
   void changeUserAsNext(bool b) {
     sameUserAsNext = b;
+  }
+
+  bool testPrevious(Message other) {
+    return this.user == true && other.user == true;
+  }
+
+  String getMsg() {
+    return this.msg;
   }
 
   Widget makeChatTile() {
