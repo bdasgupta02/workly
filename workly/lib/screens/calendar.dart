@@ -168,12 +168,12 @@ class _CalendarState extends State<Calendar> {
   Widget _bodyConstruct(List<ProjectDeadline> bottom) {
     return SingleChildScrollView(
       child: Container(
-        margin: EdgeInsets.all(20),
+        margin: EdgeInsets.all(17),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Container(
-              padding: EdgeInsets.all(7),
+              padding: EdgeInsets.all(3),
               child: TableCalendar(
                 events: _deadlines,
                 calendarStyle: CalendarStyle(
@@ -196,7 +196,7 @@ class _CalendarState extends State<Calendar> {
                 borderRadius: BorderRadius.all(Radius.circular(30)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withOpacity(0.12),
                     spreadRadius: 2,
                     blurRadius: 15,
                     offset: Offset(0, 3),
