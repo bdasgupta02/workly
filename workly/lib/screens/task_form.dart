@@ -538,7 +538,7 @@ class _TaskFormState extends State<TaskForm> {
       textAlign: TextAlign.start,
     );
   }
-
+// "Low", "Medium", "High"
   Widget _taskPriorityField() {
     return Container(
       padding: EdgeInsets.only(left: 15),
@@ -553,7 +553,10 @@ class _TaskFormState extends State<TaskForm> {
       ),
       child: Row(
         children: <Widget>[
-          Text("Priority: ", style: TextStyle(fontSize: 16)),
+          Container(
+            child: Text("Priority: ", style: TextStyle(fontSize: 16)),
+            width: 60,
+          ),
           Expanded(
             child: DropdownButtonHideUnderline(
               child: ButtonTheme(
@@ -570,7 +573,25 @@ class _TaskFormState extends State<TaskForm> {
                   },
                   items: _priorityList.map((value) {
                     return DropdownMenuItem(
-                      child: new Text(value, style: TextStyle(fontSize: 16)),
+                      child: new Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            child: Text(value, style: TextStyle(fontSize: 16)),
+                            width: 100,
+                            height: 40,
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: value == "Low" ? Color(0xFFF8EB95) : (value == "High" ? Color(0xFFF56A82) : Color(0xFFF5A76A)),
+                            ),
+                            width: 30,
+                            height: 30,
+                          ),
+                        ],
+                      ),
                       value: value,
                     );
                   }).toList(),
@@ -597,7 +618,10 @@ class _TaskFormState extends State<TaskForm> {
       ),
       child: Row(
         children: <Widget>[
-          Text("State: ", style: TextStyle(fontSize: 16)),
+          Container(
+            child: Text("State: ", style: TextStyle(fontSize: 16)),
+            width: 60,
+          ),
           Expanded(
             child: DropdownButtonHideUnderline(
               child: ButtonTheme(
