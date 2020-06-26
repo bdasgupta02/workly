@@ -61,21 +61,26 @@ class _CalendarState extends State<Calendar> {
 
   void _toMap(List<ProjectDeadline> projects) {
     for (int i = 0; i < projects.length; i++) {
-      if (_deadlines[projects[i]] == null) {
+      if (_deadlines[projects[i].getDate()] == null) {
         List<String> l = [projects[i].getMsg()];
         _deadlines[projects[i].getDate()] = l;
       } else {
         _deadlines[projects[i].getDate()].add(projects[i].getMsg());
       }
+      print(_deadlines);
     }
   }
 
   Widget _listConstructor(List<ProjectDeadline> projects) {
     _toMap(projects);
-    if (_start && _deadlines[DateTime.parse(DateFormat('yyyyMMdd').format(DateTime.now()))] != null) {
-      _selectedDeadlines = _deadlines[DateTime.parse(DateFormat('yyyyMMdd').format(DateTime.now()))];
+    if (_start &&
+        _deadlines[DateTime.parse(
+                DateFormat('yyyyMMdd').format(DateTime.now()))] !=
+            null) {
+      _selectedDeadlines = _deadlines[
+          DateTime.parse(DateFormat('yyyyMMdd').format(DateTime.now()))];
       _start = false;
-    } 
+    }
     List<Widget> widgets = [];
     for (int i = 0; i < _selectedDeadlines.length; i++) {
       if (i == 0) {
