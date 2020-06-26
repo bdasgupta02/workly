@@ -67,7 +67,6 @@ class _CalendarState extends State<Calendar> {
       } else {
         _deadlines[projects[i].getDate()].add(projects[i].getMsg());
       }
-      print(_deadlines);
     }
   }
 
