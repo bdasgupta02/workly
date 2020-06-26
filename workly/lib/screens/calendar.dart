@@ -38,6 +38,7 @@ class _CalendarState extends State<Calendar> {
         stream: database.userProjectsStream(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
+            _deadlines.clear();
             final userProjects = snapshot.data;
             final list = userProjects
                 .map((project) => ProjectDeadline(
