@@ -80,7 +80,7 @@ class _AllProjectsState extends State<AllProjects> {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(48)),
+                borderRadius: BorderRadius.all(Radius.circular(30)),
               ),
               child: Padding(
                 padding: EdgeInsets.only(left: 12, right: 12, bottom: 12),
