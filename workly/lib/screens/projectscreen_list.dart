@@ -466,7 +466,7 @@ class Project {
       child: Row(
         children: <Widget>[
           Expanded(
-            flex: 6,
+            flex: 8,
             child: Container(
               alignment: Alignment.centerLeft,
               decoration: BoxDecoration(
@@ -480,52 +480,53 @@ class Project {
                 onPressed: _goToSubScreen,
                 child: Row(
                   children: <Widget>[
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.only(
-                            top: 15,
-                            right: 0,
-                            left: 0,
-                            bottom: 3,
-                          ),
-                          child: Text(
-                            name,
-                            style: TextStyle(
-                              color: Color(0xFF141336),
-                              fontFamily: 'Roboto',
-                              fontWeight: FontWeight.w600,
-                              fontSize: 19,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: 15,
+                              right: 0,
+                              left: 0,
+                              bottom: 3,
+                            ),
+                            child: Text(
+                              name,
+                              style: TextStyle(
+                                color: Color(0xFF141336),
+                                fontFamily: 'Roboto',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 19,
+                              ),
                             ),
                           ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(
-                            top: 3,
-                            right: 0,
-                            left: 0,
-                            bottom: 15,
-                          ),
-                          child: Text(
-                            newDesc,
-                            style: TextStyle(
-                              color: Colors.black45,
-                              fontFamily: 'Roboto',
-                              fontSize: 15,
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: 3,
+                              right: 0,
+                              left: 0,
+                              bottom: 15,
+                            ),
+                            child: Text(
+                              newDesc,
+                              style: TextStyle(
+                                color: Colors.black45,
+                                fontFamily: 'Roboto',
+                                fontSize: 15,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Spacer(),
                   ],
                 ),
               ),
             ),
           ),
           Expanded(
-            flex: 2,
+            flex: 3,
             child: GestureDetector(
               onTap: _goToSubScreen,
               child: Container(

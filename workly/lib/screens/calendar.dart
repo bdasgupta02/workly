@@ -4,6 +4,7 @@ import 'package:workly/index.dart';
 import 'package:workly/models/user_projects.dart';
 import 'package:workly/resuable_widgets/custom_appbar.dart';
 import 'package:workly/services/database.dart';
+import 'package:intl/intl.dart';
 
 class Calendar extends StatefulWidget {
   @override
@@ -14,6 +15,7 @@ class _CalendarState extends State<Calendar> {
   CalendarController _controller;
   Map<DateTime, List<dynamic>> _deadlines;
   List<dynamic> _selectedDeadlines;
+  bool _start;
 
   @override
   void initState() {
@@ -21,6 +23,7 @@ class _CalendarState extends State<Calendar> {
     _controller = CalendarController();
     _deadlines = {};
     _selectedDeadlines = [];
+    _start = true;
   }
 
   @override
@@ -39,10 +42,10 @@ class _CalendarState extends State<Calendar> {
             final list = userProjects
                 .map((project) => ProjectDeadline(
                     title: project.title,
-                    date: test(project.deadline),
+                    date: _convert(project.deadline),
                     id: project.code))
                 .toList();
-            return _bodyConstruct(_listConstructor(list));
+            return _bodyConstruct(list);
           } else if (snapshot.hasError) {
             return Center(child: CircularProgressIndicator());
           } else {
@@ -51,12 +54,12 @@ class _CalendarState extends State<Calendar> {
         });
   }
 
-  DateTime test(String s) {
+  DateTime _convert(String s) {
     String t = s.substring(6, 10) + s.substring(3, 5) + s.substring(0, 2);
     return DateTime.parse(t);
   }
 
-  void toMap(List<ProjectDeadline> projects) {
+  void _toMap(List<ProjectDeadline> projects) {
     for (int i = 0; i < projects.length; i++) {
       if (_deadlines[projects[i]] == null) {
         List<String> l = [projects[i].getMsg()];
@@ -68,51 +71,57 @@ class _CalendarState extends State<Calendar> {
   }
 
   Widget _listConstructor(List<ProjectDeadline> projects) {
-    toMap(projects);
+    _toMap(projects);
+    if (_start && _deadlines[DateTime.parse(DateFormat('yyyyMMdd').format(DateTime.now()))] != null) {
+      _selectedDeadlines = _deadlines[DateTime.parse(DateFormat('yyyyMMdd').format(DateTime.now()))];
+      _start = false;
+    } 
     List<Widget> widgets = [];
     for (int i = 0; i < _selectedDeadlines.length; i++) {
       if (i == 0) {
         widgets.add(Row(
           children: <Widget>[
-            Padding(
-              padding: EdgeInsets.only(
-                top: 20,
-                left: 20,
-                right: 20,
-              ),
-              child: Text(
-                'Deadlines:',
-                style: TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 20,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w400,
+            Flexible(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: 20,
+                  left: 20,
+                  right: 20,
+                ),
+                child: Text(
+                  'Deadlines:',
+                  style: TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ),
             ),
-            Spacer(),
           ],
         ));
       }
       widgets.add(Row(
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.only(
-              top: 10,
-              left: 20,
-              right: 20,
-            ),
-            child: Text(
-              _selectedDeadlines[i],
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                fontSize: 15,
-                color: Colors.white54,
-                fontWeight: FontWeight.w400,
+          Flexible(
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: 10,
+                left: 20,
+                right: 20,
+              ),
+              child: Text(
+                _selectedDeadlines[i],
+                style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 15,
+                  color: Colors.white54,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
             ),
           ),
-          Spacer(),
         ],
       ));
       if (i == _selectedDeadlines.length - 1) {
@@ -156,7 +165,7 @@ class _CalendarState extends State<Calendar> {
     );
   }
 
-  Widget _bodyConstruct(Widget bottom) {
+  Widget _bodyConstruct(List<ProjectDeadline> bottom) {
     return SingleChildScrollView(
       child: Container(
         margin: EdgeInsets.all(20),
@@ -176,9 +185,9 @@ class _CalendarState extends State<Calendar> {
                   formatButtonVisible: false,
                 ),
                 calendarController: _controller,
-                onDaySelected: (date, events) {
+                onDaySelected: (date, deadlines) {
                   setState(() {
-                    _selectedDeadlines = events;
+                    _selectedDeadlines = deadlines;
                   });
                 },
               ),
@@ -195,7 +204,7 @@ class _CalendarState extends State<Calendar> {
                 ],
               ),
             ),
-            bottom,
+            _listConstructor(bottom),
           ],
         ),
         decoration: BoxDecoration(
@@ -231,6 +240,6 @@ class ProjectDeadline {
   }
 
   String getMsg() {
-    return ' • The project "$title" is due on this day.';
+    return '• The project "$title" is due on this day.';
   }
 }
