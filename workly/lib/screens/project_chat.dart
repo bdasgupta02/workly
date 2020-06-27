@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lazy_load_scrollview/lazy_load_scrollview.dart';
 import 'package:provider/provider.dart';
 import 'package:workly/models/chat_message.dart';
 import 'package:workly/services/project_database.dart';
@@ -29,13 +30,57 @@ class _ProjectChatState extends State<ProjectChat> {
   final TextEditingController _chatMessageController = TextEditingController();
   String cacheString = "";
   List<Message> cacheChat = [];
+  List<Message> chatList = [];
+  List<Message> partition = [];
+  int currentLength = 0;
+  final int increment = 10;
+  bool isLoading = false;
+  bool start = true;
+  bool initial = true;
+  int msgsSent = 0;
+  int partLoaded = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMore();
+  }
+
+  Future _loadMore() async {
+    setState(() {
+      isLoading = true;
+    });
+    await Future.delayed(const Duration(seconds: 0));
+    // [Note] I made these two different adding methods due to the
+    // fact that the listview is backwards and adds both ways for
+    // our cache technique and loading more.
+    for (var i = currentLength;
+        i <= currentLength + increment && i < chatList.length - msgsSent;
+        i++) {
+      if (!start) {
+        print("Chat Log: add backward");
+        List<Message> temp = [chatList[chatList.length - i - 1]];
+        for (var j = 0; j < partition.length; j++) temp.add(partition[j]);
+        partition = temp;
+      } else {
+        print("Chat Log: add forward");
+        List<Message> temp = [chatList[i]];
+        for (var j = 0; j < partition.length; j++) temp.add(partition[j]);
+        partition = temp;
+      }
+    }
+    start = false;
+    setState(() {
+      isLoading = false;
+      currentLength = partition.length;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
         Expanded(
-          //child: Tester.test(),
           child: _buildChatList(),
         ),
         makeTextBar(),
@@ -126,6 +171,7 @@ class _ProjectChatState extends State<ProjectChat> {
   }
 
   void sendMessage() async {
+    msgsSent++;
     String extractedMsg = _message;
     final database = Provider.of<ProjectDatabase>(context, listen: false);
     setState(() {
@@ -141,17 +187,31 @@ class _ProjectChatState extends State<ProjectChat> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             final chatMessages = snapshot.data;
-            final chatList = chatMessages
+            chatList = chatMessages
                 .map((chat) => Message(
                     name: chat.name,
                     msg: chat.message,
                     time: chat.time,
                     user: chat.user == database.getUid(),
+                    chatId: chat.chatId,
                     sameUserAsNext: false,
                     isEvent: chat.event))
                 .toList();
             cacheChat = chatList;
-            return constructChatList(chatList);
+            if (partition.length < 10) {
+              _loadMore();
+            }
+            if (partition.length > 1 &&
+                chatList.length > 1 &&
+                chatList[chatList.length - 1]
+                    .isSame(partition[partition.length - 1])) {
+              partition.add(chatList[chatList.length - 1]);
+            }
+            return LazyLoadScrollView(
+              isLoading: isLoading,
+              onEndOfPage: () => _loadMore(),
+              child: constructChatList(false),
+            );
           } else if (snapshot.hasError) {
             print(snapshot.error);
             return addCache();
@@ -169,29 +229,63 @@ class _ProjectChatState extends State<ProjectChat> {
         ? "0" + DateTime.now().minute.toString()
         : DateTime.now().minute.toString();
     String time = hourZero + ":" + minuteZero;
-    cacheChat.add(Message(
-        name: 'Does not matter due to Cache',
-        img: null,
-        time: time,
-        user: true,
-        sameUserAsNext: true,
-        isEvent: false,
-        msg: cacheString));
+    Message m = Message(
+      name: 'Does not matter due to Cache',
+      img: null,
+      time: time,
+      user: true,
+      sameUserAsNext: true,
+      isEvent: false,
+      msg: cacheString,
+    );
+    partition.add(m);
+    cacheChat.add(m);
     changeLastMsgCache();
-    return constructChatList(cacheChat);
+    return constructChatList(true);
   }
 
-  ListView constructChatList(List<Message> chatList) {
+  ListView constructChatList(bool useCache) {
+    print(partition.length);
+    List<Message> list;
+    if (initial) useCache = false;
+    if (initial && !useCache) {
+      list = chatList;
+      initial = false;
+    } else if (useCache) {
+      if (partLoaded > 1) {
+        list = partition;
+      } else {
+        list = cacheChat;
+      }
+    } else {
+      partLoaded++;
+      list = partition;
+    }
+    if (partLoaded == 1) {
+      partition.clear();
+    }
     return ListView.builder(
       shrinkWrap: true,
       reverse: true,
-      itemCount: chatList.length,
+      itemCount: list.length,
       itemBuilder: (BuildContext context, int idx) {
-        final Message draftMsg = chatList[chatList.length - 1 - idx];
-        bool _sameUserAsNext = (chatList.length - idx) == chatList.length
+        print(isLoading);
+        if (partition.length != chatList.length &&
+            idx == partition.length - 1) {
+          return Padding(
+            padding: EdgeInsets.only(
+              top: 20,
+              bottom: 20,
+            ),
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        final Message draftMsg = list[list.length - 1 - idx];
+        bool _sameUserAsNext = (list.length - idx) == list.length
             ? false
-            : chatList[chatList.length - idx].user ==
-                chatList[chatList.length - 1 - idx].user;
+            : list[list.length - idx].user == list[list.length - 1 - idx].user;
         final Message msg = Message(
             name: draftMsg.name,
             msg: draftMsg.msg,
@@ -228,19 +322,26 @@ class Message {
   var msg;
   ImageProvider<dynamic> img;
   var time; //[Note] For now time is in string format
+  String chatId;
   bool user; //[Note] If this is the user's own msg
   bool sameUserAsNext; //[Note] If this msg is from the same user as the next
   bool
       isEvent; //[Note] False if this message is a proper text, true if this msg is an event (eg. John has joined the group)
 
-  Message(
-      {this.name,
-      this.msg,
-      this.img,
-      this.time,
-      this.user,
-      this.sameUserAsNext,
-      this.isEvent});
+  Message({
+    this.name,
+    this.msg,
+    this.img,
+    this.time,
+    this.user,
+    this.sameUserAsNext,
+    this.isEvent,
+    this.chatId,
+  });
+
+  bool isSame(Message other) {
+    return this.chatId == other.chatId;
+  }
 
   //[Note] This method changes this msg's properties to indicate if it's from the same user as the next msg.
   // Once the same user texts another msg after this one, this field for this msg needs to be changed to true
