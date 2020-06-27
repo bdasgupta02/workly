@@ -16,6 +16,7 @@ abstract class ProjectDatabase {
   Future<void> deleteIdea(String ideaId);
   Future<void> deleteTask(String taskId);
   Future<List<Map<String, String>>> getUserList();
+  Future<List> getAdminUserList();
   Future<String> getProjectDescription();
   Stream<List<ChatMessage>> chatStream();
   Stream<List<Idea>> ideaStream();
@@ -160,6 +161,16 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       };
       userList.add(userMap);
     });
+    return userList;
+  }
+
+  @override
+  Future<List> getAdminUserList() async {
+    List userList = List();
+    await Firestore.instance.collection('projects').document(projectId).get().then((value) {
+      userList = value.data['admin'];
+    });
+    print(userList);
     return userList;
   }
 

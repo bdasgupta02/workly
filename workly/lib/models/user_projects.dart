@@ -6,12 +6,14 @@ class UserProjects {
   final String description;
   final String deadline;
   final String code;
-  
+  final List admin;
+
   UserProjects({
     @required this.title,
     @required this.description,
     @required this.deadline,
     @required this.code,
+    @required this.admin,
   });
 
   factory UserProjects.fromMap(Map<String, dynamic> data) {
@@ -22,6 +24,7 @@ class UserProjects {
     final String description = data['description'];
     final Timestamp deadline = data['deadline'];
     final String code = data['code'];
+    final List admin = data['admin'];
     
     // String date = deadline.toDate().toString().substring(0,10);
     // int indexOfSlash = date.indexOf("-");
@@ -37,7 +40,7 @@ class UserProjects {
     String _yyyy = date.year.toString();
     String formattedDeadline = _dd + "/" + _mm + "/" + _yyyy;
 
-    return UserProjects(title: title, description: description, deadline: formattedDeadline, code: code);
+    return UserProjects(title: title, description: description, deadline: formattedDeadline, code: code, admin: admin);
   }
 
   Map<String, dynamic> toMap() {
@@ -46,6 +49,7 @@ class UserProjects {
       'description': description,
       'deadline': deadline,
       'code': code,
+      'admin': admin,
     };
   }
 }

@@ -42,23 +42,26 @@ class FirestoreDatabase implements Database {
   @override
   Future<void> joinProject(String projectId) async {
     var _isUserPresent = await Firestore.instance.collection('projects').document(projectId).collection('users').document(uid).get();
-    if (_isUserPresent == null) {
-        print("ADDING NEW USER TO PROJECT");
+    if (_isUserPresent.data == null) {
+      print("ADDING NEW USER TO PROJECT");
       String _code;
       String _title;
       String _description;
       Timestamp _deadline;
+      List _admin;
       await Firestore.instance.collection('projects').document(projectId).get().then((value) {
         _code = value.data['code'];
         _title = value.data['title'];
         _description = value.data['description'];
         _deadline = value.data['deadline'];
+        _admin = value.data['admin'];
       });
       await _setData('users/$uid/projects/$projectId', {
         "title": _title,
         "code": _code,
         "description": _description,
         "deadline": _deadline,
+        "admin": _admin,
       });
       addUserToProject(projectId);
     } else {

@@ -27,6 +27,7 @@ class _ProjectSettingsState extends State<ProjectSettings> {
   bool lastAdmin =
       false; //[Action] Need a way to check if this user is the last remaining admin.
   List<Member> memberList;
+  List adminList;
   String projectDescription;
 
   @override
@@ -38,6 +39,7 @@ class _ProjectSettingsState extends State<ProjectSettings> {
   //[Note] This method arranges the screen's main order of items inside a listview
   Widget constructor(ProjectDatabase db) {
     if (memberList == null) {
+      getAdminUserList(db);
       getUserList(db);
     }
     if (projectDescription == null) {
@@ -207,13 +209,24 @@ class _ProjectSettingsState extends State<ProjectSettings> {
       userListName.add(ele["name"].toString());
       userListUid.add(ele["uid"].toString());
       memberListName
-          .add(Member(name: ele["name"].toString(), image: null, admin: true));
+          .add(Member(name: ele["name"].toString(), image: null, admin: adminList.contains(ele["uid"].toString())));
     }
     if (mounted) {
       setState(() {
         memberList = memberListName;
       });
     }
+  }
+
+  void getAdminUserList(ProjectDatabase db) async {
+    List adminUserList = await db.getAdminUserList();
+    setState(() {
+      adminList = adminUserList;
+      admin = adminUserList.contains(db.getUid());
+      lastAdmin = adminUserList.contains(db.getUid()) && (adminUserList.length == 1);
+    });
+    print(admin);
+    print(lastAdmin);
   }
 
   void getProjectDescription(ProjectDatabase db) async {

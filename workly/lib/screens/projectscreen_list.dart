@@ -329,6 +329,7 @@ class _AllProjectsState extends State<AllProjects> {
         "code": code,
         "description": _projectDescription,
         "deadline": _convertFromString(_projectDeadline),
+        "admin": [database.getUid(),],
       });
     }
     Navigator.of(context).pop();
