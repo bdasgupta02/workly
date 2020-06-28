@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 
 class Member {
   String name;
+  String uid;
   ImageProvider<dynamic> image;
   bool admin;
 
-  Member({@required this.name, this.image, this.admin});
+  Member({@required this.name, this.uid, this.image, this.admin});
+
+  String get getUid => uid;
+
+  String get getName => name;
 
   Widget makeMemberTile(Function toPress, bool forTaskView) {
     return Container(
