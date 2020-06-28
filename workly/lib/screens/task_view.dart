@@ -411,8 +411,9 @@ class _TaskViewState extends State<TaskView> {
     List _memberListId = _taskAssignUid;
     if (mine) {
       //leave
-      _memberListId.remove(widget.database.getUid());
-      _memberList.remove(widget.database.getUserName());
+      int memberIdx = _memberListId.indexOf(widget.database.getUid());
+      _memberListId.removeAt(memberIdx);
+      _memberList.removeAt(memberIdx);
       await widget.database.updateTaskDetails(widget.taskId, {
           "assignedUid": _memberListId,
           "assignedName": _memberList,

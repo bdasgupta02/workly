@@ -150,6 +150,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     await Firestore.instance.collection('users').document(_uid).collection('projects').document(projectId).delete();
     sendLeaveMsg(_uid, _name, leave);
     removeTaskAssignment(_uid, _name);
+    removeIdeasVoting(_uid, _name);
   }
 
   @override
@@ -193,7 +194,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     });
     return description;
   }
-
+  
   Future<void> removeTaskAssignment(String id, String name) async {
     List assignListId = List();
     List assignListName = List();
@@ -204,8 +205,9 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       assignListId = element.data['assignedUid'];
       assignListName = element.data['assignedName'];
       taskId = element.data['taskId'];
-      assignListId.remove(id);
-      assignListName.remove(name);
+      int idIdx = assignListId.indexOf(id);
+      assignListId.removeAt(idIdx);
+      assignListName.removeAt(idIdx);
       await Firestore.instance.collection('projects').document(projectId).collection('task').document(taskId).updateData({
         "assignedName": assignListName,
         "assignedUid": assignListId,
@@ -214,6 +216,28 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       assignListName = List();
       taskId = "";      
     });
+  }
+
+  Future<void> removeIdeasVoting(String id, String name) async {
+    List votesListId = List();
+    int voteCount = 0;
+    String ideaId = "";
+    var results = await Firestore.instance.collection('projects').document(projectId).collection('idea').where("votes", arrayContains: id)
+    .getDocuments();
+    results.documents.forEach((element) async {
+      votesListId = element.data['votes'];
+      voteCount = element.data['voteCount'];
+      ideaId = element.data['ideaId'];
+      votesListId.remove(id);
+      voteCount  = voteCount - 1;
+      await Firestore.instance.collection('projects').document(projectId).collection('idea').document(ideaId).updateData({
+        "voteCount": voteCount,
+        "votes": votesListId,
+      });
+      votesListId = List();
+      voteCount = 0;
+      ideaId = "";      
+    });    
   }
 
   Future<void> sendLeaveMsg(String id, String name, bool leave) async {
