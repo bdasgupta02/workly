@@ -15,7 +15,7 @@ class TaskFormPage extends StatelessWidget {
   final Function refresh;
 
   TaskFormPage({
-    @required this.database, 
+    @required this.database,
     @required this.edit,
     this.taskName,
     this.taskDescription,
@@ -28,6 +28,17 @@ class TaskFormPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xFF141336),
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: Color(0xFFFCFCFC),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: Stack(
         children: <Widget>[
           ClippedHeader(),
@@ -35,7 +46,7 @@ class TaskFormPage extends StatelessWidget {
             children: <Widget>[
               Container(
                 margin: EdgeInsets.only(
-                  top: 60,
+                  top: 10,
                   bottom: 20,
                 ),
                 child: Text(
@@ -57,7 +68,7 @@ class TaskFormPage extends StatelessWidget {
                     padding: EdgeInsets.all(5),
                     child: Container(
                       child: TaskForm(
-                        database: database, 
+                        database: database,
                         edit: edit,
                         taskName: taskName,
                         taskDescription: taskDescription,
@@ -65,7 +76,7 @@ class TaskFormPage extends StatelessWidget {
                         taskPriority: taskPriority,
                         taskId: taskId,
                         refresh: refresh,
-                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -92,7 +103,7 @@ class TaskForm extends StatefulWidget {
   final Function refresh;
 
   TaskForm({
-    @required this.database, 
+    @required this.database,
     @required this.edit,
     this.taskName,
     this.taskDescription,
@@ -181,8 +192,8 @@ class _TaskFormState extends State<TaskForm> {
         child: Padding(
           padding: EdgeInsets.only(
             top: 25,
-            left: 25,
-            right: 25,
+            left: 15,
+            right: 15,
             bottom: 12,
           ),
           child: Column(
@@ -208,12 +219,13 @@ class _TaskFormState extends State<TaskForm> {
         offstage: _priorityValid,
         child: Container(
           alignment: Alignment.centerLeft,
-          padding: EdgeInsets.only(left:10),
+          padding: EdgeInsets.only(left: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              SizedBox(height:8.0),
-              Text("Please select a priority level", 
+              SizedBox(height: 8.0),
+              Text(
+                "Please select a priority level",
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.red[800],
@@ -232,11 +244,12 @@ class _TaskFormState extends State<TaskForm> {
         offstage: _stateValid || _calledEdit,
         child: Container(
           alignment: Alignment.centerLeft,
-          padding: EdgeInsets.only(left:10),
+          padding: EdgeInsets.only(left: 10),
           child: Column(
             children: <Widget>[
-              SizedBox(height:8.0),
-              Text("Please select a State", 
+              SizedBox(height: 8.0),
+              Text(
+                "Please select a State",
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.red[800],
@@ -256,7 +269,7 @@ class _TaskFormState extends State<TaskForm> {
       //     child: Column(
       //       children: <Widget>[
       //         SizedBox(height:8.0),
-      //         Text("Please select a person", 
+      //         Text("Please select a person",
       //           style: TextStyle(
       //             fontSize: 12,
       //             color: Colors.red[800],
@@ -271,14 +284,15 @@ class _TaskFormState extends State<TaskForm> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Expanded(
-            child: OutlineButton(
-              borderSide: BorderSide(color: Color(0xFF31BCD8)),
+            child: FlatButton(
+              color: Color(0xFFE9E9E9),
               child: Text(
                 "Cancel",
                 style: TextStyle(
-                  color: Color(0xFF31BCD8),
+                  color: Colors.black54,
                   fontFamily: 'Roboto',
                   fontWeight: FontWeight.w600,
+                  fontSize: 15,
                 ),
               ),
               shape: RoundedRectangleBorder(
@@ -311,7 +325,7 @@ class _TaskFormState extends State<TaskForm> {
                   widget.edit ? "Save" : "Create Task",
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18.0,
+                    fontSize: 15,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w600,
                   ),
@@ -328,29 +342,64 @@ class _TaskFormState extends State<TaskForm> {
           ),
         ],
       ),
-      SizedBox(height:5,),
+      SizedBox(
+        height: 5,
+      ),
       Offstage(
         offstage: !widget.edit,
-        child: FlatButton.icon(
-          color: Colors.red,
-          icon: Icon(
-            Icons.delete_forever,
-            color: Colors.white,
-          ),
-          label: Text(
-            "Delete",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18.0,
-              color: Colors.white,
-              fontFamily: 'Roboto',
-              fontWeight: FontWeight.w600,
+        child: Column(
+          children: <Widget>[
+            Padding(
+              padding: EdgeInsets.only(top: 5, bottom: 5),
+              child: Center(
+                child: Text(
+                  "Or",
+                  style: TextStyle(
+                    fontFamily: 'Khula',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 15,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
             ),
-          ),
-          onPressed: () => _deleteTask(),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24.0),
-          ),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(24)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.redAccent.withOpacity(0.3),
+                          spreadRadius: 2,
+                          blurRadius: 10,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: FlatButton(
+                      color: Colors.redAccent,
+                      child: Text(
+                        "Delete task",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.white,
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      onPressed: () => _deleteTask(),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24.0),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     ];
@@ -379,8 +428,8 @@ class _TaskFormState extends State<TaskForm> {
         (_taskDeadline.isNotEmpty && _taskDeadline.contains("/")) &&
         (_priority != null) &&
         (_state != null || _calledEdit == true);
-        // (_state != null) &&
-        // (_assign != null);
+    // (_state != null) &&
+    // (_assign != null);
     setState(() {
       _taskNameValid = _taskTitle.isNotEmpty;
       _taskDescValid = _taskDescription.isNotEmpty;
@@ -413,7 +462,8 @@ class _TaskFormState extends State<TaskForm> {
           // "state": stateIndex,
           "deadline": _convertFromString(_taskDeadline),
         });
-        widget.refresh(_taskTitle, _taskDescription, _formatStringDate(_taskDeadline), priorityIndex);
+        widget.refresh(_taskTitle, _taskDescription,
+            _formatStringDate(_taskDeadline), priorityIndex);
         Navigator.of(context).pop(true);
       } else {
         await widget.database.createTask(newTaskId, {
@@ -511,7 +561,7 @@ class _TaskFormState extends State<TaskForm> {
       focusNode: _taskDescriptionFocusNode,
       onChanged: (desc) => _updateState(),
       onEditingComplete: () => _taskDescEditingComplete(),
-      maxLines: null,
+      maxLines: 3,
       showCursor: true,
       maxLengthEnforced: true,
       // maxLength: 500,
@@ -538,6 +588,7 @@ class _TaskFormState extends State<TaskForm> {
       textAlign: TextAlign.start,
     );
   }
+
 // "Low", "Medium", "High"
   Widget _taskPriorityField() {
     return Container(
@@ -585,7 +636,11 @@ class _TaskFormState extends State<TaskForm> {
                           Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: value == "Low" ? Color(0xFFF8EB95) : (value == "High" ? Color(0xFFF56A82) : Color(0xFFF5A76A)),
+                              color: value == "Low"
+                                  ? Color(0xFFF8EB95)
+                                  : (value == "High"
+                                      ? Color(0xFFF56A82)
+                                      : Color(0xFFF5A76A)),
                             ),
                             width: 30,
                             height: 30,

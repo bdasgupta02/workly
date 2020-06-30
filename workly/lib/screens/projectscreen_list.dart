@@ -96,7 +96,7 @@ class _AllProjectsState extends State<AllProjects> {
                           color: Colors.black,
                         ),
                         label: Text(
-                          "Close",
+                          "Cancel",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
@@ -165,18 +165,29 @@ class _AllProjectsState extends State<AllProjects> {
                             }
                         },
                         child: Text(
-                          _joinProject ? "Join Project!" : 'Create Project!',
+                          _joinProject ? "Join project" : 'Create a new project',
                           style: TextStyle(
-                            color: Colors.black,
+                            color: Color(0xFFFCFCFC),
                             fontFamily: 'Roboto',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        color: Colors.grey[200],
+                        color: Color(0xFF04C9F1),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(34.0),
                         ),
                       ),
+                      decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(30)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF00CFF8).withOpacity(0.3),
+                    spreadRadius: 2,
+                    blurRadius: 10,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
                     ),
                     Container(
                       alignment: Alignment.center,
@@ -191,8 +202,8 @@ class _AllProjectsState extends State<AllProjects> {
                         },
                         child: Text(
                           _joinProject
-                              ? 'Create a Project instead!'
-                              : 'Join a Project instead!',
+                              ? 'Create a project instead'
+                              : 'Join a project instead',
                           style: TextStyle(
                             color: Colors.black,
                             fontFamily: 'Roboto',

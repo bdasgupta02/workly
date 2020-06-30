@@ -70,11 +70,11 @@ class _ProjectSettingsState extends State<ProjectSettings> {
         uniqueCode(db.getProjectId()),
         lastAdmin && numMember == 1
             ? SizedBox()
-            : buttonTile(
-                () => leaveProject(), 'Leave Project', 'Leave', Colors.orangeAccent),
+            : buttonTile(() => leaveProject(), 'Leave Project', 'Leave',
+                Colors.orangeAccent),
         admin && numMember == 1
-            ? buttonTile(
-                () => deleteProject(), 'Delete Project', 'Delete', Colors.redAccent)
+            ? buttonTile(() => deleteProject(), 'Delete Project', 'Delete',
+                Colors.redAccent)
             : SizedBox(),
         SizedBox(height: 20),
       ],
@@ -215,8 +215,11 @@ class _ProjectSettingsState extends State<ProjectSettings> {
     for (var ele in userMapList) {
       userListName.add(ele["name"].toString());
       userListUid.add(ele["uid"].toString());
-      memberListName
-          .add(Member(name: ele["name"].toString(), uid: ele["uid"].toString(), image: null, admin: adminList.contains(ele["uid"].toString())));
+      memberListName.add(Member(
+          name: ele["name"].toString(),
+          uid: ele["uid"].toString(),
+          image: null,
+          admin: adminList.contains(ele["uid"].toString())));
     }
     if (mounted) {
       setState(() {
@@ -232,7 +235,8 @@ class _ProjectSettingsState extends State<ProjectSettings> {
     setState(() {
       adminList = adminUserList;
       admin = adminUserList.contains(db.getUid());
-      lastAdmin = adminUserList.contains(db.getUid()) && (adminUserList.length == 1);
+      lastAdmin =
+          adminUserList.contains(db.getUid()) && (adminUserList.length == 1);
     });
     getUserList(db);
   }
@@ -316,28 +320,49 @@ class _ProjectSettingsState extends State<ProjectSettings> {
 
   Widget _showAdminActions(String id, String name) {
     return Dialog(
-      backgroundColor: Colors.grey[300],
+      backgroundColor: Color(0xFFE9E9E9),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(30),
       ),
       child: Container(
-        padding: EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 15),
+        padding: EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            FlatButton.icon(
-              color: Colors.white,
-              icon: Icon(
-                Icons.assignment_ind,
-                color: Colors.limeAccent[400],
+            Container(
+              alignment: Alignment.topLeft,
+              child: FlatButton.icon(
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: Colors.black,
+                ),
+                label: Text(
+                  "Cancel",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onPressed: () => {
+                  Navigator.of(context).pop(),
+                },
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(34.0),
+                ),
               ),
-              label: Text(
-                "Promote to admin user",
+            ),
+            FlatButton(
+              color: Colors.white,
+              child: Text(
+                "Promote to admin",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black,
+                  fontSize: 15,
+                  color: Colors.black87,
                   fontFamily: 'Roboto',
                   fontWeight: FontWeight.w600,
                 ),
@@ -348,18 +373,14 @@ class _ProjectSettingsState extends State<ProjectSettings> {
               ),
             ),
             SizedBox(height: 5),
-            FlatButton.icon(
+            FlatButton(
               color: Colors.white,
-              icon: Icon(
-                Icons.cancel,
-                color: Colors.red[800],
-              ),
-              label: Text(
+              child: Text(
                 "Remove from project",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black,
+                  fontSize: 15,
+                  color: Colors.black87,
                   fontFamily: 'Roboto',
                   fontWeight: FontWeight.w600,
                 ),
@@ -374,7 +395,6 @@ class _ProjectSettingsState extends State<ProjectSettings> {
       ),
     );
   }
-
 }
 
 class MemberTester {
@@ -390,7 +410,10 @@ class MemberTester {
   static Widget constructor(List<Member> members) {
     List<Widget> memberWidgets = [];
     for (int i = 0; i < members.length; i++) {
-      memberWidgets.add(members[i].makeMemberTile(() => projectSettingsState.memberActions(members[i].getUid, members[i].getName), false));
+      memberWidgets.add(members[i].makeMemberTile(
+          () => projectSettingsState.memberActions(
+              members[i].getUid, members[i].getName),
+          false));
     }
     return Column(
       children: memberWidgets,
