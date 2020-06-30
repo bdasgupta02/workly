@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
 import 'package:workly/screens/forget_password_page.dart';
 import 'package:workly/services/auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class EmailLoginPage extends StatelessWidget {
 
@@ -17,8 +20,8 @@ class EmailLoginPage extends StatelessWidget {
             children: <Widget>[
               Container(
                 margin: EdgeInsets.only(
-                  top: 110,
-                  bottom: 70,
+                  top: 80,
+                  bottom: 60,
                 ),
                 child: Text(
                   'Sign in with email',
@@ -76,6 +79,8 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   bool _incorrectEmailFormat = false;
   bool _incorrectEmailOrPassword = false;
   bool _weakPassword = false;
+  ImageProvider<dynamic> image;
+  PickedFile _image;
 
   EmailLoginFormType _formType = EmailLoginFormType.signIn;
 
@@ -158,6 +163,20 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
             !_isLoading;
 
     return [
+      Offstage(
+        offstage: _formType == EmailLoginFormType.register ? false : true,
+        child: Stack(
+          alignment: AlignmentDirectional.center,
+          children: <Widget>[
+            makeAvatar(),
+            Positioned(
+              bottom: 5,
+              right: 50,
+              child: _imagePickerButton(),
+            ),
+          ],
+        ),
+      ),
       Offstage(
         offstage: _formType == EmailLoginFormType.register ? false : true,
         child: _nameTextField(),
@@ -252,6 +271,152 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
         child: Center(child: CircularProgressIndicator(),),
       ),
     ];
+  }
+
+  Widget makeAvatar() {
+    return Container(
+      margin: EdgeInsets.only(
+        bottom: 12,
+        // top: 12,
+        // right: 5,
+      ),
+      width: 126,
+      height: 126,
+      decoration: BoxDecoration(
+        color: Color(0xFFE5E5E5),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black38.withOpacity(0.15),
+            spreadRadius: 2,
+            blurRadius: 20,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: CircleAvatar(
+        backgroundImage: image,
+        backgroundColor: Color(0xFFFCFCFC),
+        foregroundColor: Colors.black,
+        radius: 56,
+        child: _image == null//image == null
+            ? Text(
+                _name.isNotEmpty ? _name[0].toUpperCase() : "W",
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Roboto',
+                  fontSize: 48,
+                ),
+              )
+            : SizedBox(),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    PickedFile selectedImage = await ImagePicker().getImage(source: source);
+    // Image.file(File(selectedImage.path));
+    setState(() {
+      _image = selectedImage;
+    });
+  }
+
+  Widget _imagePickerButton() {
+    return MaterialButton(
+      color: Colors.grey[200],
+      child: Icon(
+        Icons.add_a_photo,
+        size: 20,
+      ),
+      padding: EdgeInsets.all(10),
+      shape: CircleBorder(),
+      onPressed: () => {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return _showImageSource();
+          },
+          barrierDismissible: true,
+        ),
+      },
+    );
+  }
+
+  Widget _showImageSource() {
+    return AlertDialog(
+      title: Text("Pick image from", style: TextStyle(fontSize: 18,),),
+      titlePadding: EdgeInsets.only(left: 20, top: 5),
+      backgroundColor: Color(0xFFE9E9E9),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      contentPadding: EdgeInsets.only(top: 10, bottom: 15,),
+      content: Container(
+        height: 80,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            Container(
+              width: 80,
+              child: FlatButton(
+                color: Color(0xFF04C9F1),
+                padding: EdgeInsets.all(5.0),
+                child: Column( 
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    Icon(
+                      Icons.photo_camera,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                    Text("Camera",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                onPressed: () => _pickImage(ImageSource.camera),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
+              ),
+            ),
+            Container(
+              width: 80,
+              child: FlatButton(
+                color: Color(0xFF04C9F1),
+                padding: EdgeInsets.all(5.0),
+                child: Column( 
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    Icon(
+                      Icons.photo_library,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                    Text("Gallery",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                onPressed: () => _pickImage(ImageSource.gallery),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   TextField _nameTextField() {
@@ -397,6 +562,19 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       'created': FieldValue.serverTimestamp(),
       'uid': user.uid,
     });
+    _uploadProfileImage(user.uid);
+  }
+
+  void _uploadProfileImage(String uid) async {
+    final FirebaseStorage _storage = FirebaseStorage(storageBucket: 'gs://workly-7af57.appspot.com');
+    StorageUploadTask _upload = _storage.ref().child('profile/$uid.png').putFile(File(_image.path));
+    if (_upload.isInProgress) {
+      print("UPLOAD IN PROGRESS");
+    } else if (_upload.isComplete) {
+      print("UPLOAD COMPLETED");
+    } else {
+      print("UPLOAD ERROR");
+    }
   }
 
   void _forgetMyPassword(BuildContext context) {
