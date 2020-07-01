@@ -79,8 +79,9 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   bool _incorrectEmailFormat = false;
   bool _incorrectEmailOrPassword = false;
   bool _weakPassword = false;
-  ImageProvider<dynamic> image;
+  
   PickedFile _image;
+  ImageProvider<dynamic> image;
 
   EmailLoginFormType _formType = EmailLoginFormType.signIn;
 
@@ -301,7 +302,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
         radius: 56,
         child: _image == null//image == null
             ? Text(
-                _name.isNotEmpty ? _name[0].toUpperCase() : "W",
+                _name.isNotEmpty ? _name[0].toUpperCase() : "",
                 style: TextStyle(
                   color: Colors.black54,
                   fontWeight: FontWeight.w600,
@@ -319,6 +320,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     // Image.file(File(selectedImage.path));
     setState(() {
       _image = selectedImage;
+      image = FileImage(File(_image.path));
     });
   }
 
