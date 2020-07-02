@@ -10,6 +10,7 @@ abstract class Database {
   Future<bool> checkCode(String code);
   String getUid();
   Future<String> getName();
+  Future<String> getImgeUrl();
 }
 
 class FirestoreDatabase implements Database {
@@ -24,12 +25,22 @@ class FirestoreDatabase implements Database {
     return uid;
   }
 
+  @override
   Future<String> getName() async {
     String _name;
     await Firestore.instance.collection('users').document(uid).get().then((value) {
       _name = value.data['name'];
     });
     return _name;
+  }
+
+  @override
+  Future<String> getImgeUrl() async {
+    String _url;
+    await Firestore.instance.collection('users').document(uid).get().then((value) {
+      _url = value.data['imageUrl'];
+    });
+    return _url;
   }
 
   @override
@@ -98,16 +109,19 @@ class FirestoreDatabase implements Database {
     String _uid;
     String _name;
     String _email;
+    var _imageUrl;
     String _time = DateTime.now().toString();
     await Firestore.instance.collection('users').document(uid).get().then((value) {
       _uid = value.data['uid'];
       _name = value.data['name'];
       _email = value.data['email'];
+      _imageUrl = value.data['imageUrl'];
     });
     await _setData('projects/$projectId/users/$uid', {
       "uid": _uid,
       "name": _name,
       "email": _email,
+      "imageUrl": _imageUrl,
     });
     await _setData('projects/$projectId/chat/$_time', {
       "name": _name,

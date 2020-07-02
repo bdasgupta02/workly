@@ -38,13 +38,14 @@ class _ProjectSwitchboardState extends State<ProjectSwitchboard> with AutomaticK
   void changeProjectScreen(int newIndex, String projectId, String projectName) async {
     final database = Provider.of<Database>(context, listen: false);
     String _name = await database.getName();
+    var _imageUrl = await database.getImgeUrl();
     setState(() {
       _addProjectHistory();
       stateIndex = newIndex;
       _subScreens = [
         AllProjects(),   
         Provider<ProjectDatabase>(
-          create: (_) => FirestoreProjectDatabase(uid: database.getUid(), userName: _name, projectId: projectId, projectName: projectName),
+          create: (_) => FirestoreProjectDatabase(uid: database.getUid(), userName: _name, projectId: projectId, projectName: projectName, imageUrl: _imageUrl),
           child: ProjectTabWrapper(),
         ),
       ];

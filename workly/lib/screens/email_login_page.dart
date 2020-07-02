@@ -300,7 +300,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
         backgroundColor: Color(0xFFFCFCFC),
         foregroundColor: Colors.black,
         radius: 56,
-        child: _image == null//image == null
+        child: image == null
             ? Text(
                 _name.isNotEmpty ? _name[0].toUpperCase() : "",
                 style: TextStyle(
@@ -316,12 +316,14 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    PickedFile selectedImage = await ImagePicker().getImage(source: source);
+    PickedFile selectedImage = await ImagePicker().getImage(source: source, preferredCameraDevice: CameraDevice.front);
     // Image.file(File(selectedImage.path));
-    setState(() {
-      _image = selectedImage;
-      image = FileImage(File(_image.path));
-    });
+    if (selectedImage != null) {
+      setState(() {
+        _image = selectedImage;
+        image = FileImage(File(_image.path));
+      });
+    }
   }
 
   Widget _imagePickerButton() {
@@ -381,7 +383,10 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
                     ),
                   ],
                 ),
-                onPressed: () => _pickImage(ImageSource.camera),
+                onPressed: () => {
+                  _pickImage(ImageSource.camera),
+                  Navigator.of(context).pop(),
+                },
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
@@ -409,7 +414,10 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
                     ),
                   ],
                 ),
-                onPressed: () => _pickImage(ImageSource.gallery),
+                onPressed: () => {
+                  _pickImage(ImageSource.gallery),
+                  Navigator.of(context).pop(),
+                },
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20.0),
                 ),
@@ -558,24 +566,31 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
   void _createFireBaseUser() async {
     final auth = Provider.of<AuthBase>(context, listen: false);
     User user = await auth.currentUser();
+    String _url; //If have error, then set this to null
+    if (_image != null) {
+      _url = await _uploadProfileImage(user.uid);
+    }
     Firestore.instance.collection('users').document(user.uid).setData({
       'name': _name.trim(),
       'email': _email.trim(),
       'created': FieldValue.serverTimestamp(),
       'uid': user.uid,
+      'imageUrl': _url,
     });
-    _uploadProfileImage(user.uid);
   }
 
-  void _uploadProfileImage(String uid) async {
+  Future<String> _uploadProfileImage(String uid) async {
     final FirebaseStorage _storage = FirebaseStorage(storageBucket: 'gs://workly-7af57.appspot.com');
     StorageUploadTask _upload = _storage.ref().child('profile/$uid.png').putFile(File(_image.path));
-    if (_upload.isInProgress) {
-      print("UPLOAD IN PROGRESS");
-    } else if (_upload.isComplete) {
-      print("UPLOAD COMPLETED");
+    StorageTaskSnapshot _snapshot = await _upload.onComplete;
+    if (_snapshot.error == null) {
+      String _url = await _snapshot.ref.getDownloadURL();
+      print("URL");
+      print(_url);
+      return _url;
     } else {
-      print("UPLOAD ERROR");
+      print(_snapshot.error.toString());
+      return null;
     }
   }
 

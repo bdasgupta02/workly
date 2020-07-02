@@ -27,6 +27,7 @@ abstract class ProjectDatabase {
   String getUserName();
   String getProjectName();
   String getProjectId();
+  String getImageUrl();
 }
 
 class FirestoreProjectDatabase implements ProjectDatabase {
@@ -34,12 +35,14 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   final String userName;
   final String projectId;
   final String projectName;
+  var imageUrl;
 
   FirestoreProjectDatabase({
     @required this.uid,
     @required this.userName,
     @required this.projectId,
     @required this.projectName,
+    @required this.imageUrl,
   }) : assert(uid != null), assert(userName != null), assert(projectId != null), assert(projectName != null);
 
   @override
@@ -60,6 +63,11 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   @override
   String getProjectId() {
     return projectId;
+  }
+
+  @override
+  String getImageUrl() {
+    return imageUrl;
   }
 
   @override
@@ -171,6 +179,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       Map<String, String> userMap = {
         "name": value.data['name'],
         "uid": value.data['uid'],
+        "imageUrl": value.data['imageUrl'],
       };
       userList.add(userMap);
     });

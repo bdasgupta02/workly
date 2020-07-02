@@ -70,10 +70,10 @@ class _ProjectSettingsState extends State<ProjectSettings> {
         uniqueCode(db.getProjectId()),
         lastAdmin && numMember == 1
             ? SizedBox()
-            : buttonTile(() => leaveProject(), 'Leave Project', 'Leave',
+            : buttonTile(() => showExitDialog("leave"), 'Leave Project', 'Leave',
                 Colors.orangeAccent),
         admin && numMember == 1
-            ? buttonTile(() => deleteProject(), 'Delete Project', 'Delete',
+            ? buttonTile(() => showExitDialog("delete"), 'Delete Project', 'Delete',
                 Colors.redAccent)
             : SizedBox(),
         SizedBox(height: 20),
@@ -218,7 +218,7 @@ class _ProjectSettingsState extends State<ProjectSettings> {
       memberListName.add(Member(
           name: ele["name"].toString(),
           uid: ele["uid"].toString(),
-          image: null,
+          image: ele["imageUrl"].toString() == "null" ? null : NetworkImage(ele["imageUrl"].toString()),
           admin: adminList.contains(ele["uid"].toString())));
     }
     if (mounted) {
@@ -284,6 +284,40 @@ class _ProjectSettingsState extends State<ProjectSettings> {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
     await database.deleteProject();
     projectSwitchboardState.goBack();
+  }
+
+  void showExitDialog(String action) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return _exitDialog(action);
+      },
+      barrierDismissible: true,
+    );
+  }
+
+  Widget _exitDialog(String action) {
+    String verb = action == "leave" ? "leaving" : "deleting";
+    return AlertDialog(
+      title: Text("Wait..."),
+      content: Text(
+          "Are you really $verb this project group?"),
+      actions: <Widget>[
+        FlatButton(
+          child: Text("Cancel"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        FlatButton(
+          child: Text("Yes, $action project group"),
+          onPressed: () => {
+            action == "leave" ? leaveProject() : deleteProject(),
+            Navigator.of(context).pop(),
+          },
+        ),
+      ],
+    );
   }
 
   void promoteToAdmin(String id) async {

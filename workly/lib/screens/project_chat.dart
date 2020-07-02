@@ -143,8 +143,10 @@ class _ProjectChatState extends State<ProjectChat> {
             final chatMessages = snapshot.data;
             final chatList = chatMessages
                 .map((chat) => Message(
+                    uid: chat.user,
                     name: chat.name,
                     msg: chat.message,
+                    img: database.getImageUrl() == null ? null : NetworkImage(database.getImageUrl().toString()),
                     time: chat.time,
                     user: chat.user == database.getUid(),
                     sameUserAsNext: false,
@@ -170,6 +172,7 @@ class _ProjectChatState extends State<ProjectChat> {
         : DateTime.now().minute.toString();
     String time = hourZero + ":" + minuteZero;
     cacheChat.add(Message(
+        uid: null,
         name: 'Does not matter due to Cache',
         img: null,
         time: time,
@@ -190,11 +193,12 @@ class _ProjectChatState extends State<ProjectChat> {
         final Message draftMsg = chatList[chatList.length - 1 - idx];
         bool _sameUserAsNext = (chatList.length - idx) == chatList.length
             ? false
-            : chatList[chatList.length - idx].user ==
-                chatList[chatList.length - 1 - idx].user;
+            : chatList[chatList.length - idx].uid ==
+                chatList[chatList.length - 1 - idx].uid;
         final Message msg = Message(
             name: draftMsg.name,
             msg: draftMsg.msg,
+            img: draftMsg.img,
             time: draftMsg.time,
             user: draftMsg.user,
             sameUserAsNext: _sameUserAsNext,
@@ -224,6 +228,7 @@ class MessageList {
 }
 
 class Message {
+  String uid;
   var name;
   var msg;
   ImageProvider<dynamic> img;
@@ -234,7 +239,8 @@ class Message {
       isEvent; //[Note] False if this message is a proper text, true if this msg is an event (eg. John has joined the group)
 
   Message(
-      {this.name,
+      {this.uid,
+      this.name,
       this.msg,
       this.img,
       this.time,
