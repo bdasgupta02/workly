@@ -10,11 +10,18 @@ abstract class Database {
   Future<bool> checkCode(String code);
   String getUid();
   Future<String> getName();
-  Future<String> getImgeUrl();
+  Future<String> getImageUrl();
+  // List getUserUidList();
+  // List getUserNameList();
+  // List getUserImageUrlList();
+  // Future<bool> runListQuery(String projectId);
 }
 
 class FirestoreDatabase implements Database {
   final String uid;
+  // List userUidList;
+  // List userNameList;
+  // List userImageUrlList;
 
   FirestoreDatabase({
     @required this.uid,
@@ -35,7 +42,7 @@ class FirestoreDatabase implements Database {
   }
 
   @override
-  Future<String> getImgeUrl() async {
+  Future<String> getImageUrl() async {
     String _url;
     await Firestore.instance.collection('users').document(uid).get().then((value) {
       _url = value.data['imageUrl'];
@@ -43,11 +50,52 @@ class FirestoreDatabase implements Database {
     return _url;
   }
 
+  // @override
+  // List getUserUidList() {
+  //   return userUidList;
+  // }
+
+  // @override
+  // List getUserNameList() {
+  //   return userNameList;
+  // }
+
+  // @override
+  // List getUserImageUrlList() {
+  //   return userImageUrlList;
+  // }
+
+  // @override
+  // Future<bool> runListQuery(String projectId) async {
+  //   List _userUid;
+  //   List _userName;
+  //   List _userImageUrl;
+  //   bool _valid = false;
+  //   await Firestore.instance.collection('projects').document(projectId).get().then((value) {
+  //     if (value.data != null) { 
+  //       _userUid = value.data['userUid'];
+  //       _userName = value.data['userName'];
+  //       _userImageUrl = value.data['userImageUrl'];
+  //       _valid = true;
+  //     }
+  //   });
+  //   if (_valid) {
+  //     userUidList = _userUid;
+  //     userNameList = _userName;
+  //     userImageUrlList = _userImageUrl;
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // }
+
   @override
   Future<void> createUserProject(String projectId, Map<String, dynamic> projectData) async {
     await _setData('users/$uid/projects/$projectId', projectData);
     await _setData('projects/$projectId', projectData);
-    addUserToProject(projectId); 
+    String _name = await getName();
+    await _sendJoinEventMessage(projectId, _name, uid);
+    // addUserToProject(projectId); 
   }
 
   @override
@@ -59,7 +107,6 @@ class FirestoreDatabase implements Database {
       String _title;
       String _description;
       Timestamp _deadline;
-      List _admin;
       bool _valid = false;
       await Firestore.instance.collection('projects').document(projectId).get().then((value) {
         if (value.data != null) { 
@@ -67,7 +114,6 @@ class FirestoreDatabase implements Database {
           _title = value.data['title'];
           _description = value.data['description'];
           _deadline = value.data['deadline'];
-          _admin = value.data['admin'];
           _valid = true;
         }
       });
@@ -77,7 +123,6 @@ class FirestoreDatabase implements Database {
           "code": _code,
           "description": _description,
           "deadline": _deadline,
-          "admin": _admin,
         });
         addUserToProject(projectId);
         return 1;
@@ -108,28 +153,48 @@ class FirestoreDatabase implements Database {
   Future<void> addUserToProject(String projectId) async {
     String _uid;
     String _name;
-    String _email;
+    // String _email;
     var _imageUrl;
-    String _time = DateTime.now().toString();
+    List _userUid;
+    List _userName;
+    List _userImageUrl;
     await Firestore.instance.collection('users').document(uid).get().then((value) {
       _uid = value.data['uid'];
       _name = value.data['name'];
-      _email = value.data['email'];
+      // _email = value.data['email'];
       _imageUrl = value.data['imageUrl'];
     });
-    await _setData('projects/$projectId/users/$uid', {
-      "uid": _uid,
-      "name": _name,
-      "email": _email,
-      "imageUrl": _imageUrl,
+    await Firestore.instance.collection('projects').document(projectId).get().then((value) {
+      _userUid = value.data['userUid'];
+      _userName = value.data['userName'];
+      _userImageUrl = value.data['userImageUrl'];
     });
+    // await _setData('projects/$projectId/users/$uid', {
+    //   "uid": _uid,
+    //   "name": _name,
+    //   "email": _email,
+    //   "imageUrl": _imageUrl,
+    // });
+    _userUid.add(_uid);
+    _userName.add(_name);
+    _userImageUrl.add(_imageUrl);
+    await Firestore.instance.collection('projects').document(projectId).updateData({
+      "userUid": _userUid,
+      "userName": _userName,
+      "userImageUrl": _userImageUrl,
+    });
+    _sendJoinEventMessage(projectId, _name, _uid);
+  }
+
+  Future<void> _sendJoinEventMessage(String projectId, String name, String uid) async {
+    String _time = DateTime.now().toString();
     await _setData('projects/$projectId/chat/$_time', {
-      "name": _name,
-      "message": "$_name has joined this project group",
+      "name": name,
+      "message": "$name has joined this project group",
       "timesort": FieldValue.serverTimestamp(),
       "time": FieldValue.serverTimestamp().toString(),
       "chatId": _time,
-      "user": _uid,
+      "user": uid,
       "event": true,
     });
   }

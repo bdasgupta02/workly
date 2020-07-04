@@ -6,14 +6,20 @@ class UserProjects {
   final String description;
   final String deadline;
   final String code;
-  final List admin;
+  // final List admin;
+  // final List userUid;
+  // final List userName;
+  // final List userImageUrl;
 
   UserProjects({
     @required this.title,
     @required this.description,
     @required this.deadline,
     @required this.code,
-    @required this.admin,
+    // @required this.admin,
+    // @required this.userUid,
+    // @required this.userName,
+    // @required this.userImageUrl,
   });
 
   factory UserProjects.fromMap(Map<String, dynamic> data) {
@@ -24,7 +30,10 @@ class UserProjects {
     final String description = data['description'];
     final Timestamp deadline = data['deadline'];
     final String code = data['code'];
-    final List admin = data['admin'];
+    // final List admin = data['admin'];
+    // final List userUid = data['userUid'];
+    // final List userName = data['userName'];
+    // final List userImageUrl = data['userImageUrl'];
     
     // String date = deadline.toDate().toString().substring(0,10);
     // int indexOfSlash = date.indexOf("-");
@@ -40,7 +49,7 @@ class UserProjects {
     String _yyyy = date.year.toString();
     String formattedDeadline = _dd + "/" + _mm + "/" + _yyyy;
 
-    return UserProjects(title: title, description: description, deadline: formattedDeadline, code: code, admin: admin);
+    return UserProjects(title: title, description: description, deadline: formattedDeadline, code: code);//, admin: admin, userUid: userUid, userName: userName, userImageUrl: userImageUrl);
   }
 
   Map<String, dynamic> toMap() {
@@ -49,7 +58,10 @@ class UserProjects {
       'description': description,
       'deadline': deadline,
       'code': code,
-      'admin': admin,
+      // 'admin': admin,
+      // 'userUid': userUid,
+      // 'userName': userName,
+      // 'userImageUrl': userImageUrl,
     };
   }
 }

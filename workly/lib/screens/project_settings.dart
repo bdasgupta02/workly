@@ -208,18 +208,17 @@ class _ProjectSettingsState extends State<ProjectSettings> {
 
   void getUserList(ProjectDatabase db) async {
     print("GET USER LIST");
-    List<Map<String, String>> userMapList = await db.getUserList();
-    List<String> userListName = List<String>();
-    List<String> userListUid = List<String>();
+    Map userMapList = await db.getUserList();
+    List userUidList = userMapList['userUidList'];
+    List userNameList = userMapList['userNameList'];
+    List userImageUrlList = userMapList['userImageUrlList'];
     List<Member> memberListName = List<Member>();
-    for (var ele in userMapList) {
-      userListName.add(ele["name"].toString());
-      userListUid.add(ele["uid"].toString());
+    for (int idx = 0; idx < userUidList.length; idx ++) {
       memberListName.add(Member(
-          name: ele["name"].toString(),
-          uid: ele["uid"].toString(),
-          image: ele["imageUrl"].toString() == "null" ? null : NetworkImage(ele["imageUrl"].toString()),
-          admin: adminList.contains(ele["uid"].toString())));
+          name: userNameList[idx],
+          uid: userUidList[idx],
+          image: userImageUrlList[idx].toString() == "null" ? null : NetworkImage(userImageUrlList[idx].toString()),
+          admin: adminList.contains(userUidList[idx])));
     }
     if (mounted) {
       setState(() {

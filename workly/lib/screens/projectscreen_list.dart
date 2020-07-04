@@ -376,12 +376,17 @@ class _AllProjectsState extends State<AllProjects> {
         code = generateProjectId;
       }
       print(code);
+      String _userName = await database.getName();
+      String _userImageUrl = await database.getImageUrl();
       await database.createUserProject(code, {
         "title": _projectName,
         "code": code,
         "description": _projectDescription,
         "deadline": _convertFromString(_projectDeadline),
         "admin": [database.getUid(),],
+        "userUid": [database.getUid(),],
+        "userName": [_userName,],
+        "userImageUrl": [_userImageUrl,],
       });
       Navigator.of(context).pop();
     }

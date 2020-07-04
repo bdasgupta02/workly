@@ -37,15 +37,43 @@ class _ProjectSwitchboardState extends State<ProjectSwitchboard> with AutomaticK
 
   void changeProjectScreen(int newIndex, String projectId, String projectName) async {
     final database = Provider.of<Database>(context, listen: false);
+    String _uid = database.getUid();
     String _name = await database.getName();
-    var _imageUrl = await database.getImgeUrl();
+    var _imageUrl = await database.getImageUrl();
+    // bool _valid = await database.runListQuery(projectId);
+    // List _userUidList = List();
+    // List _userNameList = List();
+    // List _userImageUrlList = List();
+    // List _newUserImageUrlList = List();
+    // if (_valid) {
+    //   _userUidList = database.getUserUidList();
+    //   _userNameList = database.getUserNameList();
+    //   _userImageUrlList = database.getUserImageUrlList();
+    //   for (var ele in _userImageUrlList) {
+    //     if (ele.toString() != "null") {
+    //       var _image = NetworkImage(ele.toString());
+    //       _newUserImageUrlList.add(_image);
+    //     } else {
+    //       _newUserImageUrlList.add(null);
+    //     }
+    //   }
+    // }
+    // print(_newUserImageUrlList);
     setState(() {
       _addProjectHistory();
       stateIndex = newIndex;
       _subScreens = [
         AllProjects(),   
         Provider<ProjectDatabase>(
-          create: (_) => FirestoreProjectDatabase(uid: database.getUid(), userName: _name, projectId: projectId, projectName: projectName, imageUrl: _imageUrl),
+          create: (_) => FirestoreProjectDatabase(
+            uid: _uid, 
+            userName: _name, 
+            projectId: projectId, 
+            projectName: projectName,
+            imageUrl: _imageUrl,),
+            // userUidList: _userUidList,
+            // userNameList: _userNameList,
+            // userImageList: _newUserImageUrlList),
           child: ProjectTabWrapper(),
         ),
       ];

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:workly/models/chat_message.dart';
@@ -16,7 +18,7 @@ abstract class ProjectDatabase {
   Future<void> exitProject(String id, String name, bool leave);
   Future<void> deleteIdea(String ideaId);
   Future<void> deleteTask(String taskId);
-  Future<List<Map<String, String>>> getUserList();
+  Future<Map> getUserList();
   Future<List> getAdminUserList();
   Future<String> getProjectDescription();
   Stream<List<ChatMessage>> chatStream();
@@ -28,6 +30,9 @@ abstract class ProjectDatabase {
   String getProjectName();
   String getProjectId();
   String getImageUrl();
+  // List getUserUidList();
+  // List getUserNameList();
+  // List getUserImageList();
 }
 
 class FirestoreProjectDatabase implements ProjectDatabase {
@@ -36,6 +41,9 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   final String projectId;
   final String projectName;
   var imageUrl;
+  // List userUidList;
+  // List userNameList;
+  // List userImageList;
 
   FirestoreProjectDatabase({
     @required this.uid,
@@ -43,7 +51,10 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     @required this.projectId,
     @required this.projectName,
     @required this.imageUrl,
-  }) : assert(uid != null), assert(userName != null), assert(projectId != null), assert(projectName != null);
+    // @required this.userUidList,
+    // @required this.userNameList,
+    // @required this.userImageList,
+  }) : assert(uid != null), assert(userName != null), assert(projectId != null), assert(projectName != null);//, assert(userUidList != null), assert(userNameList != null), assert(userImageList != null);
 
   @override
   String getUid() {
@@ -69,6 +80,21 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   String getImageUrl() {
     return imageUrl;
   }
+
+  // @override
+  // List getUserUidList() {
+  //   return userUidList;
+  // }
+  
+  // @override
+  // List getUserNameList() {
+  //   return userNameList;
+  // }
+
+  // @override
+  // List getUserImageList() {
+  //   return userImageList;
+  // }
 
   @override
   Future<void> createIdea(String ideaId, Map<String, dynamic> ideaData) async {
@@ -172,16 +198,15 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   }
 
   @override
-  Future<List<Map<String, String>>> getUserList() async {
-    List<Map<String, String>> userList = List<Map<String, String>>();
-    var results = await Firestore.instance.collection('projects').document(projectId).collection('users').getDocuments();
-    results.documents.forEach((value) {
-      Map<String, String> userMap = {
-        "name": value.data['name'],
-        "uid": value.data['uid'],
-        "imageUrl": value.data['imageUrl'],
-      };
-      userList.add(userMap);
+  Future<Map> getUserList() async {
+    Map userList = new Map();
+
+    await Firestore.instance.collection('projects').document(projectId).get().then((value) {
+      if (value.data != null) { 
+        userList['userUidList'] = value.data['userUid'];
+        userList['userNameList'] = value.data['userName'];
+        userList['userImageUrlList'] = value.data['userImageUrl'];
+      }
     });
     return userList;
   }
@@ -330,4 +355,78 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     final snapshots = reference.snapshots();
     return snapshots.map((snapshot) => snapshot.documents.map((snapshot) => builder(snapshot.data)).toList());
   }
+}
+
+class ChatStreamPagination {
+  final String projectId;
+
+  ChatStreamPagination({@required this.projectId});
+
+  // static final CollectionReference _chatCollectionReference =
+      // Firestore.instance.collection('projects/$projectId/chat');//aW9Ti7
+
+  final StreamController<List<ChatMessage>> _chatController =
+      StreamController<List<ChatMessage>>.broadcast();
+
+  List<List<ChatMessage>> _allPagedResults = List<List<ChatMessage>>();
+
+  static const int chatLimit = 5;
+  DocumentSnapshot _lastDocument;
+  bool _hasMoreData = true;
+
+  Stream listenToChatsRealTime() {
+    print("LISTEN TO CHAT");
+    _requestChats();
+    return _chatController.stream;
+  }
+
+  void _requestChats() {
+    var pagechatQuery = Firestore.instance.collection('projects/$projectId/chat')
+        .orderBy('timesort', descending: true)
+        .limit(chatLimit);
+    print(pagechatQuery);
+    if (_lastDocument != null) {
+      pagechatQuery =
+          pagechatQuery.startAfterDocument(_lastDocument);
+    }
+
+    if (!_hasMoreData) return;
+
+    var currentRequestIndex = _allPagedResults.length;
+
+    pagechatQuery.snapshots().listen(
+      (snapshot) {
+        if (snapshot.documents.isNotEmpty) {
+          var generalChats = snapshot.documents
+              .map((snapshot) => ChatMessage.fromMap(snapshot.data))
+              .toList();
+          generalChats.sort((x,y) => x.timesort.compareTo(y.timesort));
+          print("PRINT CHAT");
+          print(generalChats);
+          var pageExists = currentRequestIndex < _allPagedResults.length;
+
+          if (pageExists) {
+            _allPagedResults[currentRequestIndex] = generalChats;
+          } else {
+            _allPagedResults.add(generalChats);
+          }
+
+          var allChats = _allPagedResults.fold<List<ChatMessage>>(
+              List<ChatMessage>(),
+              // (initialValue, pageItems) => initialValue..addAll(pageItems));
+              (initialValue, pageItems) => initialValue..insertAll(0, pageItems));
+
+          _chatController.add(allChats);
+
+          if (currentRequestIndex == _allPagedResults.length - 1) {
+            _lastDocument = snapshot.documents.last;
+          }
+
+          _hasMoreData = generalChats.length == chatLimit;
+        }
+      },
+    );
+  }
+
+  void requestMoreData() => _requestChats();
 }

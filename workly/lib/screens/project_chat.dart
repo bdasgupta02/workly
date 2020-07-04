@@ -29,9 +29,26 @@ class _ProjectChatState extends State<ProjectChat> {
   final TextEditingController _chatMessageController = TextEditingController();
   String cacheString = "";
   List<Message> cacheChat = [];
+  ChatStreamPagination _chatStreamPagination;
+  final ScrollController _listScrollController = new ScrollController();
+  List userUidList;
+  List userImageUrlList;
+
+  void getUserListDetails() async {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    Map _userListDetails = await database.getUserList();
+    setState(() {
+      userUidList = _userListDetails['userUidList'];
+      userImageUrlList = _userListDetails['userImageUrlList'];
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
+    if (userUidList == null) {
+      getUserListDetails();
+    }
     return Column(
       children: <Widget>[
         Expanded(
@@ -134,10 +151,27 @@ class _ProjectChatState extends State<ProjectChat> {
     await database.createNewMessage(extractedMsg);
   }
 
+  @override
+  void initState() {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    super.initState();
+    _chatStreamPagination = ChatStreamPagination(projectId: database.getProjectId());
+    _listScrollController.addListener(_scrollListener);
+  }
+  
+  void _scrollListener() {
+    if (_listScrollController.offset >=
+            _listScrollController.position.maxScrollExtent &&
+        !_listScrollController.position.outOfRange) {
+      _chatStreamPagination.requestMoreData();
+    }
+  }
+
   Widget _buildChatList() {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
-    return StreamBuilder<List<ChatMessage>>(
-        stream: database.chatStream(),
+    return 
+    StreamBuilder<List<ChatMessage>>(
+        stream: _chatStreamPagination.listenToChatsRealTime(),//database.chatStream(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             final chatMessages = snapshot.data;
@@ -146,7 +180,8 @@ class _ProjectChatState extends State<ProjectChat> {
                     uid: chat.user,
                     name: chat.name,
                     msg: chat.message,
-                    img: database.getImageUrl() == null ? null : NetworkImage(database.getImageUrl().toString()),
+                    img: userImageUrlList[userUidList.indexOf(chat.user)] == null ? null : NetworkImage(userImageUrlList[userUidList.indexOf(chat.user)].toString()),
+                    //database.getImageUrl() == null ? null : NetworkImage(database.getImageUrl().toString()),
                     time: chat.time,
                     user: chat.user == database.getUid(),
                     sameUserAsNext: false,
@@ -186,6 +221,7 @@ class _ProjectChatState extends State<ProjectChat> {
 
   ListView constructChatList(List<Message> chatList) {
     return ListView.builder(
+      controller: _listScrollController,
       shrinkWrap: true,
       reverse: true,
       itemCount: chatList.length,
