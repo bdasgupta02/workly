@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:workly/screens/idea_view.dart';
 import 'package:workly/services/project_database.dart';
 import 'package:workly/models/idea.dart';
 
@@ -35,11 +36,11 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
         backgroundColor: Color(0xFF06D8AE),
         onPressed: () => {
           setState(() {
-              _ideaTitleController.clear();
-              _ideaDescriptionController.clear();
-              _ideaNameValid = true;
-              _ideaDescValid = true;
-              _editingMode = false;
+            _ideaTitleController.clear();
+            _ideaDescriptionController.clear();
+            _ideaNameValid = true;
+            _ideaDescValid = true;
+            _editingMode = false;
           }),
           showDialog(
             context: context,
@@ -64,10 +65,10 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(48)),
+                borderRadius: BorderRadius.all(Radius.circular(30)),
               ),
               child: Padding(
-                padding: EdgeInsets.only(left: 12, right: 12, bottom: 12),
+                padding: EdgeInsets.only(left: 12, right: 12, bottom: 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
@@ -79,7 +80,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
                           color: Colors.black,
                         ),
                         label: Text(
-                          "Close",
+                          "Cancel",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
@@ -100,7 +101,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
                       children: <Widget>[
                         _ideaNameField(),
                         SizedBox(
-                          height: 25,
+                          height: 10,
                         ),
                         _ideaDescriptionField(),
                       ],
@@ -111,45 +112,74 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
                     Container(
                       child: FlatButton(
                         onPressed: () => {
-                          if (_ideaTitle.isEmpty || _ideaDescription.isEmpty) {
-                            setState(() {
-                              _ideaNameValid = _ideaTitle.isNotEmpty;
-                              _ideaDescValid = _ideaDescription.isNotEmpty;
-                            }),
-                          } else {
-                            _editingMode ? updateIdeaDetails(ideaId) : addNewIdea(),
-                          }
+                          if (_ideaTitle.isEmpty || _ideaDescription.isEmpty)
+                            {
+                              setState(() {
+                                _ideaNameValid = _ideaTitle.isNotEmpty;
+                                _ideaDescValid = _ideaDescription.isNotEmpty;
+                              }),
+                            }
+                          else
+                            {
+                              _editingMode
+                                  ? updateIdeaDetails(ideaId)
+                                  : addNewIdea(),
+                            }
                         },
                         child: Text(
-                          _editingMode ? "Save" : "Add my Idea!",
+                          _editingMode ? "Save" : "Add my idea",
                           style: TextStyle(
-                            color: Colors.black,
+                            color: Color(0xFFFCFCFC),
                             fontFamily: 'Roboto',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        color: Colors.lightGreen[300],
+                        color: Color(0xFF04C9F1),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(34.0),
                         ),
                       ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(30)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFF00CFF8).withOpacity(0.3),
+                            spreadRadius: 2,
+                            blurRadius: 10,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                      ),
                     ),
                     Offstage(
                       offstage: !_editingMode,
-                      child: FlatButton(
-                        onPressed: () => deleteIdea(ideaId),
-                        child: Text(
-                          "Delete idea",
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontFamily: 'Roboto',
-                            fontWeight: FontWeight.w600,
+                      child: Container(
+                        child: FlatButton(
+                          onPressed: () => deleteIdea(ideaId),
+                          child: Text(
+                            "Delete idea",
+                            style: TextStyle(
+                              color: Color(0xFFFCFCFC),
+                              fontFamily: 'Roboto',
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          color: Colors.redAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(34.0),
                           ),
                         ),
-                        color: Colors.red[200],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(34.0),
-                        )
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.redAccent.withOpacity(0.3),
+                              spreadRadius: 2,
+                              blurRadius: 10,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -172,7 +202,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
   Widget _ideaNameField() {
     return TextField(
       decoration: InputDecoration(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24.0)),
         labelText: "Idea Name",
         hintText: "Name of your idea",
         errorText: _ideaNameValid ? null : "Please fill in a name",
@@ -190,7 +220,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
   Widget _ideaDescriptionField() {
     return TextField(
       decoration: InputDecoration(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
         labelText: "Idea Description",
         hintText: "Description for your idea",
         errorText: _ideaDescValid ? null : "Please fill in some description",
@@ -200,7 +230,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
       focusNode: _ideaDescriptionFocusNode,
       onChanged: (desc) => _updateState(),
       onEditingComplete: () => addNewIdea(),
-      maxLines: null,
+      maxLines: 3,
       showCursor: true,
       maxLengthEnforced: true,
       maxLength: 500,
@@ -232,23 +262,24 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
 
   void updateIdeaDetails(String ideaId) async {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
-    await database.updateIdeaDetails(ideaId, _ideaTitle, _ideaDescription);//"2020-06-17 14:56:53.873491"
+    await database.updateIdeaDetails(
+        ideaId, _ideaTitle, _ideaDescription); //"2020-06-17 14:56:53.873491"
     Navigator.of(context).pop();
   }
-  
+
   void updateVote(String ideaId) async {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
-    await database.updateVotes(ideaId);//"2020-06-17 14:56:53.873491"
+    await database.updateVotes(ideaId); //"2020-06-17 14:56:53.873491"
   }
 
   void openEditor(String ideaId, String ideaTitle, String ideaDescription) {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
     setState(() {
-        _ideaTitleController.text = ideaTitle;
-        _ideaDescriptionController.text = ideaDescription;
-        _ideaNameValid = true;
-        _ideaDescValid = true;
-        _editingMode = true;
+      _ideaTitleController.text = ideaTitle;
+      _ideaDescriptionController.text = ideaDescription;
+      _ideaNameValid = true;
+      _ideaDescValid = true;
+      _editingMode = true;
     });
     showDialog(
       context: context,
@@ -266,7 +297,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
   }
 
   Widget _buildIdeaList() {
-  final database = Provider.of<ProjectDatabase>(context, listen: false);
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
     return StreamBuilder<List<Idea>>(
       stream: database.ideaStream(),
       builder: (context, snapshot) {
@@ -274,7 +305,11 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
           final ideaItem = snapshot.data;
           final ideas = ideaItem
               .map((idea) => IdeaTile(
-                 title: idea.title, idea: idea.description, votes: idea.voteCount, ideaId: idea.ideaId)).toList();
+                  title: idea.title,
+                  idea: idea.description,
+                  votes: idea.voteCount,
+                  ideaId: idea.ideaId))
+              .toList();
           if (ideas.isEmpty) {
             return Center(
               child: Text(
@@ -324,17 +359,23 @@ class IdeaTile {
   var votes;
   var ideaId;
 
-  IdeaTile({@required this.title, @required this.idea, @required this.votes, @required this.ideaId});
+  IdeaTile(
+      {@required this.title,
+      @required this.idea,
+      @required this.votes,
+      @required this.ideaId});
 
   Widget makeIdeaTile() {
-    String newIdea = idea;//idea.length > 65 ? idea.substring(0, 65) + '...' : idea;
+    String newIdea =
+        idea; //idea.length > 65 ? idea.substring(0, 65) + '...' : idea;
     String newTitle =
         title.length > 65 ? title.substring(0, 65) + '...' : title;
 
     //[Note] This is for ONPRESSED
     Function _goToVoteAction = () => projectIdeasState.updateVote(ideaId);
-    Function _goToEditAction = () => projectIdeasState.openEditor(ideaId, title, idea);
-    
+    Function _goToEditAction =
+        () => projectIdeasState.openEditor(ideaId, title, idea);
+
     return Container(
       margin: EdgeInsets.only(right: 10, left: 10, bottom: 12),
       decoration: BoxDecoration(

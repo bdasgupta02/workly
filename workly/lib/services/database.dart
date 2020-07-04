@@ -4,7 +4,7 @@ import 'package:workly/models/user_projects.dart';
 
 abstract class Database {
   Future<void> createUserProject(String projectId, Map<String, dynamic> projectData);
-  Future<void> joinProject(String projectId);
+  Future<int> joinProject(String projectId);
   Future<void> createNewMessage(String projectId, String message);
   Stream<List<UserProjects>> userProjectsStream();
   Future<bool> checkCode(String code);
@@ -40,7 +40,7 @@ class FirestoreDatabase implements Database {
   }
 
   @override
-  Future<void> joinProject(String projectId) async {
+  Future<int> joinProject(String projectId) async {
     var _isUserPresent = await Firestore.instance.collection('projects').document(projectId).collection('users').document(uid).get();
     if (_isUserPresent.data == null) {
       print("ADDING NEW USER TO PROJECT");
@@ -49,24 +49,33 @@ class FirestoreDatabase implements Database {
       String _description;
       Timestamp _deadline;
       List _admin;
+      bool _valid = false;
       await Firestore.instance.collection('projects').document(projectId).get().then((value) {
-        _code = value.data['code'];
-        _title = value.data['title'];
-        _description = value.data['description'];
-        _deadline = value.data['deadline'];
-        _admin = value.data['admin'];
+        if (value.data != null) { 
+          _code = value.data['code'];
+          _title = value.data['title'];
+          _description = value.data['description'];
+          _deadline = value.data['deadline'];
+          _admin = value.data['admin'];
+          _valid = true;
+        }
       });
-      await _setData('users/$uid/projects/$projectId', {
-        "title": _title,
-        "code": _code,
-        "description": _description,
-        "deadline": _deadline,
-        "admin": _admin,
-      });
-      addUserToProject(projectId);
+      if (_valid) {
+        await _setData('users/$uid/projects/$projectId', {
+          "title": _title,
+          "code": _code,
+          "description": _description,
+          "deadline": _deadline,
+          "admin": _admin,
+        });
+        addUserToProject(projectId);
+        return 1;
+      }
     } else {
       print("USER ALREADY EXIST");
+      return 2;
     }
+    return 3;
   }
 
   @override
@@ -102,7 +111,7 @@ class FirestoreDatabase implements Database {
     });
     await _setData('projects/$projectId/chat/$_time', {
       "name": _name,
-      "message": "$_name has joined this group",
+      "message": "$_name has joined this project group",
       "timesort": FieldValue.serverTimestamp(),
       "time": FieldValue.serverTimestamp().toString(),
       "chatId": _time,

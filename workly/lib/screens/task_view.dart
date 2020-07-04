@@ -23,9 +23,9 @@ class TaskView extends StatefulWidget {
   final List taskAssignName;
   final List taskAssignUid;
   final String taskId;
-  
+
   TaskView({
-    @required this.database, 
+    @required this.database,
     @required this.taskName,
     @required this.taskDescription,
     @required this.taskDeadline,
@@ -38,7 +38,7 @@ class TaskView extends StatefulWidget {
 
   @override
   // _TaskViewState createState() => _TaskViewState();
-    _TaskViewState createState() {
+  _TaskViewState createState() {
     taskViewState = _TaskViewState();
     return taskViewState;
   }
@@ -68,6 +68,17 @@ class _TaskViewState extends State<TaskView> {
       _resetPage();
     }
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xFF141336),
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: Color(0xFFFCFCFC),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       backgroundColor: Color(0xFFE9E9E9),
       body: Stack(
         overflow: Overflow.visible,
@@ -77,7 +88,7 @@ class _TaskViewState extends State<TaskView> {
             children: <Widget>[
               Container(
                 margin: EdgeInsets.only(
-                  top: 40,
+                  top: 10,
                   bottom: 20,
                 ),
                 child: Text(
@@ -137,8 +148,16 @@ class _TaskViewState extends State<TaskView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         SizedBox(height: 5),
-        textTile(title, true),
-        textTile(description, false),
+        Row(
+          children: <Widget>[
+            Flexible(child: textTile(title, true)),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            Flexible(child: textTile(description, false)),
+          ],
+        ),
         SizedBox(height: 20),
       ],
     );
@@ -150,8 +169,7 @@ class _TaskViewState extends State<TaskView> {
         SizedBox(height: 20),
         Row(
           children: <Widget>[
-            headingText("Options"),
-            Spacer(),
+            Flexible(child: headingText("Options")),
           ],
         ),
         SizedBox(height: 10),
@@ -161,8 +179,7 @@ class _TaskViewState extends State<TaskView> {
         SizedBox(height: 30),
         Row(
           children: <Widget>[
-            headingText("Assigned to"),
-            Spacer(),
+            Flexible(child: headingText("Assigned to")),
           ],
         ),
         SizedBox(height: 15),
@@ -184,7 +201,7 @@ class _TaskViewState extends State<TaskView> {
               children: <Widget>[
                 Padding(
                   padding: EdgeInsets.only(bottom: 5),
-                  child: textStyling("State", Colors.white54),
+                  child: textStyling("Current state", Colors.white54),
                 ),
                 Text(
                   state,
@@ -276,7 +293,8 @@ class _TaskViewState extends State<TaskView> {
         child: Container(
           child: FlatButton(
             color: upgrade ? Color(0xFF06D8AE) : Colors.redAccent,
-            onPressed: () => _stateUpdate(upgrade, upStateIndex, downStateIndex),
+            onPressed: () =>
+                _stateUpdate(upgrade, upStateIndex, downStateIndex),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(25),
             ),
@@ -287,7 +305,11 @@ class _TaskViewState extends State<TaskView> {
                   size: 55,
                   color: Colors.white,
                 ),
-                textStyling(upgrade ? _stateList[upStateIndex - 1] : _stateList[downStateIndex - 1], Colors.white),
+                textStyling(
+                    upgrade
+                        ? _stateList[upStateIndex - 1]
+                        : _stateList[downStateIndex - 1],
+                    Colors.white),
                 SizedBox(height: 10),
               ],
             ),
@@ -411,19 +433,20 @@ class _TaskViewState extends State<TaskView> {
     List _memberListId = _taskAssignUid;
     if (mine) {
       //leave
-      _memberListId.remove(widget.database.getUid());
-      _memberList.remove(widget.database.getUserName());
+      int memberIdx = _memberListId.indexOf(widget.database.getUid());
+      _memberListId.removeAt(memberIdx);
+      _memberList.removeAt(memberIdx);
       await widget.database.updateTaskDetails(widget.taskId, {
-          "assignedUid": _memberListId,
-          "assignedName": _memberList,
-        });
+        "assignedUid": _memberListId,
+        "assignedName": _memberList,
+      });
     } else {
       //join
-      _memberListId.add(widget.database.getUid());     
-      _memberList.add(widget.database.getUserName()); 
+      _memberListId.add(widget.database.getUid());
+      _memberList.add(widget.database.getUserName());
       await widget.database.updateTaskDetails(widget.taskId, {
-          "assignedUid": _memberListId,
-          "assignedName": _memberList,
+        "assignedUid": _memberListId,
+        "assignedName": _memberList,
       });
     }
     setState(() {
@@ -437,7 +460,7 @@ class _TaskViewState extends State<TaskView> {
     Navigator.of(context).push(MaterialPageRoute<void>(
       fullscreenDialog: true,
       builder: (context) => TaskFormPage(
-        database: widget.database, 
+        database: widget.database,
         edit: true,
         taskName: title,
         taskDescription: description,
@@ -451,7 +474,8 @@ class _TaskViewState extends State<TaskView> {
     ));
   }
 
-  void refresh(String newTitle, String newDescription, String newDeadline, int newPriority) {
+  void refresh(String newTitle, String newDescription, String newDeadline,
+      int newPriority) {
     setState(() {
       title = newTitle;
       description = newDescription;
@@ -467,10 +491,10 @@ class _TaskViewState extends State<TaskView> {
 
   void _resetPage() {
     List<String> newStateList = <String>[
-    "To do",
-    "In progress",
-    "To review",
-    "Completed"
+      "To do",
+      "In progress",
+      "To review",
+      "Completed"
     ];
     setState(() {
       title = widget.taskName;
@@ -501,7 +525,8 @@ class MemberTester {
     if (members.isNotEmpty) {
       List<Widget> memberWidgets = [];
       for (int i = 0; i < members.length; i++) {
-        memberWidgets.add(Member(name: members[i], image: null).makeMemberTile(null, true));
+        memberWidgets.add(
+            Member(name: members[i], image: null).makeMemberTile(null, true));
       }
       return Column(
         children: memberWidgets,

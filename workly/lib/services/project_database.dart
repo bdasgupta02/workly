@@ -11,8 +11,9 @@ abstract class ProjectDatabase {
   Future<void> updateIdeaDetails(String ideaId, String ideaName, String ideaDescription);
   Future<void> updateTaskDetails(String taskId, Map<String, dynamic> taskData);
   Future<void> updateVotes(String ideaId);
+  Future<void> updateAdminUser(List admin);
   Future<void> deleteProject();
-  Future<void> leaveProject();
+  Future<void> exitProject(String id, String name, bool leave);
   Future<void> deleteIdea(String ideaId);
   Future<void> deleteTask(String taskId);
   Future<List<Map<String, String>>> getUserList();
@@ -129,15 +130,27 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   }
 
   @override
+  Future<void> updateAdminUser(List admin) async {
+    await Firestore.instance.collection('projects').document(projectId).updateData({
+      "admin": admin,
+    });
+  }
+
+  @override
   Future<void> deleteProject() async {
-    await leaveProject();
+    await exitProject(null, null, true);
     await Firestore.instance.collection('projects').document(projectId).delete();
   }
 
   @override
-  Future<void> leaveProject() async {
-    await Firestore.instance.collection('projects').document(projectId).collection('users').document(uid).delete();
-    await Firestore.instance.collection('users').document(uid).collection('projects').document(projectId).delete();
+  Future<void> exitProject(String id, String name, bool leave) async {
+    String _uid = id == null ? uid : id;
+    String _name = name == null ? userName : name;
+    await Firestore.instance.collection('projects').document(projectId).collection('users').document(_uid).delete();
+    await Firestore.instance.collection('users').document(_uid).collection('projects').document(projectId).delete();
+    sendLeaveMsg(_uid, _name, leave);
+    removeTaskAssignment(_uid, _name);
+    removeIdeasVoting(_uid, _name);
   }
 
   @override
@@ -170,7 +183,6 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     await Firestore.instance.collection('projects').document(projectId).get().then((value) {
       userList = value.data['admin'];
     });
-    print(userList);
     return userList;
   }
 
@@ -181,6 +193,65 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       description = value.data['description'];
     });
     return description;
+  }
+  
+  Future<void> removeTaskAssignment(String id, String name) async {
+    List assignListId = List();
+    List assignListName = List();
+    String taskId = "";
+    var results = await Firestore.instance.collection('projects').document(projectId).collection('task').where("assignedUid", arrayContains: id)
+    .getDocuments();
+    results.documents.forEach((element) async {
+      assignListId = element.data['assignedUid'];
+      assignListName = element.data['assignedName'];
+      taskId = element.data['taskId'];
+      int idIdx = assignListId.indexOf(id);
+      assignListId.removeAt(idIdx);
+      assignListName.removeAt(idIdx);
+      await Firestore.instance.collection('projects').document(projectId).collection('task').document(taskId).updateData({
+        "assignedName": assignListName,
+        "assignedUid": assignListId,
+      });
+      assignListId = List();
+      assignListName = List();
+      taskId = "";      
+    });
+  }
+
+  Future<void> removeIdeasVoting(String id, String name) async {
+    List votesListId = List();
+    int voteCount = 0;
+    String ideaId = "";
+    var results = await Firestore.instance.collection('projects').document(projectId).collection('idea').where("votes", arrayContains: id)
+    .getDocuments();
+    results.documents.forEach((element) async {
+      votesListId = element.data['votes'];
+      voteCount = element.data['voteCount'];
+      ideaId = element.data['ideaId'];
+      votesListId.remove(id);
+      voteCount  = voteCount - 1;
+      await Firestore.instance.collection('projects').document(projectId).collection('idea').document(ideaId).updateData({
+        "voteCount": voteCount,
+        "votes": votesListId,
+      });
+      votesListId = List();
+      voteCount = 0;
+      ideaId = "";      
+    });    
+  }
+
+  Future<void> sendLeaveMsg(String id, String name, bool leave) async {
+    String _time = DateTime.now().toString();
+    String _msg = leave ? "$name has left this project group" : "$name has been removed from this project group";
+    await _setData('projects/$projectId/chat/$_time', {
+      "name": name,
+      "message": _msg,
+      "timesort": FieldValue.serverTimestamp(),
+      "time": FieldValue.serverTimestamp().toString(),
+      "chatId": _time,
+      "user": id,
+      "event": true,
+    });
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -95,7 +96,7 @@ class _AllProjectsState extends State<AllProjects> {
                           color: Colors.black,
                         ),
                         label: Text(
-                          "Close",
+                          "Cancel",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
@@ -164,18 +165,29 @@ class _AllProjectsState extends State<AllProjects> {
                             }
                         },
                         child: Text(
-                          _joinProject ? "Join Project!" : 'Create Project!',
+                          _joinProject ? "Join project" : 'Create a new project',
                           style: TextStyle(
-                            color: Colors.black,
+                            color: Color(0xFFFCFCFC),
                             fontFamily: 'Roboto',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        color: Colors.grey[200],
+                        color: Color(0xFF04C9F1),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(34.0),
                         ),
                       ),
+                      decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(30)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF00CFF8).withOpacity(0.3),
+                    spreadRadius: 2,
+                    blurRadius: 10,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
                     ),
                     Container(
                       alignment: Alignment.center,
@@ -190,8 +202,8 @@ class _AllProjectsState extends State<AllProjects> {
                         },
                         child: Text(
                           _joinProject
-                              ? 'Create a Project instead!'
-                              : 'Join a Project instead!',
+                              ? 'Create a project instead'
+                              : 'Join a project instead',
                           style: TextStyle(
                             color: Colors.black,
                             fontFamily: 'Roboto',
@@ -313,10 +325,50 @@ class _AllProjectsState extends State<AllProjects> {
     FocusScope.of(context).requestFocus(newFocus);
   }
 
+  Widget _showErrorMsg(String results) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.all(Radius.circular(24)),
+        ),
+        alignment: Alignment.center,
+        padding: EdgeInsets.all(5.0),
+        child: Text(results,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            ),
+          ),
+        height: 35,
+      ),
+    );
+  }
+
   Future<void> _createProject(Database database) async {
     if (_joinProject) {
       print("joinproject");
-      await database.joinProject(_projectCode);
+      var results = await database.joinProject(_projectCode);
+      if (results != 1) {
+        String msg = results == 2 ? "You are already in the project" : "The project code is invalid";
+        Timer timer = Timer(Duration(seconds: 3), (){
+          Navigator.of(context, rootNavigator: true).pop();
+        });
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return _showErrorMsg(msg);
+          },
+          barrierDismissible: true,
+        ).then((value){
+          timer?.cancel();
+          timer = null;
+        });
+      } else {
+        Navigator.of(context).pop();
+      }
     } else {
       print("createproject");
       String code = generateProjectId;
@@ -331,8 +383,8 @@ class _AllProjectsState extends State<AllProjects> {
         "deadline": _convertFromString(_projectDeadline),
         "admin": [database.getUid(),],
       });
+      Navigator.of(context).pop();
     }
-    Navigator.of(context).pop();
   }
 
   Timestamp _convertFromString(String date) {
