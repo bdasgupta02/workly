@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:workly/screens/idea_view.dart';
 import 'package:workly/services/project_database.dart';
 import 'package:workly/models/idea.dart';
 
