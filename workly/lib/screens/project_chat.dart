@@ -36,6 +36,14 @@ class _ProjectChatState extends State<ProjectChat> {
 
   void getUserListDetails() async {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
+    setState(() {
+      userUidList = database.getUserUidList();
+      userImageUrlList = database.getUserImageList();
+    });
+  }
+
+  void refreshUserListDetails() async {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
     Map _userListDetails = await database.getUserList();
     setState(() {
       userUidList = _userListDetails['userUidList'];
@@ -48,6 +56,7 @@ class _ProjectChatState extends State<ProjectChat> {
   Widget build(BuildContext context) {
     if (userUidList == null) {
       getUserListDetails();
+      refreshUserListDetails();
     }
     return Column(
       children: <Widget>[

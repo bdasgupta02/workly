@@ -11,17 +11,17 @@ abstract class Database {
   String getUid();
   Future<String> getName();
   Future<String> getImageUrl();
-  // List getUserUidList();
-  // List getUserNameList();
-  // List getUserImageUrlList();
-  // Future<bool> runListQuery(String projectId);
+  List getUserUidList();
+  List getUserNameList();
+  List getUserImageUrlList();
+  Future<bool> runListQuery(String projectId);
 }
 
 class FirestoreDatabase implements Database {
   final String uid;
-  // List userUidList;
-  // List userNameList;
-  // List userImageUrlList;
+  List userUidList;
+  List userNameList;
+  List userImageUrlList;
 
   FirestoreDatabase({
     @required this.uid,
@@ -50,44 +50,44 @@ class FirestoreDatabase implements Database {
     return _url;
   }
 
-  // @override
-  // List getUserUidList() {
-  //   return userUidList;
-  // }
+  @override
+  List getUserUidList() {
+    return userUidList;
+  }
 
-  // @override
-  // List getUserNameList() {
-  //   return userNameList;
-  // }
+  @override
+  List getUserNameList() {
+    return userNameList;
+  }
 
-  // @override
-  // List getUserImageUrlList() {
-  //   return userImageUrlList;
-  // }
+  @override
+  List getUserImageUrlList() {
+    return userImageUrlList;
+  }
 
-  // @override
-  // Future<bool> runListQuery(String projectId) async {
-  //   List _userUid;
-  //   List _userName;
-  //   List _userImageUrl;
-  //   bool _valid = false;
-  //   await Firestore.instance.collection('projects').document(projectId).get().then((value) {
-  //     if (value.data != null) { 
-  //       _userUid = value.data['userUid'];
-  //       _userName = value.data['userName'];
-  //       _userImageUrl = value.data['userImageUrl'];
-  //       _valid = true;
-  //     }
-  //   });
-  //   if (_valid) {
-  //     userUidList = _userUid;
-  //     userNameList = _userName;
-  //     userImageUrlList = _userImageUrl;
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // }
+  @override
+  Future<bool> runListQuery(String projectId) async {
+    List _userUid;
+    List _userName;
+    List _userImageUrl;
+    bool _valid = false;
+    await Firestore.instance.collection('projects').document(projectId).get().then((value) {
+      if (value.data != null) { 
+        _userUid = value.data['userUid'];
+        _userName = value.data['userName'];
+        _userImageUrl = value.data['userImageUrl'];
+        _valid = true;
+      }
+    });
+    if (_valid) {
+      userUidList = _userUid;
+      userNameList = _userName;
+      userImageUrlList = _userImageUrl;
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   @override
   Future<void> createUserProject(String projectId, Map<String, dynamic> projectData) async {

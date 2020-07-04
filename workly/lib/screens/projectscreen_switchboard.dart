@@ -40,15 +40,15 @@ class _ProjectSwitchboardState extends State<ProjectSwitchboard> with AutomaticK
     String _uid = database.getUid();
     String _name = await database.getName();
     var _imageUrl = await database.getImageUrl();
-    // bool _valid = await database.runListQuery(projectId);
-    // List _userUidList = List();
-    // List _userNameList = List();
-    // List _userImageUrlList = List();
+    bool _valid = await database.runListQuery(projectId);
+    List _userUidList = List();
+    List _userNameList = List();
+    List _userImageUrlList = List();
     // List _newUserImageUrlList = List();
-    // if (_valid) {
-    //   _userUidList = database.getUserUidList();
-    //   _userNameList = database.getUserNameList();
-    //   _userImageUrlList = database.getUserImageUrlList();
+    if (_valid) {
+      _userUidList = database.getUserUidList();
+      _userNameList = database.getUserNameList();
+      _userImageUrlList = database.getUserImageUrlList();
     //   for (var ele in _userImageUrlList) {
     //     if (ele.toString() != "null") {
     //       var _image = NetworkImage(ele.toString());
@@ -57,7 +57,7 @@ class _ProjectSwitchboardState extends State<ProjectSwitchboard> with AutomaticK
     //       _newUserImageUrlList.add(null);
     //     }
     //   }
-    // }
+    }
     // print(_newUserImageUrlList);
     setState(() {
       _addProjectHistory();
@@ -70,10 +70,10 @@ class _ProjectSwitchboardState extends State<ProjectSwitchboard> with AutomaticK
             userName: _name, 
             projectId: projectId, 
             projectName: projectName,
-            imageUrl: _imageUrl,),
-            // userUidList: _userUidList,
-            // userNameList: _userNameList,
-            // userImageList: _newUserImageUrlList),
+            imageUrl: _imageUrl,
+            userUidList: _userUidList,
+            userNameList: _userNameList,
+            userImageList: _userImageUrlList),//_newUserImageUrlList),
           child: ProjectTabWrapper(),
         ),
       ];

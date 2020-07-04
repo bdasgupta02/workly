@@ -30,9 +30,9 @@ abstract class ProjectDatabase {
   String getProjectName();
   String getProjectId();
   String getImageUrl();
-  // List getUserUidList();
-  // List getUserNameList();
-  // List getUserImageList();
+  List getUserUidList();
+  List getUserNameList();
+  List getUserImageList();
 }
 
 class FirestoreProjectDatabase implements ProjectDatabase {
@@ -41,9 +41,9 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   final String projectId;
   final String projectName;
   var imageUrl;
-  // List userUidList;
-  // List userNameList;
-  // List userImageList;
+  List userUidList;
+  List userNameList;
+  List userImageList;
 
   FirestoreProjectDatabase({
     @required this.uid,
@@ -51,10 +51,10 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     @required this.projectId,
     @required this.projectName,
     @required this.imageUrl,
-    // @required this.userUidList,
-    // @required this.userNameList,
-    // @required this.userImageList,
-  }) : assert(uid != null), assert(userName != null), assert(projectId != null), assert(projectName != null);//, assert(userUidList != null), assert(userNameList != null), assert(userImageList != null);
+    @required this.userUidList,
+    @required this.userNameList,
+    @required this.userImageList,
+  }) : assert(uid != null), assert(userName != null), assert(projectId != null), assert(projectName != null), assert(userUidList != null), assert(userNameList != null), assert(userImageList != null);
 
   @override
   String getUid() {
@@ -81,20 +81,20 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     return imageUrl;
   }
 
-  // @override
-  // List getUserUidList() {
-  //   return userUidList;
-  // }
+  @override
+  List getUserUidList() {
+    return userUidList;
+  }
   
-  // @override
-  // List getUserNameList() {
-  //   return userNameList;
-  // }
+  @override
+  List getUserNameList() {
+    return userNameList;
+  }
 
-  // @override
-  // List getUserImageList() {
-  //   return userImageList;
-  // }
+  @override
+  List getUserImageList() {
+    return userImageList;
+  }
 
   @override
   Future<void> createIdea(String ideaId, Map<String, dynamic> ideaData) async {

@@ -273,21 +273,25 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
   }
 
   void openEditor(String ideaId, String ideaTitle, String ideaDescription) {
-    final database = Provider.of<ProjectDatabase>(context, listen: false);
-    setState(() {
-      _ideaTitleController.text = ideaTitle;
-      _ideaDescriptionController.text = ideaDescription;
-      _ideaNameValid = true;
-      _ideaDescValid = true;
-      _editingMode = true;
-    });
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return _buildIdeaForm(database, ideaId);
-      },
-      barrierDismissible: true,
-    );
+    // final database = Provider.of<ProjectDatabase>(context, listen: false);
+    // setState(() {
+    //   _ideaTitleController.text = ideaTitle;
+    //   _ideaDescriptionController.text = ideaDescription;
+    //   _ideaNameValid = true;
+    //   _ideaDescValid = true;
+    //   _editingMode = true;
+    // });
+    // showDialog(
+    //   context: context,
+    //   builder: (BuildContext context) {
+    //     return _buildIdeaForm(database, ideaId);
+    //   },
+    //   barrierDismissible: true,
+    // );
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (context) => IdeaView(),
+    ));
   }
 
   void deleteIdea(String ideaId) async {
