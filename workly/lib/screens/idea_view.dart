@@ -1,5 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:workly/models/idea_comment.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
+import 'package:workly/screens/project_ideas.dart';
+import 'package:workly/services/project_database.dart';
 
 /*
   How this works:
@@ -33,6 +37,16 @@ import 'package:workly/resuable_widgets/clipped_header_bg.dart';
 _IdeaViewState ideaViewState;
 
 class IdeaView extends StatefulWidget {
+  final bool isUser;
+  final int votes;
+  final bool hasVoted;
+  final String title;
+  final String idea;
+  final String ideaId;
+  final ProjectDatabase database;
+
+  IdeaView({@required this.isUser, @required this.votes, @required this.hasVoted, @required this.title, @required this.idea, @required this.ideaId, @required this.database});
+
   @override
   _IdeaViewState createState() {
     ideaViewState = _IdeaViewState();
@@ -42,48 +56,37 @@ class IdeaView extends StatefulWidget {
 
 class _IdeaViewState extends State<IdeaView> {
   //TODO: Need to change onSendComment and other hard-coded shit
-  Function _onSendComment = () => null;
   TextEditingController _commentController = TextEditingController();
-  List<Comment> _comments = [
-    Comment(
-        uid: "uid 1",
-        name: "Test name 1",
-        comment:
-            "This is the first comment on this idea. Time to test if the text wraps to the next line or not."),
-    Comment(
-        uid: "uid 2",
-        name: "Test name 2",
-        comment: "This is the second and shorter comment."),
-  ];
   bool _readOnly = true;
   IdeaPage idea;
+  List userUidList;
+  List userImageUrlList;
 
   @override
   void initState() {
     super.initState();
 
-    //TODO: Hard-coded test here
     idea = IdeaPage(
-      isUser: true,
-      votes: 2,
-      hasVoted: false,
-      title: "Test title long long long long long long long",
-      idea: "Test idea long long long long long long",
+      isUser: widget.isUser,
+      votes: widget.votes,
+      hasVoted: widget.hasVoted,
+      title: widget.title,
+      idea: widget.idea,
 
       //TODO: These are the idea options functions. Need to change onDelete and voteOrUnvote.
-      onDelete: () => null,
-      voteOrUnvote: () => null,
+      onDelete: () => showDeleteDialog(null, false),
+      voteOrUnvote: () => projectIdeasState.updateVote(widget.ideaId),
       onEdit: () => editIdea(),
-      onSave: () => saveIdea(),
+      onSave: (String title, String idea) => saveIdea(title, idea),
     );
   }
 
-  void saveIdea() {
-    //TODO: Code to go here to save the idea to the db
-
+  void saveIdea(String title, String idea) {
+    // TODO: Code to go here to save the idea to the db
     setState(() {
       _readOnly = true;
     });
+    projectIdeasState.updateIdeaDetails(widget.ideaId, title, idea);
   }
 
   void editIdea() {
@@ -94,10 +97,29 @@ class _IdeaViewState extends State<IdeaView> {
     });
   }
 
+  void getUserListDetails() {
+    setState(() {
+      userUidList = widget.database.getUserUidList();
+      userImageUrlList = widget.database.getUserImageList();
+    });
+  }
+
+  void refreshUserListDetails() async {
+    Map _userListDetails = await widget.database.getUserList();
+    setState(() {
+      userUidList = _userListDetails['userUidList'];
+      userImageUrlList = _userListDetails['userImageUrlList'];
+    });
+  }
+
   //TODO: Stream builder for the second card with the comment list, and either
   //query or stream builder for the ideaPage card (more notes on top).
   @override
   Widget build(BuildContext context) {
+    if (userUidList == null) {
+      getUserListDetails();
+      refreshUserListDetails();
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF141336),
@@ -153,7 +175,7 @@ class _IdeaViewState extends State<IdeaView> {
               Container(
                 margin: EdgeInsets.all(10),
                 alignment: Alignment.center,
-                child: commentColBuilder(),
+                child: _buildCommentList(),
                 decoration: BoxDecoration(
                   color: Color(0xFFFCFCFC),
                   borderRadius: BorderRadius.all(Radius.circular(35)),
@@ -226,14 +248,41 @@ class _IdeaViewState extends State<IdeaView> {
     );
   }
 
-  Widget commentColBuilder() {
+  Widget _buildCommentList() {
+    return StreamBuilder<List<IdeaComment>>(
+      stream: widget.database.ideaCommentStream(widget.ideaId),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final ideaCommentItem = snapshot.data;
+          final comments = ideaCommentItem
+              .map((com) => Comment(
+                  uid: com.user,
+                  name: com.name,
+                  comment: com.comment,
+                  commentId: com.commentId,
+                  image: userImageUrlList[userUidList.indexOf(com.user)] == null ? null : NetworkImage(userImageUrlList[userUidList.indexOf(com.user)].toString()),
+                  onPress: () => com.user == widget.database.getUid() ? showDeleteDialog(com.commentId, true) : null,
+                  ))
+              .toList();
+          return commentColBuilder(comments);
+        } else if (snapshot.hasError) {
+          print(snapshot.error);
+          return Center(child: CircularProgressIndicator());
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
+    );
+  }
+
+  Widget commentColBuilder(List comments) {
     List<Widget> widgets = [];
     widgets.add(headingText("Comments"));
-    for (int i = 0; i < _comments.length; i++) {
-      widgets.add(_comments[i].toWidget());
-      if (i == _comments.length - 1) widgets.add(addCommentForm());
+    for (int i = 0; i < comments.length; i++) {
+      widgets.add(comments[i].toWidget());
+      if (i == comments.length - 1) widgets.add(addCommentForm());
     }
-    if (_comments.length == 0) {
+    if (comments.length == 0) {
       widgets.add(
         Container(
           margin: EdgeInsets.all(10),
@@ -250,6 +299,7 @@ class _IdeaViewState extends State<IdeaView> {
           ),
         ),
       );
+      widgets.add(addCommentForm());
     }
     return Column(
       children: widgets,
@@ -285,9 +335,65 @@ class _IdeaViewState extends State<IdeaView> {
           size: 30,
           color: Color(0xFF24DCB7),
         ),
-        onPressed: _commentController.text.isEmpty ? null : _onSendComment,
+        onPressed: () => _commentController.text.isEmpty ? null : onSendComment(),
       ),
     );
+  }
+
+  void onSendComment() async {
+    String _commentId = DateTime.now().toString();
+    await widget.database.createIdeaComment(widget.ideaId, _commentId, {
+      "name": widget.database.getUserName(),
+      "user": widget.database.getUid(),
+      "time": FieldValue.serverTimestamp(),
+      "comment": _commentController.text,
+      "commentId": _commentId,
+    });
+    setState(() {
+      _commentController.clear();
+    });
+  }
+
+  void onDeleteComment(String commentId) async {
+    await widget.database.deleteIdeaComment(widget.ideaId, commentId);
+  }
+  
+  void showDeleteDialog(String commentId, bool comment) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return _deleteDialog(commentId, comment);
+      },
+      barrierDismissible: true,
+    );
+  }
+
+  Widget _deleteDialog(String commentId, bool comment) {
+    String verb = comment ? "comment" : "idea";
+    return AlertDialog(
+      title: Text("Wait..."),
+      content: Text(
+          "Do you really want to delete this $verb?"),
+      actions: <Widget>[
+        FlatButton(
+          child: Text("Cancel"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        FlatButton(
+          child: Text("Yes, delete $verb"),
+          onPressed: () => {
+            comment ? deleteIdeaComment(commentId) : projectIdeasState.deleteIdea(widget.ideaId),
+            Navigator.of(context).pop(),
+          },
+        ),
+      ],
+    );
+  }
+
+  void deleteIdeaComment(String commentId) async {
+    await widget.database.deleteIdeaComment(widget.ideaId, commentId);
   }
 
   void refresh() {
@@ -502,7 +608,7 @@ class IdeaPage {
           child: Column(
             children: <Widget>[
               Icon(
-                Icons.keyboard_arrow_up,
+                !hasVoted ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                 size: 40,
                 color: !hasVoted ? Colors.white : Colors.black45,
               ),
@@ -561,7 +667,7 @@ class IdeaPage {
         onPressed: _readOnly
             ? onEdit
             : () {
-                onSave.call();
+                onSave.call(_titleController.text, _ideaController.text);
                 //[Note] Local cache below.
                 setTitle(_titleController.text);
                 setIdea(_ideaController.text);
@@ -629,84 +735,91 @@ class IdeaPage {
 }
 
 class Comment {
+  String commentId;
   String uid;
   String name;
   String comment;
   ImageProvider<dynamic> image;
+  Function onPress;
 
   Comment({
+    @required this.commentId,
     @required this.uid,
     @required this.name,
     @required this.comment,
     this.image,
+    @required this.onPress,
   });
 
   Widget toWidget() {
-    return Container(
-      margin: EdgeInsets.only(
-        top: 10,
-        right: 10,
-        left: 10,
-      ),
-      child: Column(
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              makeAvatar(),
-              Expanded(
-                child: Column(
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Flexible(
-                          child: Text(
-                            name,
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                              fontSize: 16,
+    return GestureDetector(
+      onLongPress: onPress,
+      child: Container(
+        margin: EdgeInsets.only(
+          top: 10,
+          right: 10,
+          left: 10,
+        ),
+        child: Column(
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                makeAvatar(),
+                Expanded(
+                  child: Column(
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Flexible(
+                            child: Text(
+                              name,
+                              style: TextStyle(
+                                fontFamily: 'Roboto',
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              )
-            ],
-          ),
-          Padding(
-            padding: EdgeInsets.only(bottom: 12, left: 12),
-            child: Row(
-              children: <Widget>[
-                Flexible(
-                  child: Text(
-                    comment,
-                    style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black54,
-                      fontSize: 14,
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
-                ),
+                )
               ],
             ),
-          ),
-        ],
-      ),
-      decoration: BoxDecoration(
-        color: Color(0xFFF2F2F2),
-        borderRadius: BorderRadius.all(Radius.circular(30)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 9,
-            offset: Offset(0, 3),
-          ),
-        ],
+            Padding(
+              padding: EdgeInsets.only(bottom: 12, left: 12),
+              child: Row(
+                children: <Widget>[
+                  Flexible(
+                    child: Text(
+                      comment,
+                      style: TextStyle(
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black54,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        decoration: BoxDecoration(
+          color: Color(0xFFF2F2F2),
+          borderRadius: BorderRadius.all(Radius.circular(30)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 9,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
       ),
     );
   }

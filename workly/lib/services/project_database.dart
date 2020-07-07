@@ -4,12 +4,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:workly/models/chat_message.dart';
 import 'package:workly/models/idea.dart';
+import 'package:workly/models/idea_comment.dart';
 import 'package:workly/models/task_model.dart';
 
 abstract class ProjectDatabase {
   Future<void> createIdea(String ideaId, Map<String, dynamic> ideaData);
   Future<void> createTask(String taskId, Map<String, dynamic> taskData);
   Future<void> createNewMessage(String message);
+  Future<void> createIdeaComment(String ideaId, String commentId, Map<String, dynamic> taskData);
   Future<void> updateIdeaDetails(String ideaId, String ideaName, String ideaDescription);
   Future<void> updateTaskDetails(String taskId, Map<String, dynamic> taskData);
   Future<void> updateVotes(String ideaId);
@@ -17,12 +19,14 @@ abstract class ProjectDatabase {
   Future<void> deleteProject();
   Future<void> exitProject(String id, String name, bool leave);
   Future<void> deleteIdea(String ideaId);
+  Future<void> deleteIdeaComment(String ideaId, String commentId);
   Future<void> deleteTask(String taskId);
   Future<Map> getUserList();
   Future<List> getAdminUserList();
   Future<String> getProjectDescription();
   Stream<List<ChatMessage>> chatStream();
   Stream<List<Idea>> ideaStream();
+  Stream<List<IdeaComment>> ideaCommentStream(String ideaId);
   Stream<List<TaskModel>> taskStream();
   Stream<List<TaskModel>> myTaskStream();
   String getUid();
@@ -125,6 +129,11 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   }
 
   @override
+  Future<void> createIdeaComment(String ideaId, String commentId, Map<String, dynamic> commentData) async {
+    await _setData('projects/$projectId/idea/$ideaId/comment/$commentId', commentData);
+  }
+
+  @override
   Future<void> updateIdeaDetails(String ideaId, String ideaName, String ideaDescription) async {
     await Firestore.instance.collection('projects').document(projectId).collection('idea').document(ideaId).updateData({
       "title": ideaName,
@@ -190,6 +199,11 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   @override
   Future<void> deleteIdea(String ideaId) async {
     await Firestore.instance.collection('projects').document(projectId).collection('idea').document(ideaId).delete();
+  }
+
+  @override
+  Future<void> deleteIdeaComment(String ideaId, String commentId) async {
+    await Firestore.instance.collection('projects').document(projectId).collection('idea').document(ideaId).collection('comment').document(commentId).delete();
   }
 
   @override
@@ -305,6 +319,16 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       builder: (data) => Idea.fromMap(data),
       orderBy: "voteCount",
       descending: true,
+    );
+  }
+
+  @override
+  Stream<List<IdeaComment>> ideaCommentStream(String ideaId) {
+    return _collectionStream(
+      path: 'projects/$projectId/idea/$ideaId/comment', 
+      builder: (data) => IdeaComment.fromMap(data),
+      orderBy: "time",
+      descending: false,
     );
   }
 

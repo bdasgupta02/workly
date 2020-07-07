@@ -122,7 +122,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
                           else
                             {
                               _editingMode
-                                  ? updateIdeaDetails(ideaId)
+                                  ? updateIdeaDetails(ideaId, null, null)
                                   : addNewIdea(),
                             }
                         },
@@ -260,11 +260,15 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
     Navigator.of(context).pop();
   }
 
-  void updateIdeaDetails(String ideaId) async {
+  void updateIdeaDetails(String ideaId, String ideaTitle, String ideaDescription) async {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
     await database.updateIdeaDetails(
-        ideaId, _ideaTitle, _ideaDescription); //"2020-06-17 14:56:53.873491"
-    Navigator.of(context).pop();
+        ideaId, 
+        ideaTitle == null ? _ideaTitle : ideaTitle, 
+        ideaDescription == null ? _ideaDescription : ideaDescription); //"2020-06-17 14:56:53.873491"
+    if (_editingMode) {
+      Navigator.of(context).pop();
+    }
   }
 
   void updateVote(String ideaId) async {
@@ -272,8 +276,8 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
     await database.updateVotes(ideaId); //"2020-06-17 14:56:53.873491"
   }
 
-  void openEditor(String ideaId, String ideaTitle, String ideaDescription) {
-    // final database = Provider.of<ProjectDatabase>(context, listen: false);
+  void openEditor(String ideaId, String ideaTitle, String ideaDescription, int votes, String userId, bool hasVoted) {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
     // setState(() {
     //   _ideaTitleController.text = ideaTitle;
     //   _ideaDescriptionController.text = ideaDescription;
@@ -290,7 +294,15 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
     // );
     Navigator.of(context).push(MaterialPageRoute<void>(
       fullscreenDialog: true,
-      builder: (context) => IdeaView(),
+      builder: (context) => IdeaView(
+        isUser: userId == database.getUid(),
+        votes: votes,
+        hasVoted: hasVoted,
+        title: ideaTitle,
+        idea: ideaDescription,
+        ideaId: ideaId,
+        database: database,
+      ),
     ));
   }
 
@@ -312,7 +324,9 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
                   title: idea.title,
                   idea: idea.description,
                   votes: idea.voteCount,
-                  ideaId: idea.ideaId))
+                  ideaId: idea.ideaId,
+                  userId: idea.user,
+                  hasVoted: idea.votes.contains(database.getUid())))
               .toList();
           if (ideas.isEmpty) {
             return Center(
@@ -362,12 +376,16 @@ class IdeaTile {
   var idea;
   var votes;
   var ideaId;
+  var userId;
+  var hasVoted;
 
   IdeaTile(
       {@required this.title,
       @required this.idea,
       @required this.votes,
-      @required this.ideaId});
+      @required this.ideaId,
+      @required this.userId,
+      @required this.hasVoted});
 
   Widget makeIdeaTile() {
     String newIdea =
@@ -376,14 +394,17 @@ class IdeaTile {
         title.length > 65 ? title.substring(0, 65) + '...' : title;
 
     //[Note] This is for ONPRESSED
-    Function _goToVoteAction = () => projectIdeasState.updateVote(ideaId);
+    Function _goToVoteAction = () => {
+      hasVoted = !hasVoted,      
+      projectIdeasState.updateVote(ideaId),
+    };
     Function _goToEditAction =
-        () => projectIdeasState.openEditor(ideaId, title, idea);
+        () => projectIdeasState.openEditor(ideaId, title, idea, votes, userId, hasVoted);
 
     return Container(
       margin: EdgeInsets.only(right: 10, left: 10, bottom: 12),
       decoration: BoxDecoration(
-        color: Color(0xFF141336),
+        color: hasVoted ? Colors.orange[800] : Color(0xFF141336),
         borderRadius: BorderRadius.all(Radius.circular(30)),
         boxShadow: [
           BoxShadow(
