@@ -470,7 +470,7 @@ class _TaskFormState extends State<TaskForm> {
           "name": widget.database.getUserName(),
           "uid": widget.database.getUid(),
           "assignedUid": [],
-          "assignedName": [],
+          // "assignedName": [],
           // "assignedUid": _userUidList[userIndex],
           // "assignedName": _assign,
           "title": _taskTitle,

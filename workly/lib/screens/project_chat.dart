@@ -194,7 +194,8 @@ class _ProjectChatState extends State<ProjectChat> {
                     time: chat.time,
                     user: chat.user == database.getUid(),
                     sameUserAsNext: false,
-                    isEvent: chat.event))
+                    isEvent: chat.event,
+                    onPress: () => showDeleteDialog(chat.chatId),))
                 .toList();
             cacheChat = chatList;
             return constructChatList(chatList);
@@ -223,6 +224,7 @@ class _ProjectChatState extends State<ProjectChat> {
         user: true,
         sameUserAsNext: true,
         isEvent: false,
+        onPress: () => null,
         msg: cacheString));
     changeLastMsgCache();
     return constructChatList(cacheChat);
@@ -247,10 +249,53 @@ class _ProjectChatState extends State<ProjectChat> {
             time: draftMsg.time,
             user: draftMsg.user,
             sameUserAsNext: _sameUserAsNext,
-            isEvent: draftMsg.isEvent);
+            isEvent: draftMsg.isEvent,
+            onPress: draftMsg.onPress,);
+        // if (draftMsg.isEvent) {
+        //   refreshUserListDetails();
+        //   print("Call refresh list to get new image");
+        // }
         return msg.makeChatTile();
       },
     );
+  }
+
+  void showDeleteDialog(String chatId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return _deleteDialog(chatId);
+      },
+      barrierDismissible: true,
+    );
+  }
+
+  Widget _deleteDialog(String chatId) {
+    return AlertDialog(
+      // title: Text("Delete message"),
+      content: Text(
+          "Do you really want to delete this message?"),
+      actions: <Widget>[
+        FlatButton(
+          child: Text("Cancel"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        FlatButton(
+          child: Text("Delete message"),
+          onPressed: () => {
+            deleteChatMessage(chatId),
+            Navigator.of(context).pop(),
+          }
+        ),
+      ],
+    );
+  }
+
+  void deleteChatMessage(String chatId) async {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    await database.deleteChatMessage(chatId);
   }
 }
 
@@ -273,6 +318,7 @@ class MessageList {
 }
 
 class Message {
+  Function onPress; 
   String uid;
   var name;
   var msg;
@@ -284,7 +330,8 @@ class Message {
       isEvent; //[Note] False if this message is a proper text, true if this msg is an event (eg. John has joined the group)
 
   Message(
-      {this.uid,
+      {this.onPress,
+      this.uid,
       this.name,
       this.msg,
       this.img,
@@ -413,36 +460,39 @@ class Message {
       }
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: user ? Color(0xFF04C9F1) : Color(0xFFE9E9E9),
-        borderRadius: a,
-        boxShadow: [
-          BoxShadow(
-            color: user
-                ? Color(0xFF00CFF8).withOpacity(0.4)
-                : Colors.black38.withOpacity(0.08),
-            spreadRadius: 2,
-            blurRadius: 15,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.only(top: 11, bottom: 11, left: 12, right: 12),
-      margin: EdgeInsets.only(
-        right: 10,
-        bottom: sameUserAsNext ? 8 : 25,
-      ),
-      child: Column(
-        crossAxisAlignment:
-            user ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: <Widget>[
-          user ? SizedBox() : nameText(),
-          SizedBox(height: 4),
-          msgText(),
-          SizedBox(height: 5),
-          timeText(),
-        ],
+    return GestureDetector(
+      onLongPress: onPress,
+      child: Container(
+        decoration: BoxDecoration(
+          color: user ? Color(0xFF04C9F1) : Color(0xFFE9E9E9),
+          borderRadius: a,
+          boxShadow: [
+            BoxShadow(
+              color: user
+                  ? Color(0xFF00CFF8).withOpacity(0.4)
+                  : Colors.black38.withOpacity(0.08),
+              spreadRadius: 2,
+              blurRadius: 15,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        padding: EdgeInsets.only(top: 11, bottom: 11, left: 12, right: 12),
+        margin: EdgeInsets.only(
+          right: 10,
+          bottom: sameUserAsNext ? 8 : 25,
+        ),
+        child: Column(
+          crossAxisAlignment:
+              user ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: <Widget>[
+            user ? SizedBox() : nameText(),
+            SizedBox(height: 4),
+            msgText(),
+            SizedBox(height: 5),
+            timeText(),
+          ],
+        ),
       ),
     );
   }

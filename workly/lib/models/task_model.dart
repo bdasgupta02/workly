@@ -5,7 +5,7 @@ class TaskModel {
   final String name;
   final String uid;
   final List assignedUid;
-  final List assignedName;
+  // final List assignedName;
   final String title;
   final String description;
   final String taskId;
@@ -18,7 +18,7 @@ class TaskModel {
     @required this.name,
     @required this.uid,
     @required this.assignedUid,
-    @required this.assignedName,
+    // @required this.assignedName,
     @required this.title,
     @required this.description,
     @required this.taskId,
@@ -35,7 +35,7 @@ class TaskModel {
     final String name = data['name'];
     final String uid = data['uid'];
     final List assignedUid = data['assignedUid'];
-    final List assignedName = data['assignedName'];
+    // final List assignedName = data['assignedName'];
     final String title = data['title'];
     final String description = data['description'];
     final String taskId = data['taskId'];
@@ -49,7 +49,7 @@ class TaskModel {
     String _yyyy = date.year.toString();
     String formattedDeadline = _dd + "/" + _mm + "/" + _yyyy;
    
-    return TaskModel(name: name, uid: uid, assignedUid: assignedUid, assignedName: assignedName, title: title, description: description, taskId: taskId, priority: priority, state: state, deadline: formattedDeadline, deadlineTS: deadline);
+    return TaskModel(name: name, uid: uid, assignedUid: assignedUid, title: title, description: description, taskId: taskId, priority: priority, state: state, deadline: formattedDeadline, deadlineTS: deadline);
   }
 
   Map<String, dynamic> toMap() {
@@ -57,7 +57,7 @@ class TaskModel {
       'name': name,
       'uid': uid,
       'assignedUid': assignedUid,
-      'assignedName': assignedName,
+      // 'assignedName': assignedName,
       'title': title,
       'description': description, 
       'taskId': taskId,

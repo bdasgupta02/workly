@@ -192,7 +192,7 @@ class FirestoreDatabase implements Database {
       "name": name,
       "message": "$name has joined this project group",
       "timesort": FieldValue.serverTimestamp(),
-      "time": FieldValue.serverTimestamp().toString(),
+      "time": FieldValue.serverTimestamp(),
       "chatId": _time,
       "user": uid,
       "event": true,

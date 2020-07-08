@@ -51,7 +51,7 @@ class _ProjectTasksAllState extends State<ProjectTasksAll> {
     ));
   }
 
-  void goToEditTaskForm(String taskName, String taskDescription, String taskDeadline, int taskPriority, int taskState, List taskAssignName, List taskAssignUid, String taskId) {
+  void goToEditTaskForm(String taskName, String taskDescription, String taskDeadline, int taskPriority, int taskState, List taskAssignUid, String taskId, String creatorId) {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
       Navigator.of(context).push(MaterialPageRoute<void>(
       fullscreenDialog: true,
@@ -62,9 +62,10 @@ class _ProjectTasksAllState extends State<ProjectTasksAll> {
         taskDeadline: taskDeadline,
         taskPriority: taskPriority,
         taskState: taskState,
-        taskAssignName: taskAssignName,
+        // taskAssignName: taskAssignName,
         taskAssignUid: taskAssignUid,
         taskId: taskId,
+        creatorId: creatorId,
       ),
     ));
   }
@@ -80,7 +81,7 @@ class _ProjectTasksAllState extends State<ProjectTasksAll> {
               .map((task) => Task(
                 taskId: task.taskId, title: task.title, desc: task.description, priority: task.priority, state: task.state, deadline: task.deadline, 
                 toPress: () => 
-                  projectTasksAllState.goToEditTaskForm(task.title, task.description, task.deadline, task.priority, task.state, task.assignedName, task.assignedUid,task.taskId))).toList();
+                  projectTasksAllState.goToEditTaskForm(task.title, task.description, task.deadline, task.priority, task.state, task.assignedUid,task.taskId, task.uid))).toList();
           tasks.sort((y,x) => x.priority.compareTo(y.priority));
           return TaskListConstructor(tasks: tasks).construct();
         } else if (snapshot.hasError) {

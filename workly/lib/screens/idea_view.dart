@@ -55,7 +55,6 @@ class IdeaView extends StatefulWidget {
 }
 
 class _IdeaViewState extends State<IdeaView> {
-  //TODO: Need to change onSendComment and other hard-coded shit
   TextEditingController _commentController = TextEditingController();
   bool _readOnly = true;
   IdeaPage idea;
@@ -72,8 +71,6 @@ class _IdeaViewState extends State<IdeaView> {
       hasVoted: widget.hasVoted,
       title: widget.title,
       idea: widget.idea,
-
-      //TODO: These are the idea options functions. Need to change onDelete and voteOrUnvote.
       onDelete: () => showDeleteDialog(null, false),
       voteOrUnvote: () => projectIdeasState.updateVote(widget.ideaId),
       onEdit: () => editIdea(),
@@ -82,7 +79,6 @@ class _IdeaViewState extends State<IdeaView> {
   }
 
   void saveIdea(String title, String idea) {
-    // TODO: Code to go here to save the idea to the db
     setState(() {
       _readOnly = true;
     });

@@ -18,6 +18,7 @@ abstract class ProjectDatabase {
   Future<void> updateAdminUser(List admin);
   Future<void> deleteProject();
   Future<void> exitProject(String id, String name, bool leave);
+  Future<void> deleteChatMessage(String chatId);
   Future<void> deleteIdea(String ideaId);
   Future<void> deleteIdeaComment(String ideaId, String commentId);
   Future<void> deleteTask(String taskId);
@@ -194,6 +195,11 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     sendLeaveMsg(_uid, _name, leave);
     removeTaskAssignment(_uid, _name);
     removeIdeasVoting(_uid, _name);
+  }
+
+  @override
+  Future<void> deleteChatMessage(String chatId) async {
+    await Firestore.instance.collection('projects').document(projectId).collection('chat').document(chatId).delete();
   }
 
   @override

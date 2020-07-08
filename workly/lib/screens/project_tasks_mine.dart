@@ -50,7 +50,7 @@ class _ProjectTasksMineState extends State<ProjectTasksMine> {
     ));
   }
 
-  void goToEditTaskForm(String taskName, String taskDescription, String taskDeadline, int taskPriority, int taskState, List taskAssignName, List taskAssignUid, String taskId) {
+  void goToEditTaskForm(String taskName, String taskDescription, String taskDeadline, int taskPriority, int taskState, List taskAssignUid, String taskId, String creatorId) {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
       Navigator.of(context).push(MaterialPageRoute<void>(
       fullscreenDialog: true,
@@ -61,9 +61,10 @@ class _ProjectTasksMineState extends State<ProjectTasksMine> {
         taskDeadline: taskDeadline,
         taskPriority: taskPriority,
         taskState: taskState,
-        taskAssignName: taskAssignName,
+        // taskAssignName: taskAssignName,
         taskAssignUid: taskAssignUid,
         taskId: taskId,
+        creatorId: creatorId,
       ),
     ));
   }
@@ -78,7 +79,7 @@ class _ProjectTasksMineState extends State<ProjectTasksMine> {
           taskItem.sort((x,y) => x.deadlineTS.compareTo(y.deadlineTS));
           final tasks = taskItem
               .map((task) => Task(
-                taskId: task.taskId, title: task.title, desc: task.description, priority: task.priority, state: task.state, deadline: task.deadline, toPress: () => projectTasksMineState.goToEditTaskForm(task.title, task.description, task.deadline, task.priority, task.state, task.assignedName, task.assignedUid,task.taskId))).toList();
+                taskId: task.taskId, title: task.title, desc: task.description, priority: task.priority, state: task.state, deadline: task.deadline, toPress: () => projectTasksMineState.goToEditTaskForm(task.title, task.description, task.deadline, task.priority, task.state, task.assignedUid,task.taskId, task.uid))).toList();
           tasks.sort((y,x) => x.priority.compareTo(y.priority));
           return TaskListConstructor(tasks: tasks).construct();
         } else if (snapshot.hasError) {

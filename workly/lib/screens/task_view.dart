@@ -20,9 +20,10 @@ class TaskView extends StatefulWidget {
   final String taskDeadline;
   final int taskPriority;
   final int taskState;
-  final List taskAssignName;
+  // final List taskAssignName;
   final List taskAssignUid;
   final String taskId;
+  final String creatorId;
 
   TaskView({
     @required this.database,
@@ -31,9 +32,10 @@ class TaskView extends StatefulWidget {
     @required this.taskDeadline,
     @required this.taskPriority,
     @required this.taskState,
-    @required this.taskAssignName,
+    // @required this.taskAssignName,
     @required this.taskAssignUid,
     @required this.taskId,
+    @required this.creatorId,
   });
 
   @override
@@ -57,15 +59,39 @@ class _TaskViewState extends State<TaskView> {
   List<String> _stateList;
   bool mine;
   bool resetPage = true;
-  List _taskAssignName;
+  // List _taskAssignName;
   List _taskAssignUid;
+  List userUidList;
+  List userNameList;
+  List userImageUrlList;
   //[Note]This bool value indicates if you're already assigned or not. Need to change with the "work on this task" or "leave task" buttons.
   //[Action] Need to replace this with actual data. These are hardcoded placeholders.
+  
+  void getUserListDetails() {
+    setState(() {
+      userUidList = widget.database.getUserUidList();
+      userNameList = widget.database.getUserNameList();
+      userImageUrlList = widget.database.getUserImageList();
+    });
+  }
+
+  void refreshUserListDetails() async {
+    Map _userListDetails = await widget.database.getUserList();
+    setState(() {
+      userUidList = _userListDetails['userUidList'];
+      userNameList = _userListDetails['userNameList'];
+      userImageUrlList = _userListDetails['userImageUrlList'];
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (userUidList == null) {
+      getUserListDetails();
+    }
     if (resetPage) {
       _resetPage();
+      refreshUserListDetails();
     }
     return Scaffold(
       appBar: AppBar(
@@ -175,7 +201,10 @@ class _TaskViewState extends State<TaskView> {
         SizedBox(height: 10),
         stateControl(),
         optButton(),
-        editButton(),
+        Offstage(
+          offstage: !(_taskAssignUid.contains(widget.database.getUid()) || widget.database.getUid() == widget.creatorId),
+          child: editButton(),
+        ),
         SizedBox(height: 30),
         Row(
           children: <Widget>[
@@ -183,7 +212,7 @@ class _TaskViewState extends State<TaskView> {
           ],
         ),
         SizedBox(height: 15),
-        MemberTester.constructor(_taskAssignName),
+        MemberTester.constructor(_taskAssignUid, userUidList, userNameList, userImageUrlList),
         SizedBox(height: 20),
       ],
     );
@@ -429,28 +458,28 @@ class _TaskViewState extends State<TaskView> {
   }
 
   void _optUpdate() async {
-    List _memberList = _taskAssignName;
+    // List _memberList = _taskAssignName;
     List _memberListId = _taskAssignUid;
     if (mine) {
       //leave
       int memberIdx = _memberListId.indexOf(widget.database.getUid());
       _memberListId.removeAt(memberIdx);
-      _memberList.removeAt(memberIdx);
+      // _memberList.removeAt(memberIdx);
       await widget.database.updateTaskDetails(widget.taskId, {
         "assignedUid": _memberListId,
-        "assignedName": _memberList,
+        // "assignedName": _memberList,
       });
     } else {
       //join
       _memberListId.add(widget.database.getUid());
-      _memberList.add(widget.database.getUserName());
+      // _memberList.add(widget.database.getUserName());
       await widget.database.updateTaskDetails(widget.taskId, {
         "assignedUid": _memberListId,
-        "assignedName": _memberList,
+        // "assignedName": _memberList,
       });
     }
     setState(() {
-      _taskAssignName = _memberList;
+      // _taskAssignName = _memberList;
       _taskAssignUid = _memberListId;
       mine = _memberListId.contains(widget.database.getUid());
     });
@@ -505,7 +534,7 @@ class _TaskViewState extends State<TaskView> {
       _stateList = newStateList;
       mine = widget.taskAssignUid.contains(widget.database.getUid());
       resetPage = false;
-      _taskAssignName = widget.taskAssignName;
+      // _taskAssignName = widget.taskAssignName;
       _taskAssignUid = widget.taskAssignUid;
     });
   }
@@ -521,12 +550,13 @@ class MemberTester {
   //   return constructor(members);
   // }
 
-  static Widget constructor(List members) {
-    if (members.isNotEmpty) {
+  static Widget constructor(List membersUid, List userUidList, List userNameList, List userImageUrlList) {
+    if (membersUid.isNotEmpty) {
       List<Widget> memberWidgets = [];
-      for (int i = 0; i < members.length; i++) {
+      for (int i = 0; i < membersUid.length; i++) {
+        int idx = userUidList.indexOf(membersUid[i]);
         memberWidgets.add(
-            Member(name: members[i], image: null).makeMemberTile(null, true));
+            Member(name: userNameList[idx], image: userImageUrlList[idx] == null ? null : NetworkImage(userImageUrlList[idx].toString())).makeMemberTile(null, true));
       }
       return Column(
         children: memberWidgets,
