@@ -45,7 +45,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
           showDialog(
             context: context,
             builder: (BuildContext context) {
-              return _buildIdeaForm(database, null);
+              return _buildIdeaForm(database, null, null);
             },
             barrierDismissible: true,
           ),
@@ -54,7 +54,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
     );
   }
 
-  Widget _buildIdeaForm(ProjectDatabase database, String ideaId) {
+  Widget _buildIdeaForm(ProjectDatabase database, String ideaId, String ideaTitle) {
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(48.0),
@@ -155,7 +155,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
                       offstage: !_editingMode,
                       child: Container(
                         child: FlatButton(
-                          onPressed: () => deleteIdea(ideaId),
+                          onPressed: () => deleteIdea(ideaTitle, ideaId),
                           child: Text(
                             "Delete idea",
                             style: TextStyle(
@@ -306,9 +306,9 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
     ));
   }
 
-  void deleteIdea(String ideaId) async {
+  void deleteIdea(String ideaTitle, String ideaId) async {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
-    await database.deleteIdea(ideaId);
+    await database.deleteIdea(ideaTitle, ideaId);
     Navigator.of(context).pop();
   }
 

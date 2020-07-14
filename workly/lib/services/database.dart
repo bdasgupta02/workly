@@ -4,6 +4,7 @@ import 'package:workly/models/user_projects.dart';
 
 abstract class Database {
   Future<void> createUserProject(String projectId, Map<String, dynamic> projectData);
+  Future<void> updateUserToken(Map<String, dynamic> userToken);
   Future<int> joinProject(String projectId);
   Future<void> createNewMessage(String projectId, String message);
   Stream<List<UserProjects>> userProjectsStream();
@@ -87,6 +88,11 @@ class FirestoreDatabase implements Database {
     } else {
       return false;
     }
+  }
+
+  @override
+  Future<void> updateUserToken(Map<String, dynamic> userToken) async {
+    await Firestore.instance.collection('users').document(uid).updateData(userToken);
   }
 
   @override

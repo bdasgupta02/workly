@@ -71,7 +71,7 @@ class _IdeaViewState extends State<IdeaView> {
       hasVoted: widget.hasVoted,
       title: widget.title,
       idea: widget.idea,
-      onDelete: () => showDeleteDialog(null, false),
+      onDelete: () => showDeleteDialog(null, null, false),
       voteOrUnvote: () => projectIdeasState.updateVote(widget.ideaId),
       onEdit: () => editIdea(),
       onSave: (String title, String idea) => saveIdea(title, idea),
@@ -257,7 +257,7 @@ class _IdeaViewState extends State<IdeaView> {
                   comment: com.comment,
                   commentId: com.commentId,
                   image: userImageUrlList[userUidList.indexOf(com.user)] == null ? null : NetworkImage(userImageUrlList[userUidList.indexOf(com.user)].toString()),
-                  onPress: () => com.user == widget.database.getUid() ? showDeleteDialog(com.commentId, true) : null,
+                  onPress: () => com.user == widget.database.getUid() ? showDeleteDialog(com.comment, com.commentId, true) : null,
                   ))
               .toList();
           return commentColBuilder(comments);
@@ -338,7 +338,7 @@ class _IdeaViewState extends State<IdeaView> {
 
   void onSendComment() async {
     String _commentId = DateTime.now().toString();
-    await widget.database.createIdeaComment(widget.ideaId, _commentId, {
+    await widget.database.createIdeaComment(widget.title, widget.ideaId, _commentId, {
       "name": widget.database.getUserName(),
       "user": widget.database.getUid(),
       "time": FieldValue.serverTimestamp(),
@@ -350,21 +350,21 @@ class _IdeaViewState extends State<IdeaView> {
     });
   }
 
-  void onDeleteComment(String commentId) async {
-    await widget.database.deleteIdeaComment(widget.ideaId, commentId);
+  void onDeleteComment(String comment, String commentId) async {
+    await widget.database.deleteIdeaComment(comment, widget.title, widget.ideaId, commentId);
   }
   
-  void showDeleteDialog(String commentId, bool comment) {
+  void showDeleteDialog(String commentContent, String commentId, bool comment) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return _deleteDialog(commentId, comment);
+        return _deleteDialog(commentContent, commentId, comment);
       },
       barrierDismissible: true,
     );
   }
 
-  Widget _deleteDialog(String commentId, bool comment) {
+  Widget _deleteDialog(String commentContent, String commentId, bool comment) {
     String verb = comment ? "comment" : "idea";
     return AlertDialog(
       title: Text("Wait..."),
@@ -380,7 +380,7 @@ class _IdeaViewState extends State<IdeaView> {
         FlatButton(
           child: Text("Yes, delete $verb"),
           onPressed: () => {
-            comment ? deleteIdeaComment(commentId) : projectIdeasState.deleteIdea(widget.ideaId),
+            comment ? deleteIdeaComment(commentContent, commentId) : projectIdeasState.deleteIdea(widget.title, widget.ideaId),
             Navigator.of(context).pop(),
           },
         ),
@@ -388,8 +388,8 @@ class _IdeaViewState extends State<IdeaView> {
     );
   }
 
-  void deleteIdeaComment(String commentId) async {
-    await widget.database.deleteIdeaComment(widget.ideaId, commentId);
+  void deleteIdeaComment(String comment, String commentId) async {
+    await widget.database.deleteIdeaComment(comment, widget.title, widget.ideaId, commentId);
   }
 
   void refresh() {

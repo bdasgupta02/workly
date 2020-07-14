@@ -488,7 +488,7 @@ class _TaskFormState extends State<TaskForm> {
   }
 
   void _deleteTask() async {
-    await widget.database.deleteTask(_taskId);
+    await widget.database.deleteTask(_taskTitle, _taskId);
     taskViewState.delete();
     print("Call delete");
     Navigator.of(context).pop();

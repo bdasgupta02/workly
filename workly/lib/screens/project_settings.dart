@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workly/index.dart';
+import 'package:workly/screens/project_log.dart';
 import 'package:workly/screens/projectscreen_switchboard.dart';
 import 'package:workly/services/project_database.dart';
 import 'package:workly/resuable_widgets/member_tile.dart';
@@ -68,6 +69,7 @@ class _ProjectSettingsState extends State<ProjectSettings> {
         SizedBox(height: 30),
         headingText('Project Settings'),
         uniqueCode(db.getProjectId()),
+        buttonTile(() => showProjectLog(), 'Project Logs', 'View', Colors.blueAccent),
         lastAdmin && numMember == 1
             ? SizedBox()
             : buttonTile(() => showExitDialog("leave"), 'Leave Project', 'Leave',
@@ -427,6 +429,13 @@ class _ProjectSettingsState extends State<ProjectSettings> {
         ),
       ),
     );
+  }
+
+  void showProjectLog() {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (context) => ProjectLog(database: database)));
   }
 }
 
