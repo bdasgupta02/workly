@@ -91,6 +91,25 @@ class Task {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
+                        Offstage(
+                          offstage: assignedUID.isNotEmpty,
+                          child: Padding (
+                            padding: EdgeInsets.only(
+                              top: 15,
+                              right: 5,
+                              left: 0,
+                              bottom: 3,
+                            ),
+                            child: Container(
+                              width: 10.0,
+                              height: 10.0,
+                              decoration: new BoxDecoration(
+                                color: Colors.lightGreenAccent[400],
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ),
                         Expanded(
                           child: Padding(
                             padding: EdgeInsets.only(
@@ -190,8 +209,9 @@ class Task {
 
 class TaskListConstructor {
   List<Task> tasks;
+  int unassigned;
 
-  TaskListConstructor({@required this.tasks});
+  TaskListConstructor({@required this.tasks, @required this.unassigned});
 
   Widget construct() {
     bool toDo = false;
@@ -200,6 +220,12 @@ class TaskListConstructor {
     bool comp = false;
 
     List<Widget> widgetList = [];
+
+    if (unassigned > 0) { 
+      widgetList.add(noteTxt(
+        unassigned == 1 ? "There is 1 unassigned task" : "There are $unassigned unassigned tasks"
+      ));
+    }
 
     //[Note] Generates the 'To Do' portion
     widgetList.add(titleTxt('To do'));
@@ -306,6 +332,38 @@ Widget emptyTxt(int state) {
         ),
       ),
       Spacer(),
+    ],
+  );
+}
+
+Widget noteTxt(String s) {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: <Widget>[
+      Padding(
+        padding: EdgeInsets.only(left: 20, top: 10),
+        child: Text(
+          s,
+          style: TextStyle(
+            color: Colors.redAccent,
+            fontFamily: 'Roboto',
+            fontWeight: FontWeight.w400,
+            fontSize: 14,
+            decoration: TextDecoration.underline,
+          ),
+        ),
+      ),
+      Padding(
+        padding: EdgeInsets.only(left: 5, top: 10),
+        child: Container(
+          width: 10.0,
+          height: 10.0,
+          decoration: new BoxDecoration(
+            color: Colors.lightGreenAccent[400],
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
     ],
   );
 }

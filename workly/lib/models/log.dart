@@ -32,7 +32,7 @@ class Log {
     String _yyyy = newDate.year.toString();
     String _hr = newDate.hour < 10 ? "0" + newDate.hour.toString() : newDate.hour.toString();
     String _min = newDate.minute < 10 ? "0" + newDate.minute.toString() : newDate.minute.toString();
-    String formattedDateTime = _dd + "/" + _mm + "/" + _yyyy + "  -  [" + _hr +":"+_min + "]";
+    String formattedDateTime = _dd + "/" + _mm + "/" + _yyyy + " ,  " + _hr +":"+_min;
     return Log(name: name, user: user, description: description, date: formattedDateTime, task: task);
   }
 

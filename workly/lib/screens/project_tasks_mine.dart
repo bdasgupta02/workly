@@ -79,15 +79,21 @@ class _ProjectTasksMineState extends State<ProjectTasksMine> {
           taskItem.sort((x,y) => x.deadlineTS.compareTo(y.deadlineTS));
           final tasks = taskItem
               .map((task) => Task(
-                taskId: task.taskId, title: task.title, desc: task.description, priority: task.priority, state: task.state, deadline: task.deadline, toPress: () => projectTasksMineState.goToEditTaskForm(task.title, task.description, task.deadline, task.priority, task.state, task.assignedUid,task.taskId, task.uid))).toList();
+                taskId: task.taskId, title: task.title, desc: task.description, priority: task.priority, state: task.state, deadline: task.deadline, assignedUID: task.assignedUid, toPress: () => projectTasksMineState.goToEditTaskForm(task.title, task.description, task.deadline, task.priority, task.state, task.assignedUid,task.taskId, task.uid))).toList();
           tasks.sort((y,x) => x.priority.compareTo(y.priority));
-          return TaskListConstructor(tasks: tasks).construct();
+          int unassigned = 0;
+          for (var ele in tasks) {
+            if (ele.assignedUID.isEmpty) {
+              unassigned += 1;
+            }
+          } 
+          return TaskListConstructor(tasks: tasks, unassigned: unassigned).construct();
         } else if (snapshot.hasError) {
           print(snapshot.error);
           return Center(child: CircularProgressIndicator());
         } else {
           print("EMPTY");
-          return TaskListConstructor(tasks: []).construct();//Center(child: CircularProgressIndicator());
+          return TaskListConstructor(tasks: [], unassigned: 0).construct();//Center(child: CircularProgressIndicator());
         }
       },
     );
