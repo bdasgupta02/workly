@@ -17,7 +17,7 @@ Future<void> sendNoti(String userToken) async {
 
   final headers = {
     'content-type': 'application/json',
-    'Authorization': "key=AAAAe_6bg90:APA91bFJLXATG_94pE0k5ECMt7ApY5hvOv3NxQaeom4M_H7E_4Ozkz4tmkZZWn20gsoNX3NBh_uqgDdDrR1LsqYDO2JzyLqE1HeCKfGYFx8Yc673gaZBt1ofKdf-VeYItnsZFg7Wh2rG"
+    'Authorization': "",
   };
   final response = await http.post(postUrl,
       body: json.encode(data),
