@@ -209,34 +209,75 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     if (taskData['title'] != null && _title != taskData['title']) {
       listLog.add('\nTitle was updated from \'$_title\' to \'${taskData['title']}\'');
       runLoop = true;
+      _title = taskData['title'];
     }
     if (taskData['description'] != null && _description != taskData['description']) {
       listLog.add('\nDescription was updated from \'$_description\' to \'${taskData['description']}\'');
       runLoop = true;
+      _description = taskData['description'];
     }
     if (taskData['priority'] != null && _priority != taskData['priority']) {
       listLog.add('\nPriority was updated from \'${_priorityList[_priority - 1]}\' to \'${_priorityList[taskData['priority'] - 1]}\'');
       runLoop = true;
+      _priority = taskData['priority'];
     }
     if (taskData['state'] != null && _state != taskData['state']) {
       logDescription = '$userName updated the Task State from \'${_stateList[_state - 1]}\' to \'${_stateList[taskData['state'] - 1]}\'';
+      _state = taskData['state'];
     }
     if (taskData['deadline'] != null && convertTimeStampToStringDate(_deadline) != convertTimeStampToStringDate(taskData['deadline'])) {
       listLog.add('\nDeadline was updated from \'${convertTimeStampToStringDate(_deadline)}\' to \'${convertTimeStampToStringDate(taskData['deadline'])}\'');
       runLoop = true;
+      _deadline = taskData['deadline'];
     }
     if (taskData['assignedUid'] != null) {
       bool _assigned = taskData['assignedUid'].contains(uid);
       String _action = _assigned ? 'self-assigned to' : 'self-removed from';
+      addTaskToUser(_assigned, taskId, _title, _deadline, _stateList[_state - 1], _priorityList[_priority - 1]);
       logDescription = '$userName $_action \'$_title\'';
     }
     if (runLoop) {
+      updateTaskToUser(taskId, _title, _deadline, _stateList[_state - 1], _priorityList[_priority - 1]);
       logDescription = '$userName have updated the following details of Task \'$_title\':';
       for (var ele in listLog) {
         logDescription += ele;
       }
     }
     createNewLog(logDescription, true);  
+  }
+
+  Future<void> addTaskToUser(bool add, String taskId, String title, var deadline, String state, String priority) async {
+    if (add) {
+      _setData('users/$uid/task/$taskId', {
+        'taskId': taskId,
+        'title': title,
+        'deadline': deadline,
+        'projectName': projectName, 
+        'state': state,
+        'priority': priority,
+      });
+    } else {
+      Firestore.instance.collection('users').document(uid).collection('task').document(taskId).delete();
+    }
+  }
+
+  Future<void> updateTaskToUser(String taskId, String title, var deadline, String state, String priority) async {
+    bool valid = false;
+    await Firestore.instance.collection('users').document(uid).collection('task').document(taskId).get().then((value) {
+      if (value.data != null) { 
+        valid = true;
+      }
+    });
+    if (valid) {
+      await Firestore.instance.collection('users').document(uid).collection('task').document(taskId).updateData({
+        'taskId': taskId,
+        'title': title,
+        'deadline': deadline,
+        'projectName': projectName, 
+        'state': state,
+        'priority': priority,
+      });
+    }
   }
 
   @override
@@ -336,9 +377,20 @@ class FirestoreProjectDatabase implements ProjectDatabase {
 
   @override
   Future<void> deleteTask(String taskName, String taskId) async {
+    List assignedUid;
+    await Firestore.instance.collection('projects').document(projectId).collection('task').document(taskId).get().then((value) {
+      if (value.data != null) { 
+        assignedUid = value.data['assignedUid'];
+      }
+    });
     await Firestore.instance.collection('projects').document(projectId).collection('task').document(taskId).delete();
     String logDescription = '$userName deleted Task \'$taskName\'';
     createNewLog(logDescription, true);
+    if (assignedUid != null) {
+      for (var ele in assignedUid) {
+        Firestore.instance.collection('users').document(ele).collection('task').document(taskId).delete();
+      }
+    }
   }
 
   @override
@@ -394,6 +446,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       assignListName = List();
       taskId = '';      
     });
+    Firestore.instance.collection('users').document(id).collection('task').document(taskId).delete();
   }
 
   Future<void> removeIdeasVoting(String id, String name) async {

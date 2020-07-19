@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:workly/models/user_projects.dart';
+import 'package:workly/models/user_tasks.dart';
 
 abstract class Database {
   Future<void> createUserProject(String projectId, Map<String, dynamic> projectData);
@@ -8,6 +9,7 @@ abstract class Database {
   Future<int> joinProject(String projectId);
   Future<void> createNewMessage(String projectId, String message);
   Stream<List<UserProjects>> userProjectsStream();
+  Stream<List<UserTasks>> userTasksStream();
   Future<bool> checkCode(String code);
   String getUid();
   Future<String> getName();
@@ -210,6 +212,16 @@ class FirestoreDatabase implements Database {
     return _collectionStream(
       path: 'users/$uid/projects', 
       builder: (data) => UserProjects.fromMap(data),
+      orderBy: "deadline",
+      descending: false,
+    );
+  }
+
+  @override
+  Stream<List<UserTasks>> userTasksStream() {
+    return _collectionStream(
+      path: 'users/$uid/task', 
+      builder: (data) => UserTasks.fromMap(data),
       orderBy: "deadline",
       descending: false,
     );
