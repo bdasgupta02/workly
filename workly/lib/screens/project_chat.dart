@@ -51,7 +51,6 @@ class _ProjectChatState extends State<ProjectChat> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     if (userUidList == null) {
@@ -71,7 +70,19 @@ class _ProjectChatState extends State<ProjectChat> {
 
   Widget makeTextBar() {
     return Container(
-      margin: EdgeInsets.only(left: 20, bottom: 10),
+      decoration: BoxDecoration(
+        color: Color(0xFF141336),
+        borderRadius: BorderRadius.all(Radius.circular(35)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black38.withOpacity(0.15),
+            spreadRadius: 2,
+            blurRadius: 12,
+            offset: Offset(0, 7),
+          ),
+        ],
+      ),
+      margin: EdgeInsets.only(left: 20, bottom: 10, right: 20),
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,7 +91,10 @@ class _ProjectChatState extends State<ProjectChat> {
               child: Container(
                 decoration: BoxDecoration(
                   color: Color(0xFFFCFCFC),
-                  borderRadius: BorderRadius.all(Radius.circular(35)),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(35),
+                    bottomLeft: Radius.circular(35),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black38.withOpacity(0.08),
@@ -134,8 +148,8 @@ class _ProjectChatState extends State<ProjectChat> {
       child: IconButton(
         icon: Icon(
           Icons.send,
-          size: 30,
-          color: Color(0xFF24DCB7),
+          size: 25,
+          color: Colors.white
         ),
         onPressed: () => _message.isEmpty ? null : sendMessage(),
       ),
@@ -164,10 +178,11 @@ class _ProjectChatState extends State<ProjectChat> {
   void initState() {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
     super.initState();
-    _chatStreamPagination = ChatStreamPagination(projectId: database.getProjectId());
+    _chatStreamPagination =
+        ChatStreamPagination(projectId: database.getProjectId());
     _listScrollController.addListener(_scrollListener);
   }
-  
+
   void _scrollListener() {
     if (_listScrollController.offset >=
             _listScrollController.position.maxScrollExtent &&
@@ -178,24 +193,30 @@ class _ProjectChatState extends State<ProjectChat> {
 
   Widget _buildChatList() {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
-    return 
-    StreamBuilder<List<ChatMessage>>(
-        stream: _chatStreamPagination.listenToChatsRealTime(),//database.chatStream(),
+    return StreamBuilder<List<ChatMessage>>(
+        stream: _chatStreamPagination
+            .listenToChatsRealTime(), //database.chatStream(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             final chatMessages = snapshot.data;
             final chatList = chatMessages
                 .map((chat) => Message(
-                    uid: chat.user,
-                    name: chat.name,
-                    msg: chat.message,
-                    img: userImageUrlList[userUidList.indexOf(chat.user)] == null ? null : NetworkImage(userImageUrlList[userUidList.indexOf(chat.user)].toString()),
-                    //database.getImageUrl() == null ? null : NetworkImage(database.getImageUrl().toString()),
-                    time: chat.time,
-                    user: chat.user == database.getUid(),
-                    sameUserAsNext: false,
-                    isEvent: chat.event,
-                    onPress: () => showDeleteDialog(chat.chatId),))
+                      uid: chat.user,
+                      name: chat.name,
+                      msg: chat.message,
+                      img: userImageUrlList[userUidList.indexOf(chat.user)] ==
+                              null
+                          ? null
+                          : NetworkImage(
+                              userImageUrlList[userUidList.indexOf(chat.user)]
+                                  .toString()),
+                      //database.getImageUrl() == null ? null : NetworkImage(database.getImageUrl().toString()),
+                      time: chat.time,
+                      user: chat.user == database.getUid(),
+                      sameUserAsNext: false,
+                      isEvent: chat.event,
+                      onPress: () => showDeleteDialog(chat.chatId),
+                    ))
                 .toList();
             cacheChat = chatList;
             return constructChatList(chatList);
@@ -243,14 +264,15 @@ class _ProjectChatState extends State<ProjectChat> {
             : chatList[chatList.length - idx].uid ==
                 chatList[chatList.length - 1 - idx].uid;
         final Message msg = Message(
-            name: draftMsg.name,
-            msg: draftMsg.msg,
-            img: draftMsg.img,
-            time: draftMsg.time,
-            user: draftMsg.user,
-            sameUserAsNext: _sameUserAsNext,
-            isEvent: draftMsg.isEvent,
-            onPress: draftMsg.onPress,);
+          name: draftMsg.name,
+          msg: draftMsg.msg,
+          img: draftMsg.img,
+          time: draftMsg.time,
+          user: draftMsg.user,
+          sameUserAsNext: _sameUserAsNext,
+          isEvent: draftMsg.isEvent,
+          onPress: draftMsg.onPress,
+        );
         // if (draftMsg.isEvent) {
         //   refreshUserListDetails();
         //   print("Call refresh list to get new image");
@@ -273,8 +295,7 @@ class _ProjectChatState extends State<ProjectChat> {
   Widget _deleteDialog(String chatId) {
     return AlertDialog(
       // title: Text("Delete message"),
-      content: Text(
-          "Do you really want to delete this message?"),
+      content: Text("Do you really want to delete this message?"),
       actions: <Widget>[
         FlatButton(
           child: Text("Cancel"),
@@ -283,12 +304,11 @@ class _ProjectChatState extends State<ProjectChat> {
           },
         ),
         FlatButton(
-          child: Text("Delete message"),
-          onPressed: () => {
-            deleteChatMessage(chatId),
-            Navigator.of(context).pop(),
-          }
-        ),
+            child: Text("Delete message"),
+            onPressed: () => {
+                  deleteChatMessage(chatId),
+                  Navigator.of(context).pop(),
+                }),
       ],
     );
   }
@@ -318,7 +338,7 @@ class MessageList {
 }
 
 class Message {
-  Function onPress; 
+  Function onPress;
   String uid;
   var name;
   var msg;

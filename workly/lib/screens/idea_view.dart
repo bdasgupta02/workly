@@ -194,7 +194,19 @@ class _IdeaViewState extends State<IdeaView> {
 
   Widget addCommentForm() {
     return Container(
-      margin: EdgeInsets.only(left: 15, bottom: 15, top: 25),
+      decoration: BoxDecoration(
+        color: Color(0xFF141336),
+        borderRadius: BorderRadius.all(Radius.circular(35)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black38.withOpacity(0.15),
+            spreadRadius: 2,
+            blurRadius: 12,
+            offset: Offset(0, 7),
+          ),
+        ],
+      ),
+      margin: EdgeInsets.only(left: 15, bottom: 15, top: 25, right: 15),
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -203,7 +215,10 @@ class _IdeaViewState extends State<IdeaView> {
               child: Container(
                 decoration: BoxDecoration(
                   color: Color(0xFFFCFCFC),
-                  borderRadius: BorderRadius.all(Radius.circular(35)),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(35),
+                    bottomLeft: Radius.circular(35),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black38.withOpacity(0.15),
@@ -281,7 +296,7 @@ class _IdeaViewState extends State<IdeaView> {
     if (comments.length == 0) {
       widgets.add(
         Container(
-          margin: EdgeInsets.all(10),
+          margin: EdgeInsets.only(top: 15),
           child: Center(
             child: Text(
               "There are no comments!",
@@ -327,9 +342,9 @@ class _IdeaViewState extends State<IdeaView> {
       margin: EdgeInsets.only(right: 10, left: 10),
       child: IconButton(
         icon: Icon(
-          Icons.comment,
-          size: 30,
-          color: Color(0xFF24DCB7),
+          Icons.send,
+          size: 25,
+          color: Colors.white,
         ),
         onPressed: () => _commentController.text.isEmpty ? null : onSendComment(),
       ),

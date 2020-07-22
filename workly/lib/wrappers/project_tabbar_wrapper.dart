@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:workly/resuable_widgets/custom_appbar.dart';
+import 'package:workly/screens/meeting_list.dart';
 import 'package:workly/screens/project_chat.dart';
 import 'package:workly/screens/project_ideas.dart';
 import 'package:workly/screens/project_settings.dart';
@@ -18,7 +19,9 @@ class _ProjectTabWrapperState extends State<ProjectTabWrapper> {
     ProjectChat(),
     ProjectTaskWrapper(),
     ProjectIdeas(),
+    MeetingList(),
     ProjectSettings(),
+    
   ];
 
   @override
@@ -27,7 +30,7 @@ class _ProjectTabWrapperState extends State<ProjectTabWrapper> {
     return Scaffold(
       backgroundColor: _index == 1 ? Color(0xFFFCFCFC) : Color(0xFFE9E9E9),
       appBar: CustomAppbar.appBarDark(database.getProjectName(),
-          () => customPage(3), 3, _index), //'Project title goes here'),
+          () => customPage(4), 4, _index), //'Project title goes here'),
       body: Column(
         children: <Widget>[
           tab(),
@@ -48,11 +51,13 @@ class _ProjectTabWrapperState extends State<ProjectTabWrapper> {
         ),
         child: Row(
           children: <Widget>[
-            Expanded(child: customButton('Chat', 0)),
+            Expanded(flex: 3, child: customButton('Chat', 0)),
             SizedBox(width: 12),
-            Expanded(child: customButton('Tasks', 1)),
+            Expanded(flex: 3, child: customButton('Tasks', 1)),
             SizedBox(width: 12),
-            Expanded(child: customButton('Ideas', 2)),
+            Expanded(flex: 3, child: customButton('Ideas', 2)),
+            SizedBox(width: 12),
+            Expanded(flex: 4, child: customButton('Meetings', 3)),
           ],
         ),
       ),
@@ -73,7 +78,7 @@ class _ProjectTabWrapperState extends State<ProjectTabWrapper> {
           style: TextStyle(
             fontFamily: 'Khula',
             fontWeight: FontWeight.w600,
-            fontSize: 15,
+            fontSize: 14,
             color: order == _index ? Color(0xFFFCFCFC) : Colors.black45,
           ),
         ),
