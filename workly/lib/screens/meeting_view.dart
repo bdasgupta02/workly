@@ -45,7 +45,7 @@ class _MeetingViewState extends State<MeetingView> {
       desc: "desc",
       isUser: true,
       date: "20/8/2020",
-      time: "10:00pm",
+      time: "10:20",
       notAttending: 2,
       attending: 4,
       maybe: 1,

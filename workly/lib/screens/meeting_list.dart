@@ -1,32 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:workly/screens/meeting_view.dart';
 
-//Can make time 24 hrs too
 class MeetingList extends StatefulWidget {
   @override
   _MeetingListState createState() => _MeetingListState();
 }
 
 class _MeetingListState extends State<MeetingList> {
-  //This just a hard-coded test
+  //TODO: This just a hard-coded test
   var meetingsTest = [
     MeetingTile(
       title: "first",
       desc: "desc",
       dateString: "25/07/2020",
-      timeString: "10:00am",
+      timeString: "17:00",
     ),
     MeetingTile(
       title: "second",
       desc: "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
       dateString: "25/07/2020",
-      timeString: "10:00am",
+      timeString: "10:00",
     ),
     MeetingTile(
       title: "third",
       desc: "desc",
       dateString: "25/07/2020",
-      timeString: "10:00am",
+      timeString: "1150",
     ),
   ];
 
@@ -35,6 +34,12 @@ class _MeetingListState extends State<MeetingList> {
     return Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
       body: construct(meetingsTest),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        backgroundColor: Color(0xFF06D8AE),
+        //TODO: change this onpressed to lead to a form thx 
+        onPressed: () => null,
+      ),
     );
   }
 
