@@ -3,7 +3,8 @@ import 'package:workly/resuable_widgets/clipped_header_bg.dart';
 
 /*
 IMPORTANT Notes:
-- Can store date and time values in the form of string and parse it when quering it from the DB.
+- Can store date and time values in the form of string (with toString() method for DateTime and TimeOfDay) and parse it 
+  with flutter methods when quering it from the DB.
 - Exactly the same style as idea view page, with visual changes.
 - Most attributes are on the top of each class, but I've marked "TODO" where it's inside a method.
 - I've changed the alternatives to a voting system instead of a "attending" system, because it's more
