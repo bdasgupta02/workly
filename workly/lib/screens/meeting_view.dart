@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
 
 /*
@@ -41,11 +42,15 @@ class _MeetingViewState extends State<MeetingView> {
 
     // TODO: query meeting here
     // THESE ARE HARD-CODED TESTS
+    // If you look carefully, the date format is in the form of YYYY-MM-DD.
+    // This can be replaced by any of the formats given here:
+    // https://api.dart.dev/stable/1.24.3/dart-core/DateTime/parse.html
+    // ^Needs to be in these specific formats to parse to and from the date picker and strings etc.
     meeting = Meeting(
       title: "title",
       desc: "desc",
       isUser: true,
-      date: "20/8/2020",
+      date: "2020-10-20",
       time: "10:20",
       notAttending: 2,
       attending: 4,
@@ -57,6 +62,8 @@ class _MeetingViewState extends State<MeetingView> {
       onAttend: () => null,
       onNotAttend: () => null,
       onMaybe: () => null,
+      context: context,
+      location: "Somewhere lulz",
     );
 
     alternatives = [
@@ -64,12 +71,15 @@ class _MeetingViewState extends State<MeetingView> {
         alternativeId: "test",
         uid: "test",
         name: "Test name",
-        dateString: "25/05/2020",
+        dateString: "2020-05-20",
         timeString: "15:00",
         onPress: () => null,
         onVote: () => null,
+        onAcceptAlternative: () => null,
+        onRejectAlternative: () => null,
         votes: 23,
         hasVoted: true,
+        isMeetingCreator: true,
       ),
     ];
   }
@@ -82,6 +92,14 @@ class _MeetingViewState extends State<MeetingView> {
     setState(() {
       _readOnly = false;
     });
+  }
+
+  void acceptAlternative(Alternative alt) {
+    meeting.setDate(alt.date);
+    meeting.setTime(alt.time);
+
+    //TODO: MAKE METHOD HERE TO ACCEPT THE ALTERNATIVE ON THE DB
+    refresh();
   }
 
   void saveMeeting() {
@@ -204,18 +222,6 @@ class _MeetingViewState extends State<MeetingView> {
   }
 
   Widget addAlternativeForm() {
-    String newHour = "";
-    String newMinute = "";
-
-    if (_alternativeFormTime != null && _alternativeFormDate != null) {
-      newHour = _alternativeFormTime.hour < 10
-          ? "0${_alternativeFormTime.hour}"
-          : "${_alternativeFormTime.hour}";
-      newMinute = _alternativeFormTime.minute < 10
-          ? "0${_alternativeFormTime.minute}"
-          : "${_alternativeFormTime.minute}";
-    }
-
     return Container(
       margin: EdgeInsets.only(left: 15, bottom: 15, top: 25, right: 15),
       decoration: BoxDecoration(
@@ -260,7 +266,7 @@ class _MeetingViewState extends State<MeetingView> {
                   child: Text(
                     _alternativeFormDate == null || _alternativeFormTime == null
                         ? "Pick a date and time"
-                        : "Selected: ${_alternativeFormDate.day}/${_alternativeFormDate.month}/${_alternativeFormDate.year} $newHour:$newMinute",
+                        : "Selected: ${MeetingTimeString.create(_alternativeFormDate, _alternativeFormTime)}",
                     style: TextStyle(
                       fontFamily: "Roboto",
                       color: _alternativeFormDate == null ||
@@ -324,11 +330,40 @@ class _MeetingViewState extends State<MeetingView> {
   }
 
   void onSendAlternative() async {
-    //TODO: MAKE A SAVE FUNCTION HERE
+    //TODO: MAKE A SAVE ALTERNATIVE FUNCTION HERE
 
     //
 
     //
+
+    //TODO: CHANGE HARDCODED CACHE FOR TESTING ONLY:
+    alternatives.add(
+      Alternative(
+        alternativeId: "HARD-CODED ID",
+        uid: "HARD-CODED ID",
+        isMeetingCreator: true,
+        hasVoted: false,
+        votes: 0,
+        name: "Test name add",
+        onVote: () => null,
+        onAcceptAlternative: () => null,
+        onPress: () => null,
+        onRejectAlternative: () => null,
+        
+        //TODO: SHOULD BE LIKE THIS WHEN STORING THE STRING TO DB TOO
+        //This is correct unlike the other hard-coded stuff around it
+        //KEEP THIS for new entry into DB
+        timeString: _alternativeFormTime.toString().substring(10,15),
+        dateString: DateFormat('yyyy-MM-dd').format(_alternativeFormDate),
+      ),
+    );
+    
+    //KEEP THIS
+    _alternativeFormTime = null;
+    _alternativeFormDate = null;
+    
+    //TODO: REMOVE THIS REFRESH FOR STREAMBUILDER
+    refresh();
   }
 
   Widget headingText(String text) {
@@ -354,6 +389,7 @@ class _MeetingViewState extends State<MeetingView> {
 class Meeting {
   String title;
   String desc;
+  String location;
   String date;
   String time;
   int attending;
@@ -361,6 +397,7 @@ class Meeting {
   int maybe;
   TextEditingController _titleController;
   TextEditingController _descController;
+  TextEditingController _locationController;
   bool _readOnly;
   bool isUser;
 
@@ -370,6 +407,8 @@ class Meeting {
   Function onAttend;
   Function onNotAttend;
   Function onMaybe;
+
+  BuildContext context;
 
   int attendingState;
   static const ATTENDING = 1;
@@ -393,11 +432,23 @@ class Meeting {
     @required this.onAttend,
     @required this.onNotAttend,
     @required this.onMaybe,
+    @required this.context,
+    @required this.location,
   }) {
     _titleController = TextEditingController();
     _descController = TextEditingController();
+    _locationController = TextEditingController();
     _titleController.text = title;
     _descController.text = desc;
+    _locationController.text = location;
+  }
+
+  void setDate(String date) {
+    this.date = date;
+  }
+
+  void setTime(String time) {
+    this.time = time;
   }
 
   Widget toWidgetEdit() {
@@ -420,6 +471,11 @@ class Meeting {
     desc = s;
   }
 
+  void setLocation(String s) {
+    _locationController.text = s;
+    location = s;
+  }
+
   String get titleString {
     return title;
   }
@@ -429,10 +485,18 @@ class Meeting {
   }
 
   Widget toWidget() {
+    //TODO: PARSES DATE AND TIME STRINGS HERE
+    //Time string parses the format of HH:MM strings.
+    //Need testing here.
+    DateTime newDate = DateTime.parse(date);
+    TimeOfDay newTime = TimeOfDay(
+        hour: int.parse(time.split(":")[0]),
+        minute: int.parse(time.split(":")[1]));
+
     return Column(
       children: <Widget>[
         Padding(
-          padding: EdgeInsets.only(left: 15, top: 15, right: 15, bottom: 8),
+          padding: EdgeInsets.only(left: 15, top: 15, right: 15, bottom: 12),
           child: Row(
             children: <Widget>[
               Flexible(
@@ -470,7 +534,95 @@ class Meeting {
             ],
           ),
         ),
-        SizedBox(height: 8),
+        Padding(
+          padding: EdgeInsets.only(left: 15, bottom: 2, right: 15),
+          child: Row(
+            children: <Widget>[
+              Flexible(
+                child: _readOnly
+                    ? Text(
+                        location,
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black26,
+                          fontSize: 15,
+                        ),
+                      )
+                    : TextField(
+                        controller: _locationController,
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black54,
+                          fontSize: 15,
+                        ),
+                        textAlign: TextAlign.start,
+                        //maxLines: 4,
+                        readOnly: _readOnly,
+                        maxLines: 6,
+                        minLines: 1,
+                        decoration: InputDecoration(
+                          labelText: "Location",
+                          hintText: "Location of your meeting",
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24)),
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(
+              left: 15, bottom: 10, right: 15, top: _readOnly ? 0 : 8),
+          child: Row(
+            children: <Widget>[
+              Flexible(
+                child: _readOnly
+                    ? Text(
+                        "Scheduled on: ${MeetingTimeString.create(newDate, newTime)}",
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black87,
+                          fontSize: 15,
+                        ),
+                      )
+                    : Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black26,
+                          borderRadius: BorderRadius.all(Radius.circular(35)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black38.withOpacity(0.15),
+                              spreadRadius: 2,
+                              blurRadius: 12,
+                              offset: Offset(0, 7),
+                            ),
+                          ],
+                        ),
+                        child: FlatButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(35),
+                          ),
+                          onPressed: () {
+                            _pickDate();
+                          },
+                          child: Text(
+                            "Scheduled on: $date $time",
+                            style: TextStyle(
+                              fontFamily: "Roboto",
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        ),
         Padding(
           padding: EdgeInsets.only(left: 15, bottom: 15, right: 15),
           child: Row(
@@ -523,6 +675,35 @@ class Meeting {
         SizedBox(height: isUser ? 5 : 0),
       ],
     );
+  }
+
+  _pickDate() async {
+    DateTime date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    if (date != null) {
+      _pickTime(date);
+    }
+  }
+
+  _pickTime(DateTime date) async {
+    TimeOfDay time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (time != null) {
+      String meetingString = MeetingTimeString.create(date, time);
+      this.date = meetingString.split(" ")[0].split("/")[2] +
+          meetingString.split(" ")[0].split("/")[1] +
+          meetingString.split(" ")[0].split("/")[0];
+      this.time = meetingString.split(" ")[1];
+
+      //TODO: THE STRINGS AFTER THIS NEED TO BE SAVED WITH onEdit FUNCTION.
+      meetingViewState.refresh();
+    }
   }
 
   Widget attendingBar() {
@@ -706,7 +887,7 @@ class Meeting {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(26),
         ),
-        color: attendingState == MAYBE ? Colors.white60 : Color(0xFFffab24),
+        color: attendingState == MAYBE ? Colors.white60 : Color(0xFFfc9803),
         onPressed: () {
           onMaybe.call();
           if (attendingState != MAYBE) {
@@ -797,6 +978,7 @@ class Meeting {
                 //[Note] Local cache below.
                 setTitle(_titleController.text);
                 setDesc(_descController.text);
+                setLocation(_locationController.text);
               },
         child: Row(
           children: <Widget>[
@@ -888,8 +1070,20 @@ class Alternative {
   ImageProvider<dynamic> image;
   Function onPress;
   Function onVote;
+  Function onAcceptAlternative;
+  Function onRejectAlternative;
   bool hasVoted;
   int votes;
+
+  //TODO: This field represents if the person viewing this page
+  //created the whole meeting, NOT specifically just the alternative.
+  //This is to enable the meeting creator to accept or reject the alternative.
+  bool isMeetingCreator;
+
+  int acceptState;
+  static const ACCEPTED = 1;
+  static const REJECTED = 2;
+  static const UNSELECTED = 0;
 
   Alternative({
     @required this.alternativeId,
@@ -902,9 +1096,24 @@ class Alternative {
     @required this.onVote,
     @required this.votes,
     @required this.hasVoted,
-  });
+    @required this.isMeetingCreator,
+    @required this.onAcceptAlternative,
+    @required this.onRejectAlternative,
+    this.acceptState,
+  }) {
+    if (acceptState == null) acceptState = UNSELECTED;
+  }
+
+  String get date => dateString;
+
+  String get time => timeString;
 
   Widget toWidget() {
+    DateTime newDate = DateTime.parse(dateString);
+    TimeOfDay newTime = TimeOfDay(
+        hour: int.parse(timeString.split(":")[0]),
+        minute: int.parse(timeString.split(":")[1]));
+
     return GestureDetector(
       onLongPress: onPress,
       child: Container(
@@ -965,7 +1174,8 @@ class Alternative {
                           Container(
                             margin: EdgeInsets.only(left: 10),
                             child: Text(
-                              dateString,
+                              MeetingTimeString.create(newDate, newTime)
+                                  .split(" ")[0],
                               style: TextStyle(
                                 fontFamily: 'Roboto',
                                 fontWeight: FontWeight.w600,
@@ -982,7 +1192,8 @@ class Alternative {
                           Container(
                             margin: EdgeInsets.only(left: 10, bottom: 10),
                             child: Text(
-                              timeString,
+                              MeetingTimeString.create(newDate, newTime)
+                                  .split(" ")[1],
                               style: TextStyle(
                                 fontFamily: 'Roboto',
                                 fontWeight: FontWeight.w400,
@@ -1057,6 +1268,131 @@ class Alternative {
                 ),
               ],
             ),
+            isMeetingCreator
+                ? Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Container(
+                          margin: EdgeInsets.only(left: 8, right: 4),
+                          child: FlatButton(
+                            color: !(acceptState == ACCEPTED) &&
+                                    acceptState != REJECTED
+                                ? Color(0xFF06D8AE)
+                                : Color(0xFFE9E9E9),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(22),
+                            ),
+                            onPressed: () {
+                              if (acceptState != ACCEPTED &&
+                                  acceptState != REJECTED) {
+                                onAcceptAlternative.call();
+                                acceptState = ACCEPTED;
+                                meetingViewState.acceptAlternative(this);
+                                //meetingViewState.refresh();
+                              }
+                            },
+                            child: Text(
+                              "Accept",
+                              style: TextStyle(
+                                fontFamily: 'Roboto',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: !(acceptState == ACCEPTED) &&
+                                        acceptState != REJECTED
+                                    ? Colors.white
+                                    : Colors.black45,
+                              ),
+                            ),
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(25)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: !(acceptState == ACCEPTED) &&
+                                        acceptState != REJECTED
+                                    ? Color(0xFF06D8AE).withOpacity(0.3)
+                                    : Colors.black.withOpacity(0.15),
+                                spreadRadius: 2,
+                                blurRadius: 15,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          margin: EdgeInsets.only(left: 4, right: 8),
+                          child: FlatButton(
+                            color: acceptState != REJECTED &&
+                                    acceptState != ACCEPTED
+                                ? Colors.redAccent
+                                : Color(0xFFE9E9E9),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(22),
+                            ),
+                            onPressed: () {
+                              if (acceptState != ACCEPTED &&
+                                  acceptState != REJECTED) {
+                                onRejectAlternative.call();
+                                acceptState = REJECTED;
+                                meetingViewState.refresh();
+                              }
+                            },
+                            child: Text(
+                              "Reject",
+                              style: TextStyle(
+                                fontFamily: 'Roboto',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: acceptState != REJECTED &&
+                                        acceptState != ACCEPTED
+                                    ? Colors.white
+                                    : Colors.black45,
+                              ),
+                            ),
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(25)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: acceptState != REJECTED &&
+                                        acceptState != ACCEPTED
+                                    ? Colors.redAccent.withOpacity(0.4)
+                                    : Colors.black.withOpacity(0.15),
+                                spreadRadius: 2,
+                                blurRadius: 15,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : SizedBox(),
+            acceptState == ACCEPTED || acceptState == REJECTED
+                ? Container(
+                    margin: EdgeInsets.all(8),
+                    child: Center(
+                      child: Text(
+                        acceptState == ACCEPTED
+                            ? "Accepted"
+                            : acceptState == REJECTED ? "Rejected" : "",
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: acceptState == ACCEPTED
+                              ? Color(0xFF06D8AE)
+                              : acceptState == REJECTED
+                                  ? Colors.redAccent
+                                  : Color(0xFFE9E9E9),
+                        ),
+                      ),
+                    ),
+                  )
+                : SizedBox(),
           ],
         ),
         decoration: BoxDecoration(
@@ -1115,5 +1451,23 @@ class Alternative {
             : SizedBox(),
       ),
     );
+  }
+}
+
+class MeetingTimeString {
+  static String create(DateTime date, TimeOfDay time) {
+    String newHour = "";
+    String newMinute = "";
+    String newMonth = "";
+    String newDay = "";
+
+    if (time != null && date != null) {
+      newHour = time.hour < 10 ? "0${time.hour}" : "${time.hour}";
+      newMinute = time.minute < 10 ? "0${time.minute}" : "${time.minute}";
+      newMonth = date.month < 10 ? "0${date.month}" : "${date.month}";
+      newDay = date.day < 10 ? "0${date.day}" : "${date.day}";
+    }
+
+    return "$newDay/$newMonth/${date.year} $newHour:$newMinute";
   }
 }
