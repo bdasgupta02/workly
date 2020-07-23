@@ -80,6 +80,7 @@ class _MeetingViewState extends State<MeetingView> {
         votes: 23,
         hasVoted: true,
         isMeetingCreator: true,
+        acceptState: 0,
       ),
     ];
   }
