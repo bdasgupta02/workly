@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:workly/models/meeting_model.dart';
+import 'package:workly/screens/meeting_form.dart';
 import 'package:workly/screens/meeting_view.dart';
+import 'package:workly/services/project_database.dart';
 
 class MeetingList extends StatefulWidget {
   @override
@@ -7,39 +11,82 @@ class MeetingList extends StatefulWidget {
 }
 
 class _MeetingListState extends State<MeetingList> {
-  //TODO: This just a hard-coded test
-  var meetingsTest = [
-    MeetingTile(
-      title: "first",
-      desc: "desc",
-      dateString: "25/07/2020",
-      timeString: "17:00",
-    ),
-    MeetingTile(
-      title: "second",
-      desc: "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
-      dateString: "25/07/2020",
-      timeString: "10:00",
-    ),
-    MeetingTile(
-      title: "third",
-      desc: "desc",
-      dateString: "25/07/2020",
-      timeString: "1150",
-    ),
-  ];
+  // var meetingsTest = [
+  //   MeetingTile(
+  //     title: "first",
+  //     desc: "desc",
+  //     dateString: "25/07/2020",
+  //     timeString: "17:00",
+  //   ),
+  //   MeetingTile(
+  //     title: "second",
+  //     desc: "desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc desc",
+  //     dateString: "25/07/2020",
+  //     timeString: "10:00",
+  //   ),
+  //   MeetingTile(
+  //     title: "third",
+  //     desc: "desc",
+  //     dateString: "25/07/2020",
+  //     timeString: "1150",
+  //   ),
+  // ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
-      body: construct(meetingsTest),
+      body: _buildMeetingList(),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         backgroundColor: Color(0xFF06D8AE),
-        //TODO: change this onpressed to lead to a form thx 
-        onPressed: () => null,
+        onPressed: () => goToMeetingForm(),
       ),
+    );
+  }
+
+  void goToMeetingForm() {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+      Navigator.of(context).push(MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (context) => MeetingFormPage(database: database),
+    ));
+  }
+
+  Widget _buildMeetingList() {
+    final database = Provider.of<ProjectDatabase>(context, listen: false);
+    return StreamBuilder<List<MeetingModel>>(
+      stream: database.meetingStream(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final meetingItem = snapshot.data;
+          final meetings = meetingItem
+              .map((meet) => MeetingTile(
+                database: database, user: meet.user, meetingId: meet.meetingId, title: meet.title, desc: meet.description, location: meet.location, dateString: meet.date, 
+                timeString: meet.time, attending: meet.attending, maybe: meet.maybe, notAttending: meet.notAttending
+                )).toList();
+          if (meetings.isEmpty) {
+            return Center(
+              child: Text(
+                "No meetings created yet. \n \n Call the first meeting now",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 20,
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            );
+          }
+          return construct(meetings);
+        } else if (snapshot.hasError) {
+          print(snapshot.error);
+          return Center(child: CircularProgressIndicator());
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
     );
   }
 
@@ -54,20 +101,37 @@ class _MeetingListState extends State<MeetingList> {
 }
 
 class MeetingTile {
+  ProjectDatabase database;
+  String user;
+  String meetingId;
   String title;
   String desc;
+  String location;
   String dateString;
   String timeString;
+  List attending;
+  List maybe;
+  List notAttending;
 
   MeetingTile({
+    @required this.database,
+    @required this.user,
+    @required this.meetingId,
     @required this.title,
     @required this.desc,
+    @required this.location,
     @required this.dateString,
     @required this.timeString,
+    @required this.attending,
+    @required this.maybe,
+    @required this.notAttending,
   });
 
   Widget toWidget(BuildContext context) {
-    Function _toViewMeeting = () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => MeetingView()));
+    Function _toViewMeeting = () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => MeetingView(
+      database: database, user: user, meetingId: meetingId, title: title, desc: desc, location: location, dateString: dateString, 
+      timeString: timeString, attending: attending, maybe: maybe, notAttending: notAttending
+    )));
 
     String newTitle =
         title.length > 65 ? title.substring(0, 65) + '...' : title;

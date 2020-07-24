@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:workly/models/meeting_alt.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
+import 'package:workly/services/project_database.dart';
 
 /*
 IMPORTANT Notes:
@@ -20,6 +23,32 @@ Alternative class - Displays the alternatives and includes a date picker to give
 _MeetingViewState meetingViewState;
 
 class MeetingView extends StatefulWidget {
+  final String meetingId;
+  final String user;
+  final String title;
+  final String desc;
+  final String location;
+  final String dateString;
+  final String timeString;
+  final List attending;
+  final List maybe;
+  final List notAttending;
+  final ProjectDatabase database;
+
+  MeetingView({
+    @required this.database,
+    @required this.meetingId,
+    @required this.user,
+    @required this.title,
+    @required this.desc,
+    @required this.location,
+    @required this.dateString,
+    @required this.timeString,
+    @required this.attending,
+    @required this.maybe,
+    @required this.notAttending,
+  });
+
   @override
   _MeetingViewState createState() {
     meetingViewState = _MeetingViewState();
@@ -33,56 +62,90 @@ class _MeetingViewState extends State<MeetingView> {
   List<Alternative> alternatives;
   DateTime _alternativeFormDate;
   TimeOfDay _alternativeFormTime;
+  List userUidList;
+  List userNameList;
+  List userImageUrlList;
 
   Function onPostAlternative = () => null;
 
   @override
   void initState() {
     super.initState();
-
-    // TODO: query meeting here
+    getAlternative();
+    // query meeting here
     // THESE ARE HARD-CODED TESTS
     // If you look carefully, the date format is in the form of YYYY-MM-DD.
     // This can be replaced by any of the formats given here:
     // https://api.dart.dev/stable/1.24.3/dart-core/DateTime/parse.html
     // ^Needs to be in these specific formats to parse to and from the date picker and strings etc.
     meeting = Meeting(
-      title: "title",
-      desc: "desc",
-      isUser: true,
-      date: "2020-10-20",
-      time: "10:20",
-      notAttending: 2,
-      attending: 4,
-      maybe: 1,
-      attendingState: Meeting.ATTENDING,
-      onDelete: () => null,
+      title: widget.title,
+      desc: widget.desc,
+      isUser: widget.user == widget.database.getUid(),
+      date: widget.dateString,
+      time: widget.timeString,
+      notAttending: widget.notAttending.length,
+      attending: widget.attending.length,
+      maybe: widget.maybe.length,
+      attendingState: 
+        widget.attending.contains(widget.database.getUid()) ? Meeting.ATTENDING :
+          (widget.notAttending.contains(widget.database.getUid()) ? Meeting.NOT_ATTENDING : 
+            (widget.maybe.contains(widget.database.getUid()) ? Meeting.MAYBE : Meeting.UNSELECTED)),
+      onDelete: () => showDeleteDialog(null),
       onEdit: () => editMeeting(),
-      onSave: () => saveMeeting(),
-      onAttend: () => null,
-      onNotAttend: () => null,
-      onMaybe: () => null,
+      onSave: (String title, String desc, String location, String date, String time) => saveMeeting(title, desc, location, date, time),
+      onAttend: (Meeting meet) => updateMeetingAttending(meet, 1),
+      onNotAttend: (Meeting meet) => updateMeetingAttending(meet, 2),
+      onMaybe: (Meeting meet) => updateMeetingAttending(meet, 3),
       context: context,
-      location: "Somewhere lulz",
+      location: widget.location,
     );
 
-    alternatives = [
-      Alternative(
-        alternativeId: "test",
-        uid: "test",
-        name: "Test name",
-        dateString: "2020-05-20",
-        timeString: "15:00",
-        onPress: () => null,
-        onVote: () => null,
-        onAcceptAlternative: () => null,
-        onRejectAlternative: () => null,
-        votes: 23,
-        hasVoted: true,
-        isMeetingCreator: true,
-        acceptState: 0,
-      ),
-    ];
+    alternatives = [];
+  }
+
+  void getAlternative() async {
+    List<Alternative> _alternatives = new List();
+    List<MeetingAlt> alt = await widget.database.meetingAltList(widget.meetingId);
+    for (var ele in alt) {
+      Alternative newAlt = Alternative(
+        alternativeId: ele.meetingAltId,
+        uid: ele.user,
+        name: userNameList[userUidList.indexOf(ele.user)],
+        dateString: ele.date,
+        timeString: ele.time,
+        image: userImageUrlList[userUidList.indexOf(ele.user)] == null ? null : NetworkImage(userImageUrlList[userUidList.indexOf(ele.user)].toString()),
+        onPress: (Alternative alt) => showDeleteDialog(alt),
+        onVote: (Alternative alt) => updateAlternativeVote(alt),
+        onAcceptAlternative: (Alternative alt) => updateAlternative(alt),
+        onRejectAlternative: (Alternative alt) => updateAlternative(alt),
+        votes: ele.votesCount,
+        hasVoted: ele.votes.contains(widget.database.getUid()),
+        isMeetingCreator: widget.database.getUid() == widget.user,
+        acceptState: ele.acceptState,
+      );
+      _alternatives.add(newAlt);
+    }
+    setState(() {
+      alternatives = _alternatives;
+    });
+  }
+
+  void getUserListDetails() {
+    setState(() {
+      userUidList = widget.database.getUserUidList();
+      userNameList = widget.database.getUserNameList();
+      userImageUrlList = widget.database.getUserImageList();
+    });
+  }
+
+  void refreshUserListDetails() async {
+    Map _userListDetails = await widget.database.getUserList();
+    setState(() {
+      userUidList = _userListDetails['userUidList'];
+      userNameList = _userListDetails['userNameList'];
+      userImageUrlList = _userListDetails['userImageUrlList'];
+    });
   }
 
   void refresh() {
@@ -98,21 +161,106 @@ class _MeetingViewState extends State<MeetingView> {
   void acceptAlternative(Alternative alt) {
     meeting.setDate(alt.date);
     meeting.setTime(alt.time);
-
-    //TODO: MAKE METHOD HERE TO ACCEPT THE ALTERNATIVE ON THE DB
+    meeting.setAttendingNumbers(alt.votes == 0 ? 1 : alt.votes, 0, 0);
+    meeting.setAttendingState(true);
     refresh();
+    widget.database.acceptAltMeetingDetails(alt.alternativeId, widget.title, widget.meetingId, {
+      'date': alt.date,
+      'time': alt.time,
+      'dateSort': _convertFromString(alt.date, alt.time),
+    });
   }
 
-  void saveMeeting() {
-    //TODO: NEED TO CALL METHODS TO SAVE IT TO DATABASE HERE
+  void updateAlternative(Alternative alt) {
+    widget.database.updateAltMeetingDetails(alt.alternativeId, widget.title, widget.meetingId, {
+      'date': alt.dateString,
+      'time': alt.timeString,
+      'acceptState': alt.acceptState,
+    });
+  }
 
+  void updateAlternativeVote(Alternative alt) {
+    widget.database.updateAltMeetingVotes(alt.alternativeId, alt.dateString, alt.timeString, widget.title, widget.meetingId);
+  }
+
+  void updateMeetingAttending(Meeting meet, int state) {
+    widget.database.updateMeetingAttending(state, meet.attendingState, widget.title, widget.meetingId);
+  }
+
+  void showDeleteDialog(Alternative alt) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return _deleteDialog(alt);
+      },
+      barrierDismissible: true,
+    );
+  }
+
+  Widget _deleteDialog(Alternative alt) {
+    String verb = alt == null ? "scheduled meeting" : "alternative proposed meeting";
+    return AlertDialog(
+      title: Text("Wait..."),
+      content: Text(
+          "Do you really want to delete this $verb?"),
+      actions: <Widget>[
+        FlatButton(
+          child: Text("Cancel"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        FlatButton(
+          child: Text("Yes, delete $verb"),
+          onPressed: () => {
+            deleteMeeting(alt),
+            Navigator.of(context).pop(),
+          },
+        ),
+      ],
+    );
+  }
+
+  void deleteMeeting(Alternative alt) {
+    if (alt == null) {
+      widget.database.deleteMeeting(widget.title, widget.meetingId);
+    } else {
+      widget.database.deleteMeetingAlt(widget.title, widget.meetingId, alt.alternativeId, alt.dateString, alt.timeString);
+    }
+    Navigator.of(context).pop();
+  }
+
+  void saveMeeting(String title, String desc, String location, String date, String time) {
+    widget.database.updateMeetingDetails(widget.meetingId, {
+      'title': title,
+      'description': desc, 
+      'location': location,
+      'date': date,
+      'time': time,
+      'dateSort': _convertFromString(date, time),
+    });
     setState(() {
       _readOnly = true;
     });
   }
+ 
+  Timestamp _convertFromString(String date, String time) {
+    String dd = date.substring(8,10);
+    String mm = date.substring(5,7);
+    String yyyy = date.substring(0,4);
+
+    String hh = time.substring(0,2);
+    String min = time.substring(3,5);
+    
+    return Timestamp.fromDate(DateTime.parse(yyyy + mm + dd + "T" + hh + min + "00"));
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (userUidList == null) {
+      getUserListDetails();
+      refreshUserListDetails();
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF141336),
@@ -331,39 +479,44 @@ class _MeetingViewState extends State<MeetingView> {
   }
 
   void onSendAlternative() async {
-    //TODO: MAKE A SAVE ALTERNATIVE FUNCTION HERE
-
-    //
-
-    //
-
-    //TODO: CHANGE HARDCODED CACHE FOR TESTING ONLY:
+    String meetingAltId = DateTime.now().toString();
     alternatives.add(
       Alternative(
-        alternativeId: "HARD-CODED ID",
-        uid: "HARD-CODED ID",
-        isMeetingCreator: true,
+        alternativeId: meetingAltId,
+        uid: widget.database.getUid(),
+        isMeetingCreator: widget.database.getUid() == widget.user,
+        image: userImageUrlList[userUidList.indexOf(widget.database.getUid())] == null ? null : NetworkImage(userImageUrlList[userUidList.indexOf(widget.database.getUid())].toString()),
         hasVoted: false,
         votes: 0,
-        name: "Test name add",
-        onVote: () => null,
-        onAcceptAlternative: () => null,
-        onPress: () => null,
-        onRejectAlternative: () => null,
+        name: userNameList[userUidList.indexOf(widget.database.getUid())],
+        onVote: (Alternative alt) => updateAlternativeVote(alt),
+        onAcceptAlternative: (Alternative alt) => updateAlternative(alt),
+        onPress: (Alternative alt) => showDeleteDialog(alt),
+        onRejectAlternative: (Alternative alt) => updateAlternative(alt),
         
-        //TODO: SHOULD BE LIKE THIS WHEN STORING THE STRING TO DB TOO
+        //SHOULD BE LIKE THIS WHEN STORING THE STRING TO DB TOO
         //This is correct unlike the other hard-coded stuff around it
         //KEEP THIS for new entry into DB
         timeString: _alternativeFormTime.toString().substring(10,15),
         dateString: DateFormat('yyyy-MM-dd').format(_alternativeFormDate),
       ),
     );
+
+    widget.database.createMeetingAlt(widget.title, widget.meetingId, meetingAltId, {
+      'meetingAltId': meetingAltId,
+      'user': widget.database.getUid(),
+      'isMeetingCreator': widget.database.getUid() == widget.user,
+      'votes': [], 
+      'votesCount': 0,
+      'date': DateFormat('yyyy-MM-dd').format(_alternativeFormDate),
+      'time': _alternativeFormTime.toString().substring(10,15),
+      'acceptState': 0,
+      });
     
     //KEEP THIS
     _alternativeFormTime = null;
     _alternativeFormDate = null;
-    
-    //TODO: REMOVE THIS REFRESH FOR STREAMBUILDER
+    getAlternative();
     refresh();
   }
 
@@ -450,6 +603,16 @@ class Meeting {
 
   void setTime(String time) {
     this.time = time;
+  }
+
+  void setAttendingNumbers(int attending, int maybe, int notAttending) {
+    this.attending = attending;
+    this.maybe = maybe;
+    this.notAttending = notAttending;
+  }
+
+  void setAttendingState(bool attending) {
+     this.attendingState =  attending ? Meeting.ATTENDING : Meeting.UNSELECTED;
   }
 
   Widget toWidgetEdit() {
@@ -611,7 +774,8 @@ class Meeting {
                             _pickDate();
                           },
                           child: Text(
-                            "Scheduled on: $date $time",
+                            // "Scheduled on: $date $time",
+                            "Scheduled on: ${MeetingTimeString.create(newDate, newTime)}",
                             style: TextStyle(
                               fontFamily: "Roboto",
                               color: Colors.white,
@@ -701,7 +865,6 @@ class Meeting {
           meetingString.split(" ")[0].split("/")[1] +
           meetingString.split(" ")[0].split("/")[0];
       this.time = meetingString.split(" ")[1];
-
       //TODO: THE STRINGS AFTER THIS NEED TO BE SAVED WITH onEdit FUNCTION.
       meetingViewState.refresh();
     }
@@ -759,7 +922,7 @@ class Meeting {
         ),
         color: attendingState == ATTENDING ? Colors.white60 : Color(0xFF06D8AE),
         onPressed: () {
-          onAttend.call();
+          onAttend.call(this);
           if (attendingState != ATTENDING) {
             decreaseCounts();
             attendingState = ATTENDING;
@@ -825,7 +988,7 @@ class Meeting {
         color:
             attendingState == NOT_ATTENDING ? Colors.white60 : Colors.redAccent,
         onPressed: () {
-          onNotAttend.call();
+          onNotAttend.call(this);
           if (attendingState != NOT_ATTENDING) {
             decreaseCounts();
             attendingState = NOT_ATTENDING;
@@ -890,7 +1053,7 @@ class Meeting {
         ),
         color: attendingState == MAYBE ? Colors.white60 : Color(0xFFfc9803),
         onPressed: () {
-          onMaybe.call();
+          onMaybe.call(this);
           if (attendingState != MAYBE) {
             decreaseCounts();
             attendingState = MAYBE;
@@ -972,10 +1135,12 @@ class Meeting {
         onPressed: _readOnly
             ? onEdit
             : () {
-                //TODO: CALL ONSAVE HERE
-                onSave.call();
-
-                //onSave.call(_titleController.text, _descController.text);
+                onSave.call(
+                  _titleController.text, 
+                  _descController.text, 
+                  _locationController.text, 
+                  DateFormat('yyyy-MM-dd').format(DateTime.parse(this.date)),
+                  this.time);
                 //[Note] Local cache below.
                 setTitle(_titleController.text);
                 setDesc(_descController.text);
@@ -1075,10 +1240,6 @@ class Alternative {
   Function onRejectAlternative;
   bool hasVoted;
   int votes;
-
-  //TODO: This field represents if the person viewing this page
-  //created the whole meeting, NOT specifically just the alternative.
-  //This is to enable the meeting creator to accept or reject the alternative.
   bool isMeetingCreator;
 
   int acceptState;
@@ -1092,7 +1253,7 @@ class Alternative {
     @required this.name,
     @required this.dateString,
     @required this.timeString,
-    this.image,
+    @required this.image,
     @required this.onPress,
     @required this.onVote,
     @required this.votes,
@@ -1116,7 +1277,7 @@ class Alternative {
         minute: int.parse(timeString.split(":")[1]));
 
     return GestureDetector(
-      onLongPress: onPress,
+      onLongPress: () {onPress.call(this);},
       child: Container(
         margin: EdgeInsets.only(
           top: 10,
@@ -1216,9 +1377,7 @@ class Alternative {
                     child: FlatButton(
                       color: !hasVoted ? Color(0xFF06D8AE) : Color(0xFFE9E9E9),
                       onPressed: () {
-                        //TODO: CALL METHOD TO VOTE HERE
-
-                        onVote.call();
+                        onVote.call(this);
                         hasVoted = !hasVoted;
                         if (hasVoted) {
                           votes++;
@@ -1286,8 +1445,8 @@ class Alternative {
                             onPressed: () {
                               if (acceptState != ACCEPTED &&
                                   acceptState != REJECTED) {
-                                onAcceptAlternative.call();
                                 acceptState = ACCEPTED;
+                                onAcceptAlternative.call(this);
                                 meetingViewState.acceptAlternative(this);
                                 //meetingViewState.refresh();
                               }
@@ -1335,8 +1494,8 @@ class Alternative {
                             onPressed: () {
                               if (acceptState != ACCEPTED &&
                                   acceptState != REJECTED) {
-                                onRejectAlternative.call();
                                 acceptState = REJECTED;
+                                onRejectAlternative.call(this);
                                 meetingViewState.refresh();
                               }
                             },

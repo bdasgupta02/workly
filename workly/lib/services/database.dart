@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:workly/models/user_projects.dart';
 import 'package:workly/models/user_tasks.dart';
 
+//TODO: Convert project, task, meeting stream into just list query for calendar. Save on read/write data
+
 abstract class Database {
   Future<void> createUserProject(String projectId, Map<String, dynamic> projectData);
   Future<void> updateUserToken(Map<String, dynamic> userToken);
