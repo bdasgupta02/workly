@@ -224,10 +224,11 @@ class _MeetingViewState extends State<MeetingView> {
   void deleteMeeting(Alternative alt) {
     if (alt == null) {
       widget.database.deleteMeeting(widget.title, widget.meetingId);
+      Navigator.of(context).pop();
     } else {
       widget.database.deleteMeetingAlt(widget.title, widget.meetingId, alt.alternativeId, alt.dateString, alt.timeString);
+      getAlternative();
     }
-    Navigator.of(context).pop();
   }
 
   void saveMeeting(String title, String desc, String location, String date, String time) {

@@ -6,23 +6,9 @@ import 'package:intl/intl.dart';
 
 class MeetingFormPage extends StatelessWidget {
   final ProjectDatabase database;
-  // final bool edit;
-  // final String meetingName;
-  // final String meetingDescription;
-  // final String meetingDeadline;
-  // final int meetingPriority;
-  // final String meetingId;
-  // final Function refresh;
 
   MeetingFormPage({
     @required this.database,
-    // @required this.edit,
-    // this.meetingName,
-    // this.meetingDescription,
-    // this.meetingDeadline,
-    // this.meetingPriority,
-    // this.meetingId,
-    // this.refresh,
   });
 
   @override
@@ -69,13 +55,6 @@ class MeetingFormPage extends StatelessWidget {
                     child: Container(
                       child: MeetingForm(
                         database: database,
-                        // edit: edit,
-                        // meetingName: meetingName,
-                        // meetingDescription: meetingDescription,
-                        // meetingDeadline: meetingDeadline,
-                        // meetingPriority: meetingPriority,
-                        // meetingId: meetingId,
-                        // refresh: refresh,
                       ),
                     ),
                   ),
@@ -94,23 +73,9 @@ _MeetingFormState meetingFormState;
 
 class MeetingForm extends StatefulWidget {
   final ProjectDatabase database;
-  // final bool edit;
-  // final String meetingName;
-  // final String meetingDescription;
-  // final String meetingDeadline;
-  // final int meetingPriority;
-  // final String meetingId;
-  // final Function refresh;
 
   MeetingForm({
     @required this.database,
-    // @required this.edit,
-    // this.meetingName,
-    // this.meetingDescription,
-    // this.meetingDeadline,
-    // this.meetingPriority,
-    // this.meetingId,
-    // this.refresh,
   });
 
   @override
@@ -372,7 +337,7 @@ class _MeetingFormState extends State<MeetingForm> {
   Widget _meetingDeadlineField() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black26,
+        color: Color(0xFFFCFCFC),
         borderRadius: BorderRadius.all(Radius.circular(35)),
         boxShadow: [
           BoxShadow(
@@ -394,7 +359,7 @@ class _MeetingFormState extends State<MeetingForm> {
           _meetingDate == null ? "Pick a date and time" : "Scheduled on: " + _meetingDate,
           style: TextStyle(
             fontFamily: "Roboto",
-            color: Colors.white,
+            color: _meetingDate == null ? Colors.black54 : Colors.black87,
             fontSize: 14,
           ),
         ),
