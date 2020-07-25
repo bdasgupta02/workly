@@ -28,7 +28,6 @@ class _MainSettingsState extends State<MainSettings> {
   ImageProvider<dynamic> image;
   bool _isEdit;
   bool _isEditPw;
-  bool _isLoading;
   bool _hasImg;
   bool _incorrectPwMatch;
   bool _pwComplexityMatch;
@@ -43,7 +42,6 @@ class _MainSettingsState extends State<MainSettings> {
 
     _isEdit = false;
     _isEditPw = false;
-    _isLoading = false;
     _hasImg = false;
     _incorrectPwMatch = false;
     _nameBlank = false;
@@ -208,7 +206,6 @@ class _MainSettingsState extends State<MainSettings> {
       });
     } else {
       setState(() {
-        _isLoading = true;
         _nameBlank = false;
         _incorrectPwMatch = false;
         _pwComplexityMatch = false;
@@ -261,7 +258,6 @@ class _MainSettingsState extends State<MainSettings> {
       }
     }
     setState(() {
-      _isLoading = false;
       _pwController.clear();
       _verifyPwController.clear();
     });
