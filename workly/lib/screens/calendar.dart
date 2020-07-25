@@ -185,6 +185,8 @@ class _CalendarState extends State<Calendar> {
                 //Few things to note: 
                 //- Make sure the deadline for the current day load on the start of this page.
                 //  Reason I'm saying this is because they could need a refresh instead of loading automatically on start, which is bad.
+                //- Need to change a bit of UI if we want to add more data inputs, because now it just says "project deadlines:"
+                //  But this would take max 1hr.
                 events: _deadlines,
                 calendarStyle: CalendarStyle(
                   todayColor: Color(0xFFE9E9E9),
