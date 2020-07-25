@@ -187,6 +187,7 @@ class _CalendarState extends State<Calendar> {
                 //  Reason I'm saying this is because they could need a refresh instead of loading automatically on start, which is bad.
                 //- Need to change a bit of UI if we want to add more data inputs, because now it just says "project deadlines:"
                 //  But this would take max 1hr.
+                //- Is it possible to query instead of streambuilder?
                 events: _deadlines,
                 calendarStyle: CalendarStyle(
                   todayColor: Color(0xFFE9E9E9),
