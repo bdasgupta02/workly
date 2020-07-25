@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:workly/models/user_projects.dart';
 import 'package:workly/models/user_tasks.dart';
 
+//TODO: Convert project, task, meeting stream into just list query for calendar. Save on read/write data
+
 abstract class Database {
   Future<void> createUserProject(String projectId, Map<String, dynamic> projectData);
   Future<void> updateUserToken(Map<String, dynamic> userToken);
@@ -133,6 +135,7 @@ class FirestoreDatabase implements Database {
           "deadline": _deadline,
         });
         addUserToProject(projectId);
+        addMeetingsToUser(projectId);
         return 1;
       }
     } else {
@@ -192,6 +195,29 @@ class FirestoreDatabase implements Database {
       "userImageUrl": _userImageUrl,
     });
     _sendJoinEventMessage(projectId, _name, _uid);
+  }
+
+  Future<void> addMeetingsToUser(String projectId) async {
+    List currentMeetingList = new List();
+    await Firestore.instance.collection('users').document(uid).get().then((value) {
+      if (value.data != null) { 
+        if (value.data['meeting'] != null) {
+          currentMeetingList = value.data['meeting'];
+        }
+      }
+    });
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').getDocuments().then((querySnapshot) {
+      querySnapshot.documents.forEach((result) {
+        Map<String, dynamic> meetingLoc = {
+          "projectId": projectId,
+          "meetingId": result.data['meetingId'],
+        };
+        currentMeetingList.add(meetingLoc);
+      });
+    });
+    await Firestore.instance.collection('users').document(uid).updateData({
+      'meeting': currentMeetingList,
+    });
   }
 
   Future<void> _sendJoinEventMessage(String projectId, String name, String uid) async {

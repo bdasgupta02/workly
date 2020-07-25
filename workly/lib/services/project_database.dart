@@ -6,15 +6,24 @@ import 'package:workly/models/chat_message.dart';
 import 'package:workly/models/idea.dart';
 import 'package:workly/models/idea_comment.dart';
 import 'package:workly/models/log.dart';
+import 'package:workly/models/meeting_alt.dart';
+import 'package:workly/models/meeting_model.dart';
 import 'package:workly/models/task_model.dart';
 
 abstract class ProjectDatabase {
   Future<void> createIdea(String ideaId, Map<String, dynamic> ideaData);
   Future<void> createTask(String taskId, Map<String, dynamic> taskData);
+  Future<void> createMeeting(String meetingId, Map<String, dynamic> meetingData);
   Future<void> createNewMessage(String message);
   Future<void> createIdeaComment(String ideaTitle, String ideaId, String commentId, Map<String, dynamic> taskData);
+  Future<void> createMeetingAlt(String meetingTitle, String meetingId, String meetingAltId, Map<String, dynamic> meetingAltData);
   Future<void> updateIdeaDetails(String ideaId, String ideaName, String ideaDescription);
   Future<void> updateTaskDetails(String taskId, Map<String, dynamic> taskData);
+  Future<void> updateMeetingDetails(String meetingId, Map<String, dynamic> meetingData);
+  Future<void> updateMeetingAttending(int state, int oldState, String title, String meetingId);
+  Future<void> updateAltMeetingDetails(String altMeetingId, String title, String meetingId, Map<String, dynamic> altMeetingData);
+  Future<void> acceptAltMeetingDetails(String altMeetingId, String title, String meetingId, Map<String, dynamic> meetingData);
+  Future<void> updateAltMeetingVotes(String altMeetingId, String date, String time, String title, String meetingId);
   Future<void> updateVotes(String ideaId);
   Future<void> updateAdminUser(List admin);
   Future<void> deleteProject();
@@ -22,15 +31,19 @@ abstract class ProjectDatabase {
   Future<void> deleteChatMessage(String chatId);
   Future<void> deleteIdea(String ideaTitle, String ideaId);
   Future<void> deleteIdeaComment(String comment, String ideaTitle, String ideaId, String commentId);
+  Future<void> deleteMeetingAlt(String meetingTitle, String meetingId, String meetingAltId, String date, String time);
   Future<void> deleteTask(String taskName, String taskId);
+  Future<void> deleteMeeting(String meetingName, String meetingId);
   Future<Map> getUserList();
   Future<List> getAdminUserList();
   Future<String> getProjectDescription();
+  Future<List<MeetingAlt>> meetingAltList(String meetingId);
   Stream<List<ChatMessage>> chatStream();
   Stream<List<Idea>> ideaStream();
   Stream<List<IdeaComment>> ideaCommentStream(String ideaId);
   Stream<List<TaskModel>> taskStream();
   Stream<List<TaskModel>> myTaskStream();
+  Stream<List<MeetingModel>> meetingStream();
   Stream<List<Log>> logStream();
   Stream<List<Log>> myLogStream();
   String getUid();
@@ -109,6 +122,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     await _setData('projects/$projectId/idea/$ideaId', ideaData);
     String logDescription = '$userName created new Idea \'${ideaData['title']}\'';
     createNewLog(logDescription, false);   
+    sendSystemMsg(uid, userName, logDescription);
   }
 
   @override
@@ -116,6 +130,32 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     await _setData('projects/$projectId/task/$taskId', taskData);
     String logDescription = '$userName created new Task \'${taskData['title']}\'';
     createNewLog(logDescription, true);
+    sendSystemMsg(uid, userName, logDescription);
+  }
+
+  @override
+  Future<void> createMeeting(String meetingId, Map<String, dynamic> meetingData) async {
+    await _setData('projects/$projectId/meeting/$meetingId', meetingData);
+    String logDescription = '$userName created new Meeting \'${meetingData['title']}\'';
+    createNewLog(logDescription, false);
+    String systemMsg = '$userName created new Meeting \'${meetingData['title']}\' on ${meetingData['date']} at ${meetingData['time']}';
+    sendSystemMsg(uid, userName, systemMsg);
+    Map<String, dynamic> meetingLoc = {
+      "projectId": projectId,
+      "meetingId": meetingId,
+    };
+    List currentMeetingList = new List();
+    for (var ele in userUidList) {
+      await Firestore.instance.collection('users').document(ele).get().then((value) {
+        if (value.data != null) { 
+          if (value.data['meeting'] != null) {
+            currentMeetingList = value.data['meeting'];
+          }
+        }
+      });
+      currentMeetingList.add(meetingLoc);
+      await Firestore.instance.collection('users').document(ele).updateData({'meeting': currentMeetingList});
+    }
   }
 
   @override
@@ -141,6 +181,16 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     await _setData('projects/$projectId/idea/$ideaId/comment/$commentId', commentData);
     String logDescription = '$userName commented \'${commentData['comment']}\' on $ideaTitle';
     createNewLog(logDescription, false);
+    String systemMsg = '$userName commented on $ideaTitle';
+    sendSystemMsg(uid, userName, systemMsg);
+  }
+
+  @override
+  Future<void> createMeetingAlt(String meetingTitle, String meetingId, String meetingAltId, Map<String, dynamic> meetingAltData) async {
+    await _setData('projects/$projectId/meeting/$meetingId/alternative/$meetingAltId', meetingAltData);
+    String logDescription = '$userName proposed an alternative meeting date and time  [${meetingAltData['date']}, ${meetingAltData['time']}] for $meetingTitle';
+    createNewLog(logDescription, false);
+    sendSystemMsg(uid, userName, logDescription);
   }
 
   Future<void> createNewLog(String description, bool task) async {
@@ -246,6 +296,152 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     createNewLog(logDescription, true);  
   }
 
+  @override
+  Future<void> updateMeetingDetails(String meetingId, Map<String, dynamic> meetingData) async {
+    String _title;
+    String _description;
+    String _location;
+    String _date;
+    String _time;
+    List<String> listLog = List();
+    String logDescription;
+    bool runLoop = false;
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).get().then((value) {
+      // _assignedUid = value.data['assignedUid'];
+      _title = value.data['title'];
+      _description = value.data['description'];
+      _location = value.data['location'];
+      _date = value.data['date'];
+      _time = value.data['time'];
+    });
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).updateData(meetingData);
+    if (meetingData['title'] != null && _title != meetingData['title']) {
+      listLog.add('\nTitle was updated from \'$_title\' to \'${meetingData['title']}\'');
+      runLoop = true;
+      _title = meetingData['title'];
+    }
+    if (meetingData['description'] != null && _description != meetingData['description']) {
+      listLog.add('\nDescription was updated from \'$_description\' to \'${meetingData['description']}\'');
+      runLoop = true;
+      _description = meetingData['description'];
+    }
+    if (meetingData['location'] != null && _location != meetingData['location']) {
+      listLog.add('\nLocation was updated from \'$_location\' to \'${meetingData['location']}\'');
+      runLoop = true;
+      _description = meetingData['location'];
+    }
+    if (meetingData['date'] != null && _date != meetingData['date']) {
+      listLog.add('\nDate was updated from \'$_date\' to \'${meetingData['date']}\'');
+      runLoop = true;
+      _description = meetingData['date'];
+    }
+    if (meetingData['time'] != null && _time != meetingData['time']) {
+      listLog.add('\nTime was updated from \'$_time\' to \'${meetingData['time']}\'');
+      runLoop = true;
+      _description = meetingData['time'];
+    }
+    if (runLoop) {
+      logDescription = '$userName have updated the following details of Meeting \'$_title\':';
+      for (var ele in listLog) {
+        logDescription += ele;
+      }
+    }
+    createNewLog(logDescription, false);  
+  }
+
+  @override
+  Future<void> updateMeetingAttending(int state, int oldState, String title, String meetingId) async {
+  // static const ATTENDING = 1;
+  // static const NOT_ATTENDING = 2;
+  // static const MAYBE = 3;
+  // static const UNSELECTED = 0;
+    String newStateString = state == 0 ? "unselected" : (state == 1 ? "attending" : (state == 2 ? "not attending" : "maybe"));
+    String oldStateString = oldState == 0 ? "unselected" : (oldState == 1 ? "attending" : (oldState == 2 ? "not attending" : "maybe"));
+    List _attending;
+    List _maybe;
+    List _notAttending;
+    String logDescription;
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).get().then((value) {
+      _attending = value.data['attending'];
+      _maybe = value.data['maybe'];
+      _notAttending = value.data['notAttending'];
+    });
+    if (oldState == 0) {
+      logDescription = '$userName has indicated meeting status as \'$newStateString\' for Meeting \'$title\'';
+      state == 1 ? _attending.add(uid) : state == 2 ? _notAttending.add(uid) : _maybe.add(uid);
+    } else {
+      if (state == 0 || state == oldState) {
+        logDescription = '$userName has removed meeting status indication for Meeting \'$title\'';
+      } else {
+        logDescription = '$userName has changed meeting status indication from \'$oldStateString\' to \'$newStateString\' for Meeting \'$title\'';
+        state == 1 ? _attending.add(uid) : state == 2 ? _notAttending.add(uid) : _maybe.add(uid);
+      }
+      oldState == 1 ? _attending.remove(uid) : oldState == 2 ? _notAttending.remove(uid) : _maybe.remove(uid);
+    }
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).updateData({
+      'attending': _attending,
+      'maybe': _maybe,
+      'notAttending': _notAttending,
+    });
+    createNewLog(logDescription, false);
+  }
+
+  @override
+  Future<void> updateAltMeetingDetails(String altMeetingId, String title, String meetingId, Map<String, dynamic> altMeetingData) async {
+    String verb = altMeetingData['acceptState'] == 1 ? "accepted" : "rejected"; 
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).collection('alternative').document(altMeetingId).updateData(altMeetingData);
+    String logDescription = '$userName $verb the alternative meeting date and time [${altMeetingData['date']}, ${altMeetingData['time']}] for Meeting \'$title\'';
+    createNewLog(logDescription, false);
+    sendSystemMsg(uid, userName, logDescription);
+  }
+
+  @override
+  Future<void> acceptAltMeetingDetails(String altMeetingId, String title, String meetingId, Map<String, dynamic> meetingData) async {
+    List _votes;
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).collection('alternative').document(altMeetingId).get().then((value) {
+      _votes = value.data['votes'];
+    });
+    Map<String, dynamic> newMeetingData = {
+      'date': meetingData['date'],
+      'time': meetingData['time'],
+      'attending': _votes,
+      'maybe': [],
+      'notAttending': [],
+      'dateSort': meetingData['dateSort'],
+    };
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).updateData(newMeetingData);
+  }
+
+  @override
+  Future<void> updateAltMeetingVotes(String altMeetingId, String date, String time, String title, String meetingId) async {
+    bool _containUser;
+    List _votes;
+    int _voteCount;
+    String _voted;
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).collection('alternative').document(altMeetingId).get().then((value) {
+      _votes = value.data['votes'];
+      _voteCount = value.data['votesCount'];
+      _containUser = _votes.contains(uid);
+    });
+    if (_containUser) {
+      print('CONTAINS');
+      _votes.remove(uid);
+      _voteCount = _voteCount - 1;
+      _voted = 'unvoted';
+    } else {
+      print('DOES NOT CONTAINS');
+      _votes.add(uid);
+      _voteCount = _voteCount + 1;
+      _voted = 'voted for';
+    }
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).collection('alternative').document(altMeetingId).updateData({
+      'votes': _votes,
+      'votesCount': _voteCount,
+    });
+    String logDescription = '$userName $_voted alternative meeting date and time [$date, $time] for Meeting \'$title\'';
+    createNewLog(logDescription, false);
+  } 
+
   Future<void> addTaskToUser(bool add, String taskId, String title, var deadline, String state, String priority) async {
     if (add) {
       _setData('users/$uid/task/$taskId', {
@@ -256,8 +452,37 @@ class FirestoreProjectDatabase implements ProjectDatabase {
         'state': state,
         'priority': priority,
       });
+      Map<String, dynamic> taskLoc = {
+        "projectId": projectId,
+        "taskId": taskId,
+      };
+      List currentTaskList = new List();
+      await Firestore.instance.collection('users').document(uid).get().then((value) {
+        if (value.data != null) { 
+          if (value.data['task'] != null) {
+            currentTaskList = value.data['task'];
+          }
+        }
+      });
+      currentTaskList.add(taskLoc);
+      await Firestore.instance.collection('users').document(uid).updateData({'task': currentTaskList});
     } else {
       Firestore.instance.collection('users').document(uid).collection('task').document(taskId).delete();
+      List currentTaskList = new List();
+      await Firestore.instance.collection('users').document(uid).get().then((value) {
+        if (value.data != null) { 
+          if (value.data['task'] != null) {
+            currentTaskList = value.data['task'];
+          }
+        }
+      });
+      for (var taskLocEle in currentTaskList) {
+        if (taskLocEle['taskId'] == taskId) {
+          currentTaskList.remove(taskLocEle);
+          break;
+        }
+      }
+      await Firestore.instance.collection('users').document(uid).updateData({'task': currentTaskList});
     }
   }
 
@@ -351,9 +576,13 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     });
     await Firestore.instance.collection('projects').document(projectId).collection('users').document(_uid).delete();
     await Firestore.instance.collection('users').document(_uid).collection('projects').document(projectId).delete();
-    sendLeaveMsg(_uid, _name, leave);
+    String msg = leave ? '$_name has left this project group' : '$_name has been removed from this project group';
+    sendSystemMsg(_uid, _name, msg);
     removeTaskAssignment(_uid, _name);
     removeIdeasVoting(_uid, _name);
+    removeMeetingAttendance(_uid, _name);
+    removeMeetingAlt(_uid, _name);
+    removeProjectRelatedFields(_uid, _name);
   }
 
   @override
@@ -389,8 +618,54 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     if (assignedUid != null) {
       for (var ele in assignedUid) {
         Firestore.instance.collection('users').document(ele).collection('task').document(taskId).delete();
+        List currentTaskList = new List();
+        await Firestore.instance.collection('users').document(ele).get().then((value) {
+          if (value.data != null) { 
+            if (value.data['task'] != null) {
+              currentTaskList = value.data['task'];
+            }
+          }
+        });
+        for (var taskLocEle in currentTaskList) {
+          if (taskLocEle['taskId'] == taskId) {
+            currentTaskList.remove(taskLocEle);
+            break;
+          }
+        }
+        await Firestore.instance.collection('users').document(ele).updateData({'task': currentTaskList});
       }
     }
+  }
+
+  @override
+  Future<void> deleteMeeting(String meetingTitle, String meetingId) async {
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).delete();
+    String logDescription = '$userName deleted Meeting \'$meetingTitle\'';
+    createNewLog(logDescription, false);
+    List currentMeetingList = new List();
+    for (var ele in userUidList) {
+      await Firestore.instance.collection('users').document(ele).get().then((value) {
+        if (value.data != null) { 
+          if (value.data['meeting'] != null) {
+            currentMeetingList = value.data['meeting'];
+          }
+        }
+      });
+      for (var meetingLocEle in currentMeetingList) {
+        if (meetingLocEle['meetingId'] == meetingId) {
+          currentMeetingList.remove(meetingLocEle);
+          break;
+        }
+      }
+      await Firestore.instance.collection('users').document(ele).updateData({'meeting': currentMeetingList});
+    }
+  }
+
+  @override
+  Future<void> deleteMeetingAlt(String meetingTitle, String meetingId, String meetingAltId, String date, String time) async {
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).collection('alternative').document(meetingAltId).delete();
+    String logDescription = '$userName deleted proposed alternative meeting schedule at [$date, $time] from Meeting $meetingTitle';
+    createNewLog(logDescription, false);  
   }
 
   @override
@@ -427,23 +702,23 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   
   Future<void> removeTaskAssignment(String id, String name) async {
     List assignListId = List();
-    List assignListName = List();
+    // List assignListName = List();
     String taskId = '';
     var results = await Firestore.instance.collection('projects').document(projectId).collection('task').where('assignedUid', arrayContains: id)
     .getDocuments();
     results.documents.forEach((element) async {
       assignListId = element.data['assignedUid'];
-      assignListName = element.data['assignedName'];
+      // assignListName = element.data['assignedName'];
       taskId = element.data['taskId'];
       int idIdx = assignListId.indexOf(id);
       assignListId.removeAt(idIdx);
-      assignListName.removeAt(idIdx);
+      // assignListName.removeAt(idIdx);
       await Firestore.instance.collection('projects').document(projectId).collection('task').document(taskId).updateData({
-        'assignedName': assignListName,
+        // 'assignedName': assignListName,
         'assignedUid': assignListId,
       });
       assignListId = List();
-      assignListName = List();
+      // assignListName = List();
       taskId = '';      
     });
     Firestore.instance.collection('users').document(id).collection('task').document(taskId).delete();
@@ -471,18 +746,126 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     });    
   }
 
-  Future<void> sendLeaveMsg(String id, String name, bool leave) async {
+  Future<void> removeMeetingAttendance(String id, String name) async {
+    List _attending = new List();
+    List _maybe = new List();
+    List _notAttending = new List();
+    String _meetingId = "";
+    var resultsA = await Firestore.instance.collection('projects').document(projectId).collection('meeting').where('attending', arrayContains: id)
+    .getDocuments();
+    resultsA.documents.forEach((element) async {
+      _attending = element.data['attending'];
+      _meetingId = element.data['meetingId'];
+      _attending.remove(id);
+      await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(_meetingId).updateData({
+        'attending': _attending,
+      });
+      _attending = List();
+      _meetingId = '';      
+    });
+    var resultsM = await Firestore.instance.collection('projects').document(projectId).collection('meeting').where('maybe', arrayContains: id)
+    .getDocuments();
+    resultsM.documents.forEach((element) async {
+      _maybe = element.data['maybe'];
+      _meetingId = element.data['meetingId'];
+      _maybe.remove(id);
+      await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(_meetingId).updateData({
+        'maybe': _maybe,
+      });
+      _maybe = List();
+      _meetingId = '';      
+    });
+    var resultsNA = await Firestore.instance.collection('projects').document(projectId).collection('meeting').where('notAttending', arrayContains: id)
+    .getDocuments();
+    resultsNA.documents.forEach((element) async {
+      _notAttending = element.data['notAttending'];
+      _meetingId = element.data['meetingId'];
+      _notAttending.remove(id);
+      await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(_meetingId).updateData({
+        'notAttending': _notAttending,
+      });
+      _notAttending = List();
+      _meetingId = '';      
+    });
+  }
+
+  Future<void> removeMeetingAlt(String id, String name) async {
+    String meetingId = '';
+    String meetingAltId = '';
+    var results = await Firestore.instance.collection('projects').document(projectId).collection('meeting')
+    .getDocuments();
+    results.documents.forEach((element) async {
+      meetingId = element.data['meetingId'];
+      var resultsAlt = await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).collection('alternative').where('user', isEqualTo: id)
+        .getDocuments();
+      resultsAlt.documents.forEach((element) async {
+        meetingAltId = element.data['meetingAltId'];
+        await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).collection('alternative').document(meetingAltId).delete();
+      });  
+    });    
+  }
+
+  Future<void> removeProjectRelatedFields(String id, String name) async {
+    List currentTaskList = new List();
+    List currentMeetingList = new List();
+    await Firestore.instance.collection('users').document(id).get().then((value) {
+      if (value.data != null) { 
+        if (value.data['task'] != null) {
+          currentTaskList = value.data['task'];
+          for (var taskLocEle in List.of(currentTaskList)) {
+            if (taskLocEle['projectId'] == projectId) {
+              currentTaskList.remove(taskLocEle);
+            }
+          }
+        }
+        if (value.data['meeting'] != null) {
+          currentMeetingList = value.data['meeting'];
+          for (var meetingLocEle in List.of(currentMeetingList)) {
+            if (meetingLocEle['projectId'] == projectId) {
+              currentMeetingList.remove(meetingLocEle);
+            }
+          }
+        }
+      }
+    });
+    await Firestore.instance.collection('users').document(id).updateData({
+      'task': currentTaskList,
+      'meeting': currentMeetingList,
+    });
+  }
+
+  Future<void> sendSystemMsg(String id, String name, String msg) async {
     String _time = DateTime.now().toString();
-    String _msg = leave ? '$name has left this project group' : '$name has been removed from this project group';
     await _setData('projects/$projectId/chat/$_time', {
       'name': name,
-      'message': _msg,
+      'message': msg,
       'timesort': FieldValue.serverTimestamp(),
-      'time': FieldValue.serverTimestamp().toString(),
+      'time': FieldValue.serverTimestamp(),
       'chatId': _time,
       'user': id,
       'event': true,
     });
+  }
+
+  @override
+  Future<List<MeetingAlt>> meetingAltList(String meetingId) async {
+    List<MeetingAlt> meetingAltList = new List();
+    await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).collection('alternative').getDocuments().then((querySnapshot) {
+      querySnapshot.documents.forEach((result) {
+        MeetingAlt alt = MeetingAlt(
+          meetingAltId: result.data['meetingAltId'], 
+          user: result.data['user'], 
+          isMeetingCreator: result.data['isMeetingCreator'], 
+          votes: result.data['votes'], 
+          votesCount: result.data['votesCount'], 
+          date: result.data['date'], 
+          time: result.data['time'],
+          acceptState: result.data['acceptState'],
+        );
+        meetingAltList.add(alt);
+      });
+    });
+    return meetingAltList;
   }
 
   @override
@@ -534,6 +917,16 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       filterValue: uid,
     );
   } 
+
+  @override
+  Stream<List<MeetingModel>> meetingStream() {
+    return _collectionStream(
+      path: 'projects/$projectId/meeting', 
+      builder: (data) => MeetingModel.fromMap(data),
+      orderBy: 'dateSort',
+      descending: false,
+    );
+  }
 
   @override
   Stream<List<Log>> logStream() {
@@ -621,7 +1014,7 @@ class ChatStreamPagination {
 
   List<List<ChatMessage>> _allPagedResults = List<List<ChatMessage>>();
 
-  static const int chatLimit = 5;
+  static const int chatLimit = 10;
   DocumentSnapshot _lastDocument;
   bool _hasMoreData = true;
 
@@ -640,7 +1033,6 @@ class ChatStreamPagination {
       pagechatQuery =
           pagechatQuery.startAfterDocument(_lastDocument);
     }
-
     if (!_hasMoreData) return;
 
     var currentRequestIndex = _allPagedResults.length;
@@ -661,18 +1053,18 @@ class ChatStreamPagination {
           } else {
             _allPagedResults.add(generalChats);
           }
-
+          
           var allChats = _allPagedResults.fold<List<ChatMessage>>(
               List<ChatMessage>(),
               // (initialValue, pageItems) => initialValue..addAll(pageItems));
               (initialValue, pageItems) => initialValue..insertAll(0, pageItems));
-
+          
           _chatController.add(allChats);
-
+          
           if (currentRequestIndex == _allPagedResults.length - 1) {
             _lastDocument = snapshot.documents.last;
           }
-
+          
           _hasMoreData = generalChats.length == chatLimit;
         }
       },
