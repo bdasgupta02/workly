@@ -4,7 +4,6 @@ import 'package:workly/screens/email_login_page.dart';
 //[Action] We need to have privacy policy somewhere
 
 class SignInPage extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,17 +16,15 @@ class SignInPage extends StatelessWidget {
     return Stack(
       overflow: Overflow.visible,
       children: <Widget>[
-        Expanded(
+        Container(
+          alignment: Alignment.center,
           child: Container(
-            alignment: Alignment.center,
-            child: Container(
-              margin: EdgeInsets.only(
-                top: 30,
-                bottom: 10,
-              ),
-              child: Image(
-                image: AssetImage('assets/sign_in_graphics_dark_tp.png'),
-              ),
+            margin: EdgeInsets.only(
+              top: 30,
+              bottom: 10,
+            ),
+            child: Image(
+              image: AssetImage('assets/sign_in_graphics_dark_tp.png'),
             ),
           ),
         ),

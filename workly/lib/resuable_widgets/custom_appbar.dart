@@ -18,6 +18,8 @@ class CustomAppbar {
         style: TextStyle(
           fontFamily: 'Roboto',
           color: Color(0xFF141336),
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -39,6 +41,8 @@ class CustomAppbar {
         style: TextStyle(
           fontFamily: 'Roboto',
           color: Color(0xFFFCFCFC),
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
         ),
       ),
       actions: <Widget>[

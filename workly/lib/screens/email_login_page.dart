@@ -434,8 +434,8 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
         _submitted && !widget.nameValidator.isValid(_name.trim());
     return TextField(
       decoration: InputDecoration(
-        labelText: "Username",
-        hintText: "Display name for your account",
+        labelText: "Name",
+        hintText: "Your name",
         errorText: showErrorText ? widget.invalidNameErrorText : null,
         enabled: !_isLoading,
       ),
@@ -627,7 +627,7 @@ class EmailAndPasswordValidators {
   final StringValidator emailValidator = NonEmptyStringValidator();
   final StringValidator passwordValidator = NonEmptyStringValidator();
   final StringValidator nameValidator = NonEmptyStringValidator();
-  final String invalidNameErrorText = "Username cannot be empty";
+  final String invalidNameErrorText = "Name cannot be empty";
   final String weakPasswordText = "Password cannot be less than 6 characters";
   String invalidEmailErrorText;
   String invalidPasswordErrorText;
