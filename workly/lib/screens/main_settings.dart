@@ -8,8 +8,6 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 
-//TODO: SIGN OUT BUTTON
-//ISLOADING
 /*
 Notes:
 - Profile pic change: deletes the existing profile pic off storage and
