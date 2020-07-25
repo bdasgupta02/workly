@@ -180,6 +180,11 @@ class _CalendarState extends State<Calendar> {
             Container(
               padding: EdgeInsets.all(3),
               child: TableCalendar(
+                //TODO: This _deadlines object has a Map of DateTimes matching with a list of events.
+                //Adding to these deadlines would show the dates.
+                //Few things to note: 
+                //- Make sure the deadline for the current day load on the start of this page.
+                //  Reason I'm saying this is because they could need a refresh instead of loading automatically on start, which is bad.
                 events: _deadlines,
                 calendarStyle: CalendarStyle(
                   todayColor: Color(0xFFE9E9E9),
