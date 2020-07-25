@@ -204,7 +204,7 @@ class _ProjectChatState extends State<ProjectChat> {
                       uid: chat.user,
                       name: chat.name,
                       msg: chat.message,
-                      img: userImageUrlList[userUidList.indexOf(chat.user)] ==
+                      img: userUidList.indexOf(chat.user) == -1 ? null : userImageUrlList[userUidList.indexOf(chat.user)] ==
                               null
                           ? null
                           : NetworkImage(

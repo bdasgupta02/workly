@@ -271,7 +271,7 @@ class _IdeaViewState extends State<IdeaView> {
                   name: com.name,
                   comment: com.comment,
                   commentId: com.commentId,
-                  image: userImageUrlList[userUidList.indexOf(com.user)] == null ? null : NetworkImage(userImageUrlList[userUidList.indexOf(com.user)].toString()),
+                  image: userUidList.indexOf(com.user) == -1 ? null : userImageUrlList[userUidList.indexOf(com.user)] == null ? null : NetworkImage(userImageUrlList[userUidList.indexOf(com.user)].toString()),
                   onPress: () => com.user == widget.database.getUid() ? showDeleteDialog(com.comment, com.commentId, true) : null,
                   ))
               .toList();

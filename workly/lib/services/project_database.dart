@@ -10,8 +10,6 @@ import 'package:workly/models/meeting_alt.dart';
 import 'package:workly/models/meeting_model.dart';
 import 'package:workly/models/task_model.dart';
 
-//TODO: update the delete project method to delete all task assignment and meeting
-
 abstract class ProjectDatabase {
   Future<void> createIdea(String ideaId, Map<String, dynamic> ideaData);
   Future<void> createTask(String taskId, Map<String, dynamic> taskData);
@@ -582,6 +580,9 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     sendSystemMsg(_uid, _name, msg);
     removeTaskAssignment(_uid, _name);
     removeIdeasVoting(_uid, _name);
+    removeMeetingAttendance(_uid, _name);
+    removeMeetingAlt(_uid, _name);
+    removeProjectRelatedFields(_uid, _name);
   }
 
   @override
@@ -617,6 +618,21 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     if (assignedUid != null) {
       for (var ele in assignedUid) {
         Firestore.instance.collection('users').document(ele).collection('task').document(taskId).delete();
+        List currentTaskList = new List();
+        await Firestore.instance.collection('users').document(ele).get().then((value) {
+          if (value.data != null) { 
+            if (value.data['task'] != null) {
+              currentTaskList = value.data['task'];
+            }
+          }
+        });
+        for (var taskLocEle in currentTaskList) {
+          if (taskLocEle['taskId'] == taskId) {
+            currentTaskList.remove(taskLocEle);
+            break;
+          }
+        }
+        await Firestore.instance.collection('users').document(ele).updateData({'task': currentTaskList});
       }
     }
   }
@@ -686,23 +702,23 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   
   Future<void> removeTaskAssignment(String id, String name) async {
     List assignListId = List();
-    List assignListName = List();
+    // List assignListName = List();
     String taskId = '';
     var results = await Firestore.instance.collection('projects').document(projectId).collection('task').where('assignedUid', arrayContains: id)
     .getDocuments();
     results.documents.forEach((element) async {
       assignListId = element.data['assignedUid'];
-      assignListName = element.data['assignedName'];
+      // assignListName = element.data['assignedName'];
       taskId = element.data['taskId'];
       int idIdx = assignListId.indexOf(id);
       assignListId.removeAt(idIdx);
-      assignListName.removeAt(idIdx);
+      // assignListName.removeAt(idIdx);
       await Firestore.instance.collection('projects').document(projectId).collection('task').document(taskId).updateData({
-        'assignedName': assignListName,
+        // 'assignedName': assignListName,
         'assignedUid': assignListId,
       });
       assignListId = List();
-      assignListName = List();
+      // assignListName = List();
       taskId = '';      
     });
     Firestore.instance.collection('users').document(id).collection('task').document(taskId).delete();
@@ -728,6 +744,94 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       voteCount = 0;
       ideaId = '';      
     });    
+  }
+
+  Future<void> removeMeetingAttendance(String id, String name) async {
+    List _attending = new List();
+    List _maybe = new List();
+    List _notAttending = new List();
+    String _meetingId = "";
+    var resultsA = await Firestore.instance.collection('projects').document(projectId).collection('meeting').where('attending', arrayContains: id)
+    .getDocuments();
+    resultsA.documents.forEach((element) async {
+      _attending = element.data['attending'];
+      _meetingId = element.data['meetingId'];
+      _attending.remove(id);
+      await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(_meetingId).updateData({
+        'attending': _attending,
+      });
+      _attending = List();
+      _meetingId = '';      
+    });
+    var resultsM = await Firestore.instance.collection('projects').document(projectId).collection('meeting').where('maybe', arrayContains: id)
+    .getDocuments();
+    resultsM.documents.forEach((element) async {
+      _maybe = element.data['maybe'];
+      _meetingId = element.data['meetingId'];
+      _maybe.remove(id);
+      await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(_meetingId).updateData({
+        'maybe': _maybe,
+      });
+      _maybe = List();
+      _meetingId = '';      
+    });
+    var resultsNA = await Firestore.instance.collection('projects').document(projectId).collection('meeting').where('notAttending', arrayContains: id)
+    .getDocuments();
+    resultsNA.documents.forEach((element) async {
+      _notAttending = element.data['notAttending'];
+      _meetingId = element.data['meetingId'];
+      _notAttending.remove(id);
+      await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(_meetingId).updateData({
+        'notAttending': _notAttending,
+      });
+      _notAttending = List();
+      _meetingId = '';      
+    });
+  }
+
+  Future<void> removeMeetingAlt(String id, String name) async {
+    String meetingId = '';
+    String meetingAltId = '';
+    var results = await Firestore.instance.collection('projects').document(projectId).collection('meeting')
+    .getDocuments();
+    results.documents.forEach((element) async {
+      meetingId = element.data['meetingId'];
+      var resultsAlt = await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).collection('alternative').where('user', isEqualTo: id)
+        .getDocuments();
+      resultsAlt.documents.forEach((element) async {
+        meetingAltId = element.data['meetingAltId'];
+        await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).collection('alternative').document(meetingAltId).delete();
+      });  
+    });    
+  }
+
+  Future<void> removeProjectRelatedFields(String id, String name) async {
+    List currentTaskList = new List();
+    List currentMeetingList = new List();
+    await Firestore.instance.collection('users').document(id).get().then((value) {
+      if (value.data != null) { 
+        if (value.data['task'] != null) {
+          currentTaskList = value.data['task'];
+          for (var taskLocEle in List.of(currentTaskList)) {
+            if (taskLocEle['projectId'] == projectId) {
+              currentTaskList.remove(taskLocEle);
+            }
+          }
+        }
+        if (value.data['meeting'] != null) {
+          currentMeetingList = value.data['meeting'];
+          for (var meetingLocEle in List.of(currentMeetingList)) {
+            if (meetingLocEle['projectId'] == projectId) {
+              currentMeetingList.remove(meetingLocEle);
+            }
+          }
+        }
+      }
+    });
+    await Firestore.instance.collection('users').document(id).updateData({
+      'task': currentTaskList,
+      'meeting': currentMeetingList,
+    });
   }
 
   Future<void> sendSystemMsg(String id, String name, String msg) async {
@@ -910,7 +1014,7 @@ class ChatStreamPagination {
 
   List<List<ChatMessage>> _allPagedResults = List<List<ChatMessage>>();
 
-  static const int chatLimit = 5;
+  static const int chatLimit = 10;
   DocumentSnapshot _lastDocument;
   bool _hasMoreData = true;
 
@@ -929,7 +1033,6 @@ class ChatStreamPagination {
       pagechatQuery =
           pagechatQuery.startAfterDocument(_lastDocument);
     }
-
     if (!_hasMoreData) return;
 
     var currentRequestIndex = _allPagedResults.length;
@@ -950,18 +1053,18 @@ class ChatStreamPagination {
           } else {
             _allPagedResults.add(generalChats);
           }
-
+          
           var allChats = _allPagedResults.fold<List<ChatMessage>>(
               List<ChatMessage>(),
               // (initialValue, pageItems) => initialValue..addAll(pageItems));
               (initialValue, pageItems) => initialValue..insertAll(0, pageItems));
-
+          
           _chatController.add(allChats);
-
+          
           if (currentRequestIndex == _allPagedResults.length - 1) {
             _lastDocument = snapshot.documents.last;
           }
-
+          
           _hasMoreData = generalChats.length == chatLimit;
         }
       },
