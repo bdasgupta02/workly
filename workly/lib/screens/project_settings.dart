@@ -304,7 +304,7 @@ class _ProjectSettingsState extends State<ProjectSettings> {
     String verb = action == "leave" ? "leaving" : "deleting";
     return AlertDialog(
       title: Text("Are you sure?"),
-      content: Text("You will lose this $verb forever."),
+      content: Text("You are $verb this project forever."),
       actions: <Widget>[
         FlatButton(
           child: Text("No"),
