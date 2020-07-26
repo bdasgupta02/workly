@@ -319,7 +319,7 @@ class FirestoreDatabase implements Database {
     List<Map> newTaskList = new List();
     Map taskMap = new Map();
     await Firestore.instance.collection('users').document(uid).get().then((value) async {
-      if (value.data != null) { 
+      if (value.data != null && value.data['task'] != null) { 
         taskList = value.data['task'];
         for (var ele in taskList) {
           await Firestore.instance.collection('projects').document(ele['projectId']).get().then((valueP) {
@@ -350,7 +350,7 @@ class FirestoreDatabase implements Database {
     List<Map> newMeetingList = new List();
     Map meetingMap = new Map();
     await Firestore.instance.collection('users').document(uid).get().then((value) async {
-      if (value.data != null) { 
+      if (value.data != null && value.data['meeting'] != null) { 
         meetingList = value.data['meeting'];
         for (var ele in meetingList) {
           await Firestore.instance.collection('projects').document(ele['projectId']).get().then((valueP) {
