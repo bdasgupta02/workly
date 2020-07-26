@@ -135,6 +135,12 @@ class FirestoreProjectDatabase implements ProjectDatabase {
 
   @override
   Future<void> createMeeting(String meetingId, Map<String, dynamic> meetingData) async {
+    List newUserUidList = List();
+    await Firestore.instance.collection('projects').document(projectId).get().then((value) {
+      if (value.data != null) { 
+        newUserUidList = value.data['userUid'];
+      }
+    });
     await _setData('projects/$projectId/meeting/$meetingId', meetingData);
     String logDescription = '$userName created new Meeting \'${meetingData['title']}\'';
     createNewLog(logDescription, false);
@@ -145,7 +151,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       "meetingId": meetingId,
     };
     List currentMeetingList = new List();
-    for (var ele in userUidList) {
+    for (var ele in newUserUidList) {
       await Firestore.instance.collection('users').document(ele).get().then((value) {
         if (value.data != null) { 
           if (value.data['meeting'] != null) {
@@ -287,7 +293,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       logDescription = '$userName $_action \'$_title\'';
     }
     if (runLoop) {
-      updateTaskToUser(taskId, _title, _deadline, _stateList[_state - 1], _priorityList[_priority - 1]);
+      // updateTaskToUser(taskId, _title, _deadline, _stateList[_state - 1], _priorityList[_priority - 1]);
       logDescription = '$userName have updated the following details of Task \'$_title\':';
       for (var ele in listLog) {
         logDescription += ele;
@@ -401,6 +407,9 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).collection('alternative').document(altMeetingId).get().then((value) {
       _votes = value.data['votes'];
     });
+    if (!_votes.contains(uid)) {
+      _votes.add(uid);
+    }
     Map<String, dynamic> newMeetingData = {
       'date': meetingData['date'],
       'time': meetingData['time'],
@@ -444,14 +453,14 @@ class FirestoreProjectDatabase implements ProjectDatabase {
 
   Future<void> addTaskToUser(bool add, String taskId, String title, var deadline, String state, String priority) async {
     if (add) {
-      _setData('users/$uid/task/$taskId', {
-        'taskId': taskId,
-        'title': title,
-        'deadline': deadline,
-        'projectName': projectName, 
-        'state': state,
-        'priority': priority,
-      });
+      // _setData('users/$uid/task/$taskId', {
+      //   'taskId': taskId,
+      //   'title': title,
+      //   'deadline': deadline,
+      //   'projectName': projectName, 
+      //   'state': state,
+      //   'priority': priority,
+      // });
       Map<String, dynamic> taskLoc = {
         "projectId": projectId,
         "taskId": taskId,
@@ -467,7 +476,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       currentTaskList.add(taskLoc);
       await Firestore.instance.collection('users').document(uid).updateData({'task': currentTaskList});
     } else {
-      Firestore.instance.collection('users').document(uid).collection('task').document(taskId).delete();
+      // Firestore.instance.collection('users').document(uid).collection('task').document(taskId).delete();
       List currentTaskList = new List();
       await Firestore.instance.collection('users').document(uid).get().then((value) {
         if (value.data != null) { 
@@ -486,24 +495,24 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     }
   }
 
-  Future<void> updateTaskToUser(String taskId, String title, var deadline, String state, String priority) async {
-    bool valid = false;
-    await Firestore.instance.collection('users').document(uid).collection('task').document(taskId).get().then((value) {
-      if (value.data != null) { 
-        valid = true;
-      }
-    });
-    if (valid) {
-      await Firestore.instance.collection('users').document(uid).collection('task').document(taskId).updateData({
-        'taskId': taskId,
-        'title': title,
-        'deadline': deadline,
-        'projectName': projectName, 
-        'state': state,
-        'priority': priority,
-      });
-    }
-  }
+  // Future<void> updateTaskToUser(String taskId, String title, var deadline, String state, String priority) async {
+  //   bool valid = false;
+  //   await Firestore.instance.collection('users').document(uid).collection('task').document(taskId).get().then((value) {
+  //     if (value.data != null) { 
+  //       valid = true;
+  //     }
+  //   });
+  //   if (valid) {
+  //     await Firestore.instance.collection('users').document(uid).collection('task').document(taskId).updateData({
+  //       'taskId': taskId,
+  //       'title': title,
+  //       'deadline': deadline,
+  //       'projectName': projectName, 
+  //       'state': state,
+  //       'priority': priority,
+  //     });
+  //   }
+  // }
 
   @override
   Future<void> updateVotes(String ideaId) async {
@@ -574,8 +583,8 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       'userName': userNameList,
       'userImageUrl': userImageList,
     });
-    await Firestore.instance.collection('projects').document(projectId).collection('users').document(_uid).delete();
-    await Firestore.instance.collection('users').document(_uid).collection('projects').document(projectId).delete();
+    // await Firestore.instance.collection('projects').document(projectId).collection('users').document(_uid).delete();
+    // await Firestore.instance.collection('users').document(_uid).collection('projects').document(projectId).delete();
     String msg = leave ? '$_name has left this project group' : '$_name has been removed from this project group';
     sendSystemMsg(_uid, _name, msg);
     removeTaskAssignment(_uid, _name);
@@ -617,7 +626,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     createNewLog(logDescription, true);
     if (assignedUid != null) {
       for (var ele in assignedUid) {
-        Firestore.instance.collection('users').document(ele).collection('task').document(taskId).delete();
+        // Firestore.instance.collection('users').document(ele).collection('task').document(taskId).delete();
         List currentTaskList = new List();
         await Firestore.instance.collection('users').document(ele).get().then((value) {
           if (value.data != null) { 
@@ -639,11 +648,17 @@ class FirestoreProjectDatabase implements ProjectDatabase {
 
   @override
   Future<void> deleteMeeting(String meetingTitle, String meetingId) async {
+    List newUserUidList = List();
+    await Firestore.instance.collection('projects').document(projectId).get().then((value) {
+      if (value.data != null) { 
+        newUserUidList = value.data['userUid'];
+      }
+    });
     await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).delete();
     String logDescription = '$userName deleted Meeting \'$meetingTitle\'';
     createNewLog(logDescription, false);
     List currentMeetingList = new List();
-    for (var ele in userUidList) {
+    for (var ele in newUserUidList) {
       await Firestore.instance.collection('users').document(ele).get().then((value) {
         if (value.data != null) { 
           if (value.data['meeting'] != null) {
@@ -721,7 +736,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       // assignListName = List();
       taskId = '';      
     });
-    Firestore.instance.collection('users').document(id).collection('task').document(taskId).delete();
+    // Firestore.instance.collection('users').document(id).collection('task').document(taskId).delete();
   }
 
   Future<void> removeIdeasVoting(String id, String name) async {
@@ -808,8 +823,13 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   Future<void> removeProjectRelatedFields(String id, String name) async {
     List currentTaskList = new List();
     List currentMeetingList = new List();
+    List currentProjectList = new List();
     await Firestore.instance.collection('users').document(id).get().then((value) {
       if (value.data != null) { 
+        if (value.data['project'] != null) {
+          currentProjectList = value.data['project'];
+          currentProjectList.remove(projectId);
+        }
         if (value.data['task'] != null) {
           currentTaskList = value.data['task'];
           for (var taskLocEle in List.of(currentTaskList)) {
@@ -831,6 +851,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     await Firestore.instance.collection('users').document(id).updateData({
       'task': currentTaskList,
       'meeting': currentMeetingList,
+      'project': currentProjectList,
     });
   }
 

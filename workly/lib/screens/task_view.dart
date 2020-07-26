@@ -555,8 +555,10 @@ class MemberTester {
       List<Widget> memberWidgets = [];
       for (int i = 0; i < membersUid.length; i++) {
         int idx = userUidList.indexOf(membersUid[i]);
-        memberWidgets.add(
-            Member(name: userNameList[idx], image: userImageUrlList[idx] == null ? null : NetworkImage(userImageUrlList[idx].toString())).makeMemberTile(null, true));
+        if (idx != -1) {
+          memberWidgets.add(
+              Member(name: userNameList[idx], image: userImageUrlList[idx] == null ? null : NetworkImage(userImageUrlList[idx].toString())).makeMemberTile(null, true));
+        }
       }
       return Column(
         children: memberWidgets,

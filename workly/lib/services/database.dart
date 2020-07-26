@@ -1,17 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:workly/models/user_projects.dart';
-import 'package:workly/models/user_tasks.dart';
-
-//TODO: Convert project, task, meeting stream into just list query for calendar. Save on read/write data
+// import 'package:workly/models/user_projects.dart';
+// import 'package:workly/models/user_tasks.dart';
 
 abstract class Database {
   Future<void> createUserProject(String projectId, Map<String, dynamic> projectData);
   Future<void> updateUserToken(Map<String, dynamic> userToken);
   Future<int> joinProject(String projectId);
+  Future<void> updateUserDetails(String name, String imgUrl);
   Future<void> createNewMessage(String projectId, String message);
-  Stream<List<UserProjects>> userProjectsStream();
-  Stream<List<UserTasks>> userTasksStream();
+  Future<List<Map>> userProjectDocuments();
+  Future<List<Map>> userTaskDocuments();
+  Future<List<Map>> userMeetingDocuments();
+  // Stream<List<UserProjects>> userProjectsStream();
+  // Stream<List<UserTasks>> userTasksStream();
   Future<bool> checkCode(String code);
   String getUid();
   Future<String> getName();
@@ -96,13 +98,18 @@ class FirestoreDatabase implements Database {
 
   @override
   Future<void> updateUserToken(Map<String, dynamic> userToken) async {
-    await Firestore.instance.collection('users').document(uid).updateData(userToken);
+    try {
+      await Firestore.instance.collection('users').document(uid).updateData(userToken);
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   @override
   Future<void> createUserProject(String projectId, Map<String, dynamic> projectData) async {
-    await _setData('users/$uid/projects/$projectId', projectData);
+    // await _setData('users/$uid/projects/$projectId', projectData);
     await _setData('projects/$projectId', projectData);
+    addProjectToUser(projectId);
     String _name = await getName();
     await _sendJoinEventMessage(projectId, _name, uid);
     // addUserToProject(projectId); 
@@ -110,8 +117,8 @@ class FirestoreDatabase implements Database {
 
   @override
   Future<int> joinProject(String projectId) async {
-    var _isUserPresent = await Firestore.instance.collection('projects').document(projectId).collection('users').document(uid).get();
-    if (_isUserPresent.data == null) {
+    var _isUserPresent = await Firestore.instance.collection('users').document(uid).get();
+    if (_isUserPresent.data['project'].contains(uid)) {
       print("ADDING NEW USER TO PROJECT");
       String _code;
       String _title;
@@ -128,12 +135,13 @@ class FirestoreDatabase implements Database {
         }
       });
       if (_valid) {
-        await _setData('users/$uid/projects/$projectId', {
-          "title": _title,
-          "code": _code,
-          "description": _description,
-          "deadline": _deadline,
-        });
+        // await _setData('users/$uid/projects/$projectId', {
+        //   "title": _title,
+        //   "code": _code,
+        //   "description": _description,
+        //   "deadline": _deadline,
+        // });
+        addProjectToUser(projectId);
         addUserToProject(projectId);
         addMeetingsToUser(projectId);
         return 1;
@@ -143,6 +151,50 @@ class FirestoreDatabase implements Database {
       return 2;
     }
     return 3;
+  }
+
+  Future<void> addProjectToUser(String projectId) async {
+    List currentProjectList = new List();
+    await Firestore.instance.collection('users').document(uid).get().then((value) {
+      if (value.data != null) { 
+        if (value.data['project'] != null) {
+          currentProjectList = value.data['project'];
+        }
+      }
+    });
+    currentProjectList.add(projectId);
+    await Firestore.instance.collection('users').document(uid).updateData({'project': currentProjectList});
+  }
+
+  @override
+  Future<void> updateUserDetails(String name, String imgUrl) async {
+    String projectId = "";
+    List userUid = new List();
+    List userName = new List();
+    List userImage = new List();
+    var results = await Firestore.instance.collection('projects').where('userUid', arrayContains: uid)
+    .getDocuments();
+    results.documents.forEach((element) async {
+      userUid = element.data['userUid'];
+      userName = element.data['userName'];
+      userImage = element.data['userImageUrl'];
+      projectId = element.data['code'];
+      int idIdx = userUid.indexOf(uid);
+      userName[idIdx] = name;
+      print(userImage);
+      if (imgUrl != null) {
+        userImage[idIdx] = imgUrl;
+      }
+      await Firestore.instance.collection('projects').document(projectId).updateData({
+        'userUid': userUid,
+        'userName': userName,
+        'userImageUrl': userImage,
+      });
+      userUid = new List();
+      userName = new List();
+      userImage = new List();
+      projectId = '';      
+    });
   }
 
   @override
@@ -234,24 +286,124 @@ class FirestoreDatabase implements Database {
   }
 
   @override
-  Stream<List<UserProjects>> userProjectsStream() {
-    return _collectionStream(
-      path: 'users/$uid/projects', 
-      builder: (data) => UserProjects.fromMap(data),
-      orderBy: "deadline",
-      descending: false,
-    );
+  Future<List<Map>> userProjectDocuments() async {
+    List projectList = new List();
+    List<Map> newProjectList = new List();
+    Map projectMap = new Map();
+    await Firestore.instance.collection('users').document(uid).get().then((value) async {
+      if (value.data != null) { 
+        if (value.data['project'] != null) {
+          projectList = value.data['project'];
+          for (var ele in projectList) {
+            await Firestore.instance.collection('projects').document(ele).get().then((valueP) {
+              if (valueP.data != null) { 
+                projectMap['projectId'] = valueP.data['code'];
+                projectMap['projectTitle'] = valueP.data['title'];
+                projectMap['projectDesc'] = valueP.data['description'];
+                projectMap['projectDeadline'] = convertTimeStampToStringDate(valueP.data['deadline']);
+              }
+            });
+            newProjectList.add(projectMap);
+            projectMap = new Map(); 
+            projectList = new List();
+          }
+        }
+      }
+    });
+    return newProjectList;
   }
 
   @override
-  Stream<List<UserTasks>> userTasksStream() {
-    return _collectionStream(
-      path: 'users/$uid/task', 
-      builder: (data) => UserTasks.fromMap(data),
-      orderBy: "deadline",
-      descending: false,
-    );
+  Future<List<Map>> userTaskDocuments() async {
+    List taskList = new List();
+    List<Map> newTaskList = new List();
+    Map taskMap = new Map();
+    await Firestore.instance.collection('users').document(uid).get().then((value) async {
+      if (value.data != null) { 
+        taskList = value.data['task'];
+        for (var ele in taskList) {
+          await Firestore.instance.collection('projects').document(ele['projectId']).get().then((valueP) {
+            if (valueP.data != null) { 
+              taskMap['projectId'] = valueP.data['code'];
+              taskMap['projectTitle'] = valueP.data['title'];
+            }
+          });
+          await Firestore.instance.collection('projects').document(ele['projectId']).collection('task').document(ele['taskId']).get().then((valueT) {
+            if (valueT.data != null) { 
+              taskMap['taskId'] = valueT.data['taskId'];
+              taskMap['taskTitle'] = valueT.data['title'];
+              taskMap['taskDeadline'] = convertTimeStampToStringDate(valueT.data['deadline']);
+            }
+          });
+          newTaskList.add(taskMap);
+          taskMap = new Map(); 
+          taskList = new List();
+        }
+      }
+    });
+    return newTaskList;
   }
+
+  @override
+  Future<List<Map>> userMeetingDocuments() async {
+    List meetingList = new List();
+    List<Map> newMeetingList = new List();
+    Map meetingMap = new Map();
+    await Firestore.instance.collection('users').document(uid).get().then((value) async {
+      if (value.data != null) { 
+        meetingList = value.data['meeting'];
+        for (var ele in meetingList) {
+          await Firestore.instance.collection('projects').document(ele['projectId']).get().then((valueP) {
+            if (valueP.data != null) { 
+              meetingMap['projectId'] = valueP.data['code'];
+              meetingMap['projectTitle'] = valueP.data['title'];
+            }
+          });
+          await Firestore.instance.collection('projects').document(ele['projectId']).collection('meeting').document(ele['meetingId']).get().then((valueM) {
+            if (valueM.data != null) { 
+              meetingMap['meetingId'] = valueM.data['meetingId'];
+              meetingMap['meetingTitle'] = valueM.data['title'];
+              meetingMap['meetingDate'] = convertTimeStampToStringDate(valueM.data['dateSort']);
+              meetingMap['meetingTime'] = valueM.data['time'];
+              if (valueM.data['attending'].contains(uid)) {
+                meetingMap['attendance'] = "attending";
+              }
+              if (valueM.data['maybe'].contains(uid)) {
+                meetingMap['attendance'] = "maybe";
+              }
+              if (valueM.data['notAttending'].contains(uid)) {
+                meetingMap['attendance'] = "notAttending";
+              }
+            }
+          });
+          newMeetingList.add(meetingMap);
+          meetingMap = new Map(); 
+          meetingList = new List();
+        }
+      }
+    });
+    return newMeetingList;
+  }
+
+  // @override
+  // Stream<List<UserProjects>> userProjectsStream() {
+  //   return _collectionStream(
+  //     path: 'users/$uid/projects', 
+  //     builder: (data) => UserProjects.fromMap(data),
+  //     orderBy: "deadline",
+  //     descending: false,
+  //   );
+  // }
+
+  // @override
+  // Stream<List<UserTasks>> userTasksStream() {
+  //   return _collectionStream(
+  //     path: 'users/$uid/task', 
+  //     builder: (data) => UserTasks.fromMap(data),
+  //     orderBy: "deadline",
+  //     descending: false,
+  //   );
+  // }
   
   @override
   Future<bool> checkCode(String code) async {
@@ -287,5 +439,14 @@ class FirestoreDatabase implements Database {
     final reference = Firestore.instance.collection(path).orderBy(orderBy, descending: descending);
     final snapshots = reference.snapshots();
     return snapshots.map((snapshot) => snapshot.documents.map((snapshot) => builder(snapshot.data)).toList());
+  }
+  
+  String convertTimeStampToStringDate(Timestamp deadline) {
+    DateTime date = DateTime.parse(deadline.toDate().toString());
+    String _dd = date.day < 10 ? '0' + date.day.toString() : date.day.toString();
+    String _mm = date.month < 10 ? '0' + date.month.toString() : date.month.toString();
+    String _yyyy = date.year.toString();
+    String formattedDeadline = _dd + '/' + _mm + '/' + _yyyy;
+    return formattedDeadline;
   }
 }

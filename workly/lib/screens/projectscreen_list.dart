@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:workly/models/user_projects.dart';
+// import 'package:workly/models/user_projects.dart';
 import 'package:workly/resuable_widgets/custom_appbar.dart';
 import 'package:workly/screens/projectscreen_switchboard.dart';
 import 'package:workly/services/database.dart';
@@ -18,21 +18,32 @@ class _AllProjectsState extends State<AllProjects> {
 
   final FocusNode _projectNameFocusNode = FocusNode();
   final FocusNode _projectDescriptionFocusNode = FocusNode();
-  final FocusNode _projectDeadlineFocusNode = FocusNode();
+  // final FocusNode _projectDeadlineFocusNode = FocusNode();
   final TextEditingController _projectNameController = TextEditingController();
   final TextEditingController _projectDescriptionController =
       TextEditingController();
-  final TextEditingController _projectDeadlineController =
-      TextEditingController();
+  // final TextEditingController _projectDeadlineController =
+  //     TextEditingController();
   final TextEditingController _projectCodeController = TextEditingController();
   bool _joinProject = false;
   bool _titleValid = true;
   bool _dateValid = true;
   bool _codeValid = true;
+  DateTime _date;
+  List<Project> _projects;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _date = null;
+    _projects = null;
+  }
 
   @override
   Widget build(BuildContext context) {
     final database = Provider.of<Database>(context, listen: false);
+    getDocumentsList();
     return Scaffold(
       appBar: CustomAppbar.appBar('Projects'),
       backgroundColor: Color(0xFFE9E9E9),
@@ -42,7 +53,8 @@ class _AllProjectsState extends State<AllProjects> {
       // ),
       body: Padding(
         padding: EdgeInsets.all(10),
-        child: _buildProjectList(context),
+        child: _loading ? 
+          _loadingScreen() : _buildProjectList(context),
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.library_add),
@@ -51,12 +63,13 @@ class _AllProjectsState extends State<AllProjects> {
           setState(() {
             _projectNameController.clear();
             _projectDescriptionController.clear();
-            _projectDeadlineController.clear();
+            // _projectDeadlineController.clear();
             _projectCodeController.clear();
             _joinProject = false;
             _codeValid = true;
             _titleValid = true;
             _dateValid = true;
+            _date = null;
           }),
           showDialog(
             context: context,
@@ -67,6 +80,28 @@ class _AllProjectsState extends State<AllProjects> {
           ),
         },
       ),
+    );
+  }
+
+  Widget _loadingScreen() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Center(child: CircularProgressIndicator()),
+        SizedBox(height: 10,),
+        Center(
+          child: Text(
+            _joinProject ? "Joining project..." : "Creating project...",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Roboto',
+              fontSize: 20,
+              color: Colors.black54,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -116,6 +151,7 @@ class _AllProjectsState extends State<AllProjects> {
                     Offstage(
                       offstage: _joinProject,
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: <Widget>[
                           _projectNameField(),
                           SizedBox(
@@ -125,7 +161,31 @@ class _AllProjectsState extends State<AllProjects> {
                           SizedBox(
                             height: 5,
                           ),
-                          _projectDeadlineField(database),
+                          _projectDeadlineField((date) => {
+                            setState(() {
+                              _date = date;
+                              _dateValid = true;
+                            })
+                          }),
+                          Offstage(
+                            offstage: _dateValid,
+                            child: Container(
+                              alignment: Alignment.centerLeft,
+                              padding: EdgeInsets.only(left: 10),
+                              child: Column(
+                                children: <Widget>[
+                                  SizedBox(height: 8.0),
+                                  Text(
+                                    "Please set a deadline",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.red[800],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -142,8 +202,7 @@ class _AllProjectsState extends State<AllProjects> {
                           if (_joinProject
                               ? _projectCode.isEmpty
                               : (_projectName.isEmpty ||
-                                  _projectDeadline.isEmpty ||
-                                  !_projectDeadline.contains("/")))
+                                  _date == null))
                             {
                               print("CHECK"),
                               setState(() {
@@ -155,8 +214,7 @@ class _AllProjectsState extends State<AllProjects> {
                                     : _projectName.isNotEmpty;
                                 _dateValid = _joinProject
                                     ? true
-                                    : (_projectDeadline.isNotEmpty &&
-                                        _projectDeadline.contains("/"));
+                                    : (_date != null);
                               }),
                             }
                           else
@@ -232,7 +290,7 @@ class _AllProjectsState extends State<AllProjects> {
 
   String get _projectName => _projectNameController.text;
   String get _projectDescription => _projectDescriptionController.text;
-  String get _projectDeadline => _projectDeadlineController.text;
+  // String get _projectDeadline => _projectDeadlineController.text;
   String get _projectCode => _projectCodeController.text;
 
   Widget _projectNameField() {
@@ -273,25 +331,47 @@ class _AllProjectsState extends State<AllProjects> {
     );
   }
 
-  Widget _projectDeadlineField(Database database) {
-    return TextField(
-      decoration: InputDecoration(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
-        labelText: "Project Deadline",
-        hintText: "DD/MM/YYYY",
-        errorText: _dateValid
-            ? null
-            : "Please enter Deadline in this format: DD/MM/YYYY",
+  Widget _projectDeadlineField(Function setPick) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFFFCFCFC),
+        borderRadius: BorderRadius.all(Radius.circular(35)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black38.withOpacity(0.15),
+            spreadRadius: 2,
+            blurRadius: 12,
+            offset: Offset(0, 7),
+          ),
+        ],
       ),
-      controller: _projectDeadlineController,
-      textInputAction: TextInputAction.next,
-      focusNode: _projectDeadlineFocusNode,
-      onChanged: (date) => _updateState(),
-      //onEditingComplete: () => _createProject(database),
-      keyboardType: TextInputType.datetime,
-      showCursor: true,
-      textAlign: TextAlign.start,
+      child: FlatButton(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(35),
+        ),
+        onPressed: () {
+          _pickDate(setPick);
+        },
+        child: Text(
+          _date == null ? "Set a deadline" : "Deadline: " + _formatStringDate(_date),
+          style: TextStyle(
+            fontFamily: "Roboto",
+            color: _date == null ? Colors.black54 : Colors.black87,
+            fontSize: 14,
+          ),
+        ),
+      ),
     );
+  }
+  
+  void _pickDate(Function setPick) async {
+    DateTime date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    setPick.call(date);
   }
 
   Widget _projectCodeField(Database database) {
@@ -319,10 +399,9 @@ class _AllProjectsState extends State<AllProjects> {
   }
 
   void _projectDescriptionEditingComplete() {
-    final newFocus = _projectDescription.trim().isNotEmpty
-        ? _projectDeadlineFocusNode
-        : _projectDescriptionFocusNode;
-    FocusScope.of(context).requestFocus(newFocus);
+    _projectDescription.trim().isNotEmpty
+        ? FocusScope.of(context).unfocus()
+        : FocusScope.of(context).requestFocus(_projectDescriptionFocusNode);
   }
 
   Widget _showErrorMsg(String results) {
@@ -382,7 +461,7 @@ class _AllProjectsState extends State<AllProjects> {
         "title": _projectName,
         "code": code,
         "description": _projectDescription,
-        "deadline": _convertFromString(_projectDeadline),
+        "deadline": _convertFromDateTime(_date),
         "admin": [database.getUid(),],
         "userUid": [database.getUid(),],
         "userName": [_userName,],
@@ -392,18 +471,34 @@ class _AllProjectsState extends State<AllProjects> {
     }
   }
 
-  Timestamp _convertFromString(String date) {
-    int indexOfSlash = date.indexOf("/");
-    String _dd = date.substring(0, indexOfSlash);
+  // Timestamp _convertFromString(String date) {
+  //   int indexOfSlash = date.indexOf("/");
+  //   String _dd = date.substring(0, indexOfSlash);
+  //   String dd = _dd.length < 2 ? "0" + _dd : _dd;
+  //   int indexOfSecondSlash = date.substring(indexOfSlash + 1).indexOf("/");
+  //   String _mm =
+  //       date.substring(indexOfSlash + 1).substring(0, indexOfSecondSlash);
+  //   String mm = _mm.length < 2 ? "0" + _mm : _mm;
+  //   String _yyyy =
+  //       date.substring(indexOfSlash + 1).substring(indexOfSecondSlash + 1);
+  //   String yyyy = _yyyy.length == 2 ? "20" + _yyyy : _yyyy;
+  //   return Timestamp.fromDate(DateTime.parse(yyyy + mm + dd));
+  // }
+
+  Timestamp _convertFromDateTime(DateTime date) {
+    String _dd = date.day.toString();
     String dd = _dd.length < 2 ? "0" + _dd : _dd;
-    int indexOfSecondSlash = date.substring(indexOfSlash + 1).indexOf("/");
-    String _mm =
-        date.substring(indexOfSlash + 1).substring(0, indexOfSecondSlash);
+    String _mm = date.month.toString();
     String mm = _mm.length < 2 ? "0" + _mm : _mm;
-    String _yyyy =
-        date.substring(indexOfSlash + 1).substring(indexOfSecondSlash + 1);
+    String _yyyy = date.year.toString();
     String yyyy = _yyyy.length == 2 ? "20" + _yyyy : _yyyy;
     return Timestamp.fromDate(DateTime.parse(yyyy + mm + dd));
+  }
+
+  String _formatStringDate(DateTime date) {
+    String newMonth = date.month < 10 ? "0${date.month}" : "${date.month}";
+    String newDay = date.day < 10 ? "0${date.day}" : "${date.day}";
+    return '$newDay/$newMonth/${date.year}';
   }
 
   //Generate a 6digit project id
@@ -425,26 +520,85 @@ class _AllProjectsState extends State<AllProjects> {
 
   //For reading streamdata for projects
   Widget _buildProjectList(BuildContext context) {
+    if (_projects == null) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Center(child: CircularProgressIndicator()),
+          SizedBox(height: 10,),
+          Center(
+            child: Text(
+              "Loading projects...",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 20,
+                color: Colors.black54,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ],
+      );
+    } else if (_projects.isEmpty) {
+      return Center(
+        child: Text(
+          "No projects found. \n \n Create one or Join one!",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 20,
+            color: Colors.black54,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      );
+    } else {
+      _projects.sort((x,y) => x.getDateTime().compareTo(y.getDateTime()));
+      return ListContructor.construct(_projects);
+    }
+
+    // final database = Provider.of<Database>(context, listen: false);
+    // return StreamBuilder<List<UserProjects>>(
+    //     stream: database.userProjectsStream(),
+    //     builder: (context, snapshot) {
+    //       if (snapshot.hasData) {
+    //         final userProjects = snapshot.data;
+    //         final list = userProjects
+    //             .map((project) => Project(
+    //                 name: project.title,
+    //                 desc: project.description,
+    //                 deadline: project.deadline,
+    //                 projectId: project.code))
+    //             .toList();
+    //         return ListContructor.construct(list);
+    //       } else if (snapshot.hasError) {
+    //         return Center(child: Text('Error in UserProjects Stream'));
+    //       } else {
+    //         return Center(child: CircularProgressIndicator());
+    //       }
+    //     });
+  }
+  
+  void getDocumentsList() async {
     final database = Provider.of<Database>(context, listen: false);
-    return StreamBuilder<List<UserProjects>>(
-        stream: database.userProjectsStream(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final userProjects = snapshot.data;
-            final list = userProjects
-                .map((project) => Project(
-                    name: project.title,
-                    desc: project.description,
-                    deadline: project.deadline,
-                    projectId: project.code))
-                .toList();
-            return ListContructor.construct(list);
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error in UserProjects Stream'));
-          } else {
-            return Center(child: CircularProgressIndicator());
-          }
-        });
+    List<Map> _projectMap = await database.userProjectDocuments();
+    List<Project> _projectList = new List();
+    print(_projectMap);
+    for (var projectEle in _projectMap) {
+      Project pd = new Project(
+        name: projectEle['projectTitle'], 
+        projectId: projectEle['projectId'], 
+        deadline: projectEle['projectDeadline'],
+        desc: projectEle['projectDesc'],
+      );
+      _projectList.add(pd);
+    }
+    if (this.mounted) {
+      setState(() {
+        _projects = _projectList;
+      });
+    }
   }
 }
 
@@ -629,5 +783,10 @@ class Project {
         ],
       ),
     );
+  }
+
+  DateTime getDateTime() {
+    String t = deadline.substring(6, 10) + deadline.substring(3, 5) + deadline.substring(0, 2);
+    return DateTime.parse(t);
   }
 }

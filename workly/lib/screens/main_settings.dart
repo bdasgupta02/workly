@@ -7,6 +7,7 @@ import 'package:workly/services/auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:workly/services/database.dart';
 
 /*
 Notes:
@@ -232,6 +233,7 @@ class _MainSettingsState extends State<MainSettings> {
 
   void _editUser(bool pw) async {
     final auth = Provider.of<AuthBase>(context, listen: false);
+    final db = Provider.of<Database>(context, listen: false);
     User user = await auth.currentUser();
     String _url;
     if (_image != null) {
@@ -249,12 +251,14 @@ class _MainSettingsState extends State<MainSettings> {
           'uid': user.uid,
           'imageUrl': _url,
         });
+        await db.updateUserDetails(_nameController.text.trim(), _url);
       } else {
         Firestore.instance.document('users/${user.uid}').updateData({
           'name': _nameController.text.trim(),
           'email': _email,
           'uid': user.uid,
         });
+        await db.updateUserDetails(_nameController.text.trim(), null);
       }
     }
     setState(() {

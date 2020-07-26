@@ -123,14 +123,14 @@ class TaskForm extends StatefulWidget {
 class _TaskFormState extends State<TaskForm> {
   final FocusNode _taskNameFocusNode = FocusNode();
   final FocusNode _taskDescriptionFocusNode = FocusNode();
-  final FocusNode _taskDeadlineFocusNode = FocusNode();
+  // final FocusNode _taskDeadlineFocusNode = FocusNode();
   final FocusNode _taskPriorityFocusNode = FocusNode();
   final FocusNode _taskStateFocusNode = FocusNode();
   // final FocusNode _taskAssignFocusNode = FocusNode();
   final TextEditingController _taskTitleController = TextEditingController();
   final TextEditingController _taskDescriptionController =
       TextEditingController();
-  final TextEditingController _taskDeadlineController = TextEditingController();
+  // final TextEditingController _taskDeadlineController = TextEditingController();
   bool _taskNameValid = true;
   bool _taskDescValid = true;
   bool _dateValid = true;
@@ -150,15 +150,22 @@ class _TaskFormState extends State<TaskForm> {
     "To review",
     "Completed"
   ];
+  DateTime _date;
   // List<String> _userNameList;
   // List<String> _userUidList;
   // List<DropdownMenuItem<String>> _userList;
 
   @override
+  void initState() {
+    super.initState();
+    _date = null;
+  }
+
+  @override
   void dispose() {
     _taskTitleController.dispose();
     _taskDescriptionController.dispose();
-    _taskDeadlineController.dispose();
+    // _taskDeadlineController.dispose();
     _taskNameFocusNode.dispose();
     _taskDescriptionFocusNode.dispose();
     _taskPriorityFocusNode.dispose();
@@ -212,8 +219,6 @@ class _TaskFormState extends State<TaskForm> {
       SizedBox(height: 10.0),
       _taskDescriptionField(),
       SizedBox(height: 10.0),
-      _taskDeadlineField(),
-      SizedBox(height: 10.0),
       _taskPriorityField(),
       Offstage(
         offstage: _priorityValid,
@@ -259,7 +264,6 @@ class _TaskFormState extends State<TaskForm> {
           ),
         ),
       ),
-      SizedBox(height: 10.0),
       // _taskAssignField(),
       // Offstage(
       //   offstage: _assignValid,
@@ -280,6 +284,28 @@ class _TaskFormState extends State<TaskForm> {
       //   ),
       // ),
       // SizedBox(height: 20.0),
+      SizedBox(height: 10.0),
+      _taskDeadlineField(),
+      Offstage(
+        offstage: _dateValid,
+        child: Container(
+          alignment: Alignment.centerLeft,
+          padding: EdgeInsets.only(left: 10),
+          child: Column(
+            children: <Widget>[
+              SizedBox(height: 8.0),
+              Text(
+                "Please set a deadline",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.red[800],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SizedBox(height: 10.0),
       Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -412,7 +438,7 @@ class _TaskFormState extends State<TaskForm> {
       setState(() {
         _taskTitleController.text = widget.taskName;
         _taskDescriptionController.text = widget.taskDescription;
-        _taskDeadlineController.text = widget.taskDeadline;
+        // _taskDeadlineController.text = widget.taskDeadline;
         _priority = _priorityList[priorityIndex];
         // _state = _stateList[stateIndex];
         // _assign = widget.taskAssign;
@@ -425,7 +451,7 @@ class _TaskFormState extends State<TaskForm> {
   void checkFormValid() {
     bool _valid = (_taskTitle.isNotEmpty) &&
         (_taskDescription.isNotEmpty) &&
-        (_taskDeadline.isNotEmpty && _taskDeadline.contains("/")) &&
+        (_date != null) &&
         (_priority != null) &&
         (_state != null || _calledEdit == true);
     // (_state != null) &&
@@ -433,7 +459,7 @@ class _TaskFormState extends State<TaskForm> {
     setState(() {
       _taskNameValid = _taskTitle.isNotEmpty;
       _taskDescValid = _taskDescription.isNotEmpty;
-      _dateValid = _taskDeadline.isNotEmpty && _taskDeadline.contains("/");
+      _dateValid = _date != null;
       _formValid = _valid;
       _priorityValid = _priority != null;
       _stateValid = _state != null;
@@ -460,10 +486,10 @@ class _TaskFormState extends State<TaskForm> {
           "taskId": _taskId,
           "priority": priorityIndex,
           // "state": stateIndex,
-          "deadline": _convertFromString(_taskDeadline),
+          "deadline": _convertFromDateTime(_date),
         });
         widget.refresh(_taskTitle, _taskDescription,
-            _formatStringDate(_taskDeadline), priorityIndex);
+            _formatStringDate(_date), priorityIndex);
         Navigator.of(context).pop(true);
       } else {
         await widget.database.createTask(newTaskId, {
@@ -478,7 +504,7 @@ class _TaskFormState extends State<TaskForm> {
           "taskId": newTaskId,
           "priority": priorityIndex,
           "state": stateIndex,
-          "deadline": _convertFromString(_taskDeadline),
+          "deadline": _convertFromDateTime(_date),
         });
         Navigator.of(context).pop();
       }
@@ -494,32 +520,34 @@ class _TaskFormState extends State<TaskForm> {
     Navigator.of(context).pop();
   }
 
-  Timestamp _convertFromString(String date) {
-    int indexOfSlash = date.indexOf("/");
-    String _dd = date.substring(0, indexOfSlash);
+  // Timestamp _convertFromString(String date) {
+  //   int indexOfSlash = date.indexOf("/");
+  //   String _dd = date.substring(0, indexOfSlash);
+  //   String dd = _dd.length < 2 ? "0" + _dd : _dd;
+  //   int indexOfSecondSlash = date.substring(indexOfSlash + 1).indexOf("/");
+  //   String _mm =
+  //       date.substring(indexOfSlash + 1).substring(0, indexOfSecondSlash);
+  //   String mm = _mm.length < 2 ? "0" + _mm : _mm;
+  //   String _yyyy =
+  //       date.substring(indexOfSlash + 1).substring(indexOfSecondSlash + 1);
+  //   String yyyy = _yyyy.length == 2 ? "20" + _yyyy : _yyyy;
+  //   return Timestamp.fromDate(DateTime.parse(yyyy + mm + dd));
+  // }
+
+  Timestamp _convertFromDateTime(DateTime date) {
+    String _dd = date.day.toString();
     String dd = _dd.length < 2 ? "0" + _dd : _dd;
-    int indexOfSecondSlash = date.substring(indexOfSlash + 1).indexOf("/");
-    String _mm =
-        date.substring(indexOfSlash + 1).substring(0, indexOfSecondSlash);
+    String _mm = date.month.toString();
     String mm = _mm.length < 2 ? "0" + _mm : _mm;
-    String _yyyy =
-        date.substring(indexOfSlash + 1).substring(indexOfSecondSlash + 1);
+    String _yyyy = date.year.toString();
     String yyyy = _yyyy.length == 2 ? "20" + _yyyy : _yyyy;
     return Timestamp.fromDate(DateTime.parse(yyyy + mm + dd));
   }
 
-  String _formatStringDate(String date) {
-    int indexOfSlash = date.indexOf("/");
-    String _dd = date.substring(0, indexOfSlash);
-    String dd = _dd.length < 2 ? "0" + _dd : _dd;
-    int indexOfSecondSlash = date.substring(indexOfSlash + 1).indexOf("/");
-    String _mm =
-        date.substring(indexOfSlash + 1).substring(0, indexOfSecondSlash);
-    String mm = _mm.length < 2 ? "0" + _mm : _mm;
-    String _yyyy =
-        date.substring(indexOfSlash + 1).substring(indexOfSecondSlash + 1);
-    String yyyy = _yyyy.length == 2 ? "20" + _yyyy : _yyyy;
-    return dd + "/" + mm + "/" + yyyy;
+  String _formatStringDate(DateTime date) {
+      String newMonth = date.month < 10 ? "0${date.month}" : "${date.month}";
+      String newDay = date.day < 10 ? "0${date.day}" : "${date.day}";
+      return '$newDay/$newMonth/${date.year}';
   }
 
   void _updateState() {
@@ -528,7 +556,7 @@ class _TaskFormState extends State<TaskForm> {
 
   String get _taskTitle => _taskTitleController.text.trim();
   String get _taskDescription => _taskDescriptionController.text.trim();
-  String get _taskDeadline => _taskDeadlineController.text.trim();
+  // String get _taskDeadline => _taskDeadlineController.text.trim();
 
   Widget _taskNameField() {
     return TextField(
@@ -570,23 +598,49 @@ class _TaskFormState extends State<TaskForm> {
   }
 
   Widget _taskDeadlineField() {
-    return TextField(
-      decoration: InputDecoration(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
-        labelText: "Task Deadline",
-        hintText: "DD/MM/YYYY",
-        errorText:
-            _dateValid ? null : "Please enter in this format: DD/MM/YYYY",
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFFFCFCFC),
+        borderRadius: BorderRadius.all(Radius.circular(35)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black38.withOpacity(0.15),
+            spreadRadius: 2,
+            blurRadius: 12,
+            offset: Offset(0, 7),
+          ),
+        ],
       ),
-      controller: _taskDeadlineController,
-      textInputAction: TextInputAction.next,
-      focusNode: _taskDeadlineFocusNode,
-      onChanged: (date) => _updateState(),
-      onEditingComplete: () => _taskDeadlineEditingComplete(),
-      keyboardType: TextInputType.datetime,
-      showCursor: true,
-      textAlign: TextAlign.start,
+      child: FlatButton(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(35),
+        ),
+        onPressed: () {
+          _pickDate();
+        },
+        child: Text(
+          _date == null ? "Set a deadline" : "Deadline: " + _formatStringDate(_date),
+          style: TextStyle(
+            fontFamily: "Roboto",
+            color: _date == null ? Colors.black54 : Colors.black87,
+            fontSize: 14,
+          ),
+        ),
+      ),
     );
+  }
+  
+  void _pickDate() async {
+    DateTime date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    setState(() {
+      _date = date;
+      _dateValid = true;
+    });
   }
 
 // "Low", "Medium", "High"
@@ -762,24 +816,11 @@ class _TaskFormState extends State<TaskForm> {
   }
 
   void _taskDescEditingComplete() {
-    final newFocus = _taskDescription.trim().isNotEmpty
-        ? _taskDeadlineFocusNode
-        : _taskDescriptionFocusNode;
-    FocusScope.of(context).requestFocus(newFocus);
+    _taskDescription.trim().isNotEmpty
+        ? FocusScope.of(context).unfocus()
+        : FocusScope.of(context).requestFocus(_taskDescriptionFocusNode);
     setState(() {
       _taskDescValid = _taskDescription.trim().isNotEmpty;
-    });
-  }
-
-  void _taskDeadlineEditingComplete() {
-    final newFocus =
-        (_taskDeadline.trim().isNotEmpty && _taskDeadline.contains("/"))
-            ? _taskPriorityFocusNode
-            : _taskDeadlineFocusNode;
-    FocusScope.of(context).requestFocus(newFocus);
-    setState(() {
-      _dateValid =
-          (_taskDeadline.trim().isNotEmpty && _taskDeadline.contains("/"));
     });
   }
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:workly/index.dart';
-import 'package:workly/models/user_projects.dart';
 import 'package:workly/resuable_widgets/custom_appbar.dart';
 import 'package:workly/services/database.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +15,7 @@ class _CalendarState extends State<Calendar> {
   Map<DateTime, List<dynamic>> _deadlines;
   List<dynamic> _selectedDeadlines;
   bool _start;
+  List<ProjectDeadline> _projectsList;
 
   @override
   void initState() {
@@ -24,6 +24,7 @@ class _CalendarState extends State<Calendar> {
     _deadlines = {};
     _selectedDeadlines = [];
     _start = true;
+    _projectsList = null;
   }
 
   @override
@@ -33,26 +34,100 @@ class _CalendarState extends State<Calendar> {
   }
 
   Widget _buildDeadlineList(BuildContext context) {
+    // final database = Provider.of<Database>(context, listen: false);
+    _deadlines.clear();
+    if (_projectsList == null || _projectsList.isEmpty) {
+      return _bodyConstruct([]);
+    } else {
+      return _bodyConstruct(_projectsList);
+    }
+    // return StreamBuilder<List<UserProjects>>(
+    //     stream: database.userProjectsStream(),
+    //     builder: (context, snapshot) {
+    //       if (snapshot.hasData) {
+    //         _deadlines.clear();
+    //         final userProjects = snapshot.data;
+    //         final list = userProjects
+    //             .map((project) => ProjectDeadline(
+    //                 title: project.title,
+    //                 date: _convert(project.deadline),
+    //                 id: project.code))
+    //             .toList();
+    //         return _bodyConstruct(list);
+    //       } else if (snapshot.hasError) {
+    //         return Center(child: CircularProgressIndicator());
+    //       } else {
+    //         return Center(child: CircularProgressIndicator());
+    //       }
+    //     });
+
+  }
+
+  void getDocumentsList() async {
     final database = Provider.of<Database>(context, listen: false);
-    return StreamBuilder<List<UserProjects>>(
-        stream: database.userProjectsStream(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            _deadlines.clear();
-            final userProjects = snapshot.data;
-            final list = userProjects
-                .map((project) => ProjectDeadline(
-                    title: project.title,
-                    date: _convert(project.deadline),
-                    id: project.code))
-                .toList();
-            return _bodyConstruct(list);
-          } else if (snapshot.hasError) {
-            return Center(child: CircularProgressIndicator());
-          } else {
-            return Center(child: CircularProgressIndicator());
-          }
-        });
+    List<Map> _task = await database.userTaskDocuments();
+    print(_task);
+    List<ProjectDeadline> projects = new List();
+    for (var taskEle in _task) {
+      ProjectDeadline pd = new ProjectDeadline(
+        title: taskEle['projectTitle'], 
+        id: taskEle['projectId'], 
+        date: _convert(taskEle['taskDeadline']),
+        type: 2,
+        subtypeTitle: taskEle['taskTitle'],
+        subtypeId: taskEle['taskId'], 
+        details: null,
+        time: null,
+      );
+      projects.add(pd);
+    }
+    if (this.mounted) {
+      setState(() {
+        _projectsList = projects;
+      });
+    }
+    List<Map> _meeting = await database.userMeetingDocuments();
+    print(_meeting);
+    for (var meetingEle in _meeting) {
+      ProjectDeadline pd = new ProjectDeadline(
+        title: meetingEle['projectTitle'], 
+        id: meetingEle['projectId'], 
+        date: _convert(meetingEle['meetingDate']),
+        type: 3,
+        subtypeTitle: meetingEle['meetingTitle'],
+        subtypeId: meetingEle['meetingId'], 
+        details: meetingEle['attendance'],
+        time: meetingEle['meetingTime'],
+      );
+      if (meetingEle['attendance'] != "notAttending") {
+        projects.add(pd);
+      }
+    }
+    if (this.mounted) {
+      setState(() {
+        _projectsList = projects;
+      });
+    }
+    List<Map> _project = await database.userProjectDocuments();
+    print(_project);
+    for (var projectEle in _project) {
+      ProjectDeadline pd = new ProjectDeadline(
+        title: projectEle['projectTitle'], 
+        id: projectEle['projectId'], 
+        date: _convert(projectEle['projectDeadline']),
+        type: 1,
+        subtypeTitle: null,
+        subtypeId: null, 
+        details: null,
+        time: null,
+      );
+      projects.add(pd);
+    }
+    if (this.mounted) {
+      setState(() {
+        _projectsList = projects;
+      });
+    }
   }
 
   DateTime _convert(String s) {
@@ -163,6 +238,9 @@ class _CalendarState extends State<Calendar> {
 
   @override
   Widget build(BuildContext context) {
+    if (_projectsList == null) {
+      getDocumentsList();
+    }
     return Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
       appBar: CustomAppbar.appBar('Calendar'),
@@ -241,11 +319,22 @@ class ProjectDeadline {
   String id;
   String title;
   DateTime date;
+  String subtypeTitle; //Only applicable to type 2,3
+  String subtypeId; //Only applicable to type 2,3
+  String time; //Only applicable to type 3
+  String details; //Only applicable to type 3
+  int type; //1: Project, 2: Task, 3: Meeting
+
 
   ProjectDeadline({
     @required this.id,
     @required this.title,
     @required this.date,
+    @required this.subtypeTitle,
+    @required this.subtypeId,
+    @required this.time,
+    @required this.details,
+    @required this.type,
   });
 
   DateTime getDate() {
@@ -253,6 +342,12 @@ class ProjectDeadline {
   }
 
   String getMsg() {
-    return '• The project "$title" is due on this day.';
+    if (type == 1) {
+      return '• The project "$title" is due on this day.';
+    } else if (type == 2) {
+      return '• The task "$subtypeTitle" for project "$title" is due on this day.';
+    } else {
+      return '• Meeting "$subtypeTitle" for project "$title" at $time [RSVP: $details].';
+    }
   }
 }

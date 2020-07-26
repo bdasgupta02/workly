@@ -161,7 +161,8 @@ class _MeetingViewState extends State<MeetingView> {
   void acceptAlternative(Alternative alt) {
     meeting.setDate(alt.date);
     meeting.setTime(alt.time);
-    meeting.setAttendingNumbers(alt.votes == 0 ? 1 : alt.votes, 0, 0);
+    int votes = alt.hasVoted ? alt.votes : (alt.votes == 0 ? 1 : alt.votes + 1);
+    meeting.setAttendingNumbers(votes, 0, 0);
     meeting.setAttendingState(true);
     refresh();
     widget.database.acceptAltMeetingDetails(alt.alternativeId, widget.title, widget.meetingId, {
@@ -1376,14 +1377,18 @@ class Alternative {
                   child: Container(
                     margin: EdgeInsets.only(right: 10, bottom: 10),
                     child: FlatButton(
-                      color: !hasVoted ? Color(0xFF06D8AE) : Color(0xFFE9E9E9),
+                      color: !hasVoted && acceptState == 0 ? Color(0xFF06D8AE) : Color(0xFFE9E9E9),
                       onPressed: () {
-                        onVote.call(this);
-                        hasVoted = !hasVoted;
-                        if (hasVoted) {
-                          votes++;
+                        if (acceptState != 0) {
+                          return null;
                         } else {
-                          votes--;
+                          onVote.call(this);
+                          hasVoted = !hasVoted;
+                          if (hasVoted) {
+                            votes++;
+                          } else {
+                            votes--;
+                          }
                         }
                         meetingViewState.refresh();
                       },
@@ -1397,7 +1402,7 @@ class Alternative {
                                 ? Icons.keyboard_arrow_up
                                 : Icons.keyboard_arrow_down,
                             size: 40,
-                            color: !hasVoted ? Colors.white : Colors.black45,
+                            color: !hasVoted && acceptState == 0 ? Colors.white : Colors.black45,
                           ),
                           Text(
                             hasVoted ? "Unvote" : "Vote",
@@ -1405,7 +1410,7 @@ class Alternative {
                               fontFamily: 'Roboto',
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
-                              color: !hasVoted ? Colors.white : Colors.black45,
+                              color: !hasVoted && acceptState == 0 ? Colors.white : Colors.black45,
                             ),
                           ),
                           SizedBox(height: 6),
@@ -1416,7 +1421,7 @@ class Alternative {
                       borderRadius: BorderRadius.all(Radius.circular(25)),
                       boxShadow: [
                         BoxShadow(
-                          color: !hasVoted
+                          color: !hasVoted && acceptState == 0
                               ? Color(0xFF06D8AE).withOpacity(0.3)
                               : Colors.black.withOpacity(0.15),
                           spreadRadius: 2,

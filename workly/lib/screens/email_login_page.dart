@@ -526,7 +526,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
       } else {
         await auth
             .createUserWithEmailAndPassword(_email.trim(), _password);
-        _createFireBaseUser();
+        await _createFireBaseUser();
       }
       Navigator.of(context).pop();
     } catch (e) {
@@ -563,14 +563,14 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     }
   }
 
-  void _createFireBaseUser() async {
+  Future<void> _createFireBaseUser() async {
     final auth = Provider.of<AuthBase>(context, listen: false);
     User user = await auth.currentUser();
     String _url; //If have error, then set this to null
     if (_image != null) {
       _url = await _uploadProfileImage(user.uid);
     }
-    Firestore.instance.collection('users').document(user.uid).setData({
+    await Firestore.instance.collection('users').document(user.uid).setData({
       'name': _name.trim(),
       'email': _email.trim(),
       'created': FieldValue.serverTimestamp(),

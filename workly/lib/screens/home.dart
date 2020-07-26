@@ -7,7 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:workly/resuable_widgets/clipped_header_bg.dart';
-import 'package:workly/services/auth.dart';
+// import 'package:workly/services/auth.dart';
 import 'package:workly/services/database.dart';
 import 'package:workly/wrappers/navbar_wrapper.dart';
 
@@ -95,6 +95,7 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final database = Provider.of<Database>(context, listen: false);
     return Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
       body: Stack(
@@ -141,7 +142,7 @@ class _HomeState extends State<Home> {
                 ),
                 child: Column(
                   children: <Widget>[
-                    BackBoxButtons(),
+                    BackBoxButtons(database: database),
                     FlatButton(
                       child: Text(
                         'All Projects',
@@ -165,39 +166,39 @@ class _HomeState extends State<Home> {
               Padding(
                 padding: EdgeInsets.only(top: 20),
               ),
-              Container(
-                child: (FlatButton(
-                  onPressed: () =>
-                      _signOut(), //[Action] Here's the temporary button.
-                  child: Text(
-                    'Sign-out',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: 'Roboto',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(34.0),
-                  ),
-                )),
-                margin: EdgeInsets.only(
-                  left: 40,
-                  right: 40,
-                ),
-                decoration: BoxDecoration(
-                  color: Color(0xFFFCFCFC),
-                  borderRadius: BorderRadius.all(Radius.circular(34)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      spreadRadius: 2,
-                      blurRadius: 15,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-              ),
+              // Container(
+              //   child: (FlatButton(
+              //     onPressed: () =>
+              //         _signOut(), //[Action] Here's the temporary button.
+              //     child: Text(
+              //       'Sign-out',
+              //       style: TextStyle(
+              //         color: Colors.grey,
+              //         fontFamily: 'Roboto',
+              //         fontWeight: FontWeight.w600,
+              //       ),
+              //     ),
+              //     shape: RoundedRectangleBorder(
+              //       borderRadius: BorderRadius.circular(34.0),
+              //     ),
+              //   )),
+              //   margin: EdgeInsets.only(
+              //     left: 40,
+              //     right: 40,
+              //   ),
+              //   decoration: BoxDecoration(
+              //     color: Color(0xFFFCFCFC),
+              //     borderRadius: BorderRadius.all(Radius.circular(34)),
+              //     boxShadow: [
+              //       BoxShadow(
+              //         color: Colors.black.withOpacity(0.2),
+              //         spreadRadius: 2,
+              //         blurRadius: 15,
+              //         offset: Offset(0, 3),
+              //       ),
+              //     ],
+              //   ),
+              // ),
             ],
           ),
         ],
@@ -205,14 +206,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Future<void> _signOut() async {
-    try {
-      final auth = Provider.of<AuthBase>(context, listen: false);
-      await auth.signOut();
-    } catch (e) {
-      print(e.toString);
-    }
-  }
 }
 
 class BackBoxNotifs extends StatefulWidget {
@@ -221,6 +214,40 @@ class BackBoxNotifs extends StatefulWidget {
 }
 
 class _BackBoxNotifsState extends State<BackBoxNotifs> {
+  List<String> _notiList = [];
+
+
+  void getDocumentsList() async {
+    List<String> newNotiList = new List();
+    final database = Provider.of<Database>(context, listen: false);
+    List<Map> _meeting = await database.userMeetingDocuments();
+    print(_meeting);
+    for (var meetingEle in _meeting) {
+      String newNotiT = "";
+      DateTime meetingDate =  _convert(meetingEle['meetingDate']);
+      DateTime now = DateTime.now();
+      if (meetingDate.compareTo(now) <= 0) {
+        newNotiT = "[${meetingEle['projectTitle']}]: There is a meeting '${meetingEle['meetingTitle']}' today";
+        newNotiList.add(newNotiT);
+      }
+    }
+    List<Map> _task = await database.userTaskDocuments();
+    print(_task);
+    for (var taskEle in _task) {
+      String newNotiT = "";
+      DateTime taskDate =  _convert(taskEle['taskDeadline']);
+      DateTime nextTwoDays = DateTime.now().add(new Duration(days: 2));
+      if (taskDate.compareTo(nextTwoDays) <= 0) {
+        newNotiT = "[${taskEle['projectTitle']}]: Task '${taskEle['taskTitle']}' due soon";
+        newNotiList.add(newNotiT);
+      }
+    }
+    if (this.mounted) {
+      setState(() {
+        _notiList = newNotiList;
+      });
+    }
+  }
   //[Note] setState when the String list is updated, probably in a method here that builds it when this page is built for the first time.
   List<String> _notifListTest = [
     'First dummy notif.',
@@ -277,7 +304,9 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
 
   @override
   Widget build(BuildContext context) {
-    _containerList = buildList(_notifListTest);
+    getDocumentsList();
+    // _containerList = buildList(_notifListTest);
+    _containerList = buildList(_notiList);
 
     return Container(
       alignment: Alignment.topCenter,
@@ -324,10 +353,48 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
   }
 }
 
-class BackBoxButtons extends StatelessWidget {
+class BackBoxButtons extends StatefulWidget {
+  final Database database;
+  BackBoxButtons({@required this.database});
+
+  @override
+  _BackBoxButtonsState createState() => _BackBoxButtonsState();
+}
+
+class _BackBoxButtonsState extends State<BackBoxButtons> {
+  int missed = 0;
+  int dueSoon = 0;
+
+  void getDocumentsList() async {
+    int _missed = 0;
+    int _dueSoon = 0;
+    List<Map> _project = await widget.database.userProjectDocuments();
+    print("GET PROJECT" + '$_project');
+    List<DateTime> deadline = new List();
+    for (var projectEle in _project) {
+      deadline.add(_convert(projectEle['projectDeadline']));
+    }
+    for (var deadlineEle in deadline) {
+      DateTime today = DateTime.now();
+      DateTime nextWeek = DateTime.now().add(new Duration(days: 7));
+      if (deadlineEle.compareTo(today) <= 0) {
+        _missed ++;
+      } else if (deadlineEle.compareTo(nextWeek) <= 0) {
+        _dueSoon ++;
+      }
+    }
+    if (this.mounted) {
+      setState(() {
+        missed = _missed;
+        dueSoon = _dueSoon;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     //[Note] This is highly scalable because it auto-scales to the screen. Replicate row/column system elsewhere if needed.
+    getDocumentsList();
     return Container(
       alignment: Alignment.topCenter,
       decoration: BoxDecoration(
@@ -358,8 +425,7 @@ class BackBoxButtons extends StatelessWidget {
                     Container(
                       margin: EdgeInsets.only(top: 16, bottom: 8),
                       child: Text(
-                        //[Placeholder] Overdue items
-                        '1',
+                        missed.toString(),
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 45,
@@ -412,8 +478,7 @@ class BackBoxButtons extends StatelessWidget {
                     Container(
                       margin: EdgeInsets.only(top: 16, bottom: 8),
                       child: Text(
-                        //[Placeholder] Due soon
-                        '2',
+                        dueSoon.toString(),
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 45,
@@ -456,4 +521,9 @@ class BackBoxButtons extends StatelessWidget {
       ),
     );
   }
+}
+
+DateTime _convert(String s) {
+  String t = s.substring(6, 10) + s.substring(3, 5) + s.substring(0, 2);
+  return DateTime.parse(t);
 }
