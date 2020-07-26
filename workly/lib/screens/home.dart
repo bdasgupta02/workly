@@ -24,21 +24,26 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   String _token;
 
-  @override initState() {
+  @override
+  initState() {
     super.initState();
     registerNotification();
     configLocalNotification();
   }
+
   void registerNotification() {
     final database = Provider.of<Database>(context, listen: false);
     firebaseMessaging.requestNotificationPermissions();
 
     firebaseMessaging.configure(onMessage: (Map<String, dynamic> message) {
       print('onMessage: $message');
-      Platform.isAndroid ? showNotification(message['notification']) : showNotification(message['aps']['alert']);
+      Platform.isAndroid
+          ? showNotification(message['notification'])
+          : showNotification(message['aps']['alert']);
       return;
     }, onResume: (Map<String, dynamic> message) {
       print('onResume: $message');
@@ -60,9 +65,11 @@ class _HomeState extends State<Home> {
   }
 
   void configLocalNotification() {
-    var initializationSettingsAndroid = new AndroidInitializationSettings('@mipmap/ic_launcher'); //'app_icon
+    var initializationSettingsAndroid =
+        new AndroidInitializationSettings('@mipmap/ic_launcher'); //'app_icon
     var initializationSettingsIOS = new IOSInitializationSettings();
-    var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
+    var initializationSettings = new InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
@@ -77,21 +84,21 @@ class _HomeState extends State<Home> {
       priority: Priority.High,
     );
     var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
-    var platformChannelSpecifics =
-        new NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    var platformChannelSpecifics = new NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
 
     print(message);
     // print(message['body'].toString());
     // print(json.encode(message));
 
-    await flutterLocalNotificationsPlugin.show(
-        0, message['title'].toString(), message['body'].toString(), platformChannelSpecifics,
+    await flutterLocalNotificationsPlugin.show(0, message['title'].toString(),
+        message['body'].toString(), platformChannelSpecifics,
         payload: json.encode(message));
 
     // await flutterLocalNotificationsPlugin.show(
     //     0, 'plain title', 'plain body', platformChannelSpecifics,
     //     payload: 'item x');
-  } 
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +212,6 @@ class _HomeState extends State<Home> {
       ),
     );
   }
-
 }
 
 class BackBoxNotifs extends StatefulWidget {
@@ -214,8 +220,16 @@ class BackBoxNotifs extends StatefulWidget {
 }
 
 class _BackBoxNotifsState extends State<BackBoxNotifs> {
-  List<String> _notiList = [];
+  bool onStart;
 
+  @override
+  initState() {
+    super.initState();
+    onStart = true;
+  }
+
+
+  List<String> _notiList = [];
 
   void getDocumentsList() async {
     List<String> newNotiList = new List();
@@ -224,10 +238,11 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
     print(_meeting);
     for (var meetingEle in _meeting) {
       String newNotiT = "";
-      DateTime meetingDate =  _convert(meetingEle['meetingDate']);
+      DateTime meetingDate = _convert(meetingEle['meetingDate']);
       DateTime now = DateTime.now();
       if (meetingDate.compareTo(now) <= 0) {
-        newNotiT = "[${meetingEle['projectTitle']}]: There is a meeting '${meetingEle['meetingTitle']}' today";
+        newNotiT =
+            "[${meetingEle['projectTitle']}]: There is a meeting '${meetingEle['meetingTitle']}' today";
         newNotiList.add(newNotiT);
       }
     }
@@ -235,19 +250,22 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
     print(_task);
     for (var taskEle in _task) {
       String newNotiT = "";
-      DateTime taskDate =  _convert(taskEle['taskDeadline']);
+      DateTime taskDate = _convert(taskEle['taskDeadline']);
       DateTime nextTwoDays = DateTime.now().add(new Duration(days: 2));
       if (taskDate.compareTo(nextTwoDays) <= 0) {
-        newNotiT = "[${taskEle['projectTitle']}]: Task '${taskEle['taskTitle']}' due soon";
+        newNotiT =
+            "[${taskEle['projectTitle']}]: Task '${taskEle['taskTitle']}' due soon";
         newNotiList.add(newNotiT);
       }
     }
     if (this.mounted) {
       setState(() {
         _notiList = newNotiList;
+        onStart = false;
       });
     }
   }
+
   //[Note] setState when the String list is updated, probably in a method here that builds it when this page is built for the first time.
   List<String> _notifListTest = [
     'First dummy notif.',
@@ -302,9 +320,11 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
     return containerList;
   }
 
+  void doNothing() {}
+
   @override
   Widget build(BuildContext context) {
-    getDocumentsList();
+    onStart ? getDocumentsList() : doNothing();
     // _containerList = buildList(_notifListTest);
     _containerList = buildList(_notiList);
 
@@ -364,6 +384,13 @@ class BackBoxButtons extends StatefulWidget {
 class _BackBoxButtonsState extends State<BackBoxButtons> {
   int missed = 0;
   int dueSoon = 0;
+  bool onStart;
+
+  @override
+  initState() {
+    super.initState();
+    onStart = true;
+  }
 
   void getDocumentsList() async {
     int _missed = 0;
@@ -378,23 +405,26 @@ class _BackBoxButtonsState extends State<BackBoxButtons> {
       DateTime today = DateTime.now();
       DateTime nextWeek = DateTime.now().add(new Duration(days: 7));
       if (deadlineEle.compareTo(today) <= 0) {
-        _missed ++;
+        _missed++;
       } else if (deadlineEle.compareTo(nextWeek) <= 0) {
-        _dueSoon ++;
+        _dueSoon++;
       }
     }
     if (this.mounted) {
       setState(() {
         missed = _missed;
         dueSoon = _dueSoon;
+        onStart = false;
       });
     }
   }
 
+  void doNothing() {}
+
   @override
   Widget build(BuildContext context) {
     //[Note] This is highly scalable because it auto-scales to the screen. Replicate row/column system elsewhere if needed.
-    getDocumentsList();
+    onStart ? getDocumentsList() : doNothing();
     return Container(
       alignment: Alignment.topCenter,
       decoration: BoxDecoration(
@@ -524,6 +554,11 @@ class _BackBoxButtonsState extends State<BackBoxButtons> {
 }
 
 DateTime _convert(String s) {
-  String t = s.substring(6, 10) + s.substring(3, 5) + s.substring(0, 2);
-  return DateTime.parse(t);
+  if (s != null) {
+    print(s);
+    String t = s.split("/")[2] + s.split("/")[1] + s.split("/")[0];
+    //String t = s.substring(6, 10) + s.substring(3, 5) + s.substring(0, 2);
+    return DateTime.parse(t);
+  }
+  return null;
 }

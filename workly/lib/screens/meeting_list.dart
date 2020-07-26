@@ -68,7 +68,7 @@ class _MeetingListState extends State<MeetingList> {
           if (meetings.isEmpty) {
             return Center(
               child: Text(
-                "No meetings created yet. \n \n Call the first meeting now",
+                "No meetings created yet!",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Roboto',
@@ -127,6 +127,12 @@ class MeetingTile {
     @required this.notAttending,
   });
 
+  
+
+  bool notIndicated() {
+    return !attending.contains(database.getUid()) && !maybe.contains(database.getUid()) && !notAttending.contains(database.getUid());
+  }
+
   Widget toWidget(BuildContext context) {
     Function _toViewMeeting = () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => MeetingView(
       database: database, user: user, meetingId: meetingId, title: title, desc: desc, location: location, dateString: dateString, 
@@ -169,6 +175,25 @@ class MeetingTile {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
+                        Offstage(
+                          offstage: !notIndicated(),
+                          child: Padding (
+                            padding: EdgeInsets.only(
+                              top: 15,
+                              right: 5,
+                              left: 0,
+                              bottom: 3,
+                            ),
+                            child: Container(
+                              width: 10.0,
+                              height: 10.0,
+                              decoration: new BoxDecoration(
+                                color: Colors.lightGreenAccent[400],
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ),
                         Expanded(
                           child: Padding(
                             padding: EdgeInsets.only(

@@ -16,6 +16,7 @@ class _CalendarState extends State<Calendar> {
   List<dynamic> _selectedDeadlines;
   bool _start;
   List<ProjectDeadline> _projectsList;
+  bool onStart;
 
   @override
   void initState() {
@@ -25,6 +26,7 @@ class _CalendarState extends State<Calendar> {
     _selectedDeadlines = [];
     _start = true;
     _projectsList = null;
+    onStart = true;
   }
 
   @override
@@ -60,8 +62,9 @@ class _CalendarState extends State<Calendar> {
     //         return Center(child: CircularProgressIndicator());
     //       }
     //     });
-
   }
+
+  void doNothing() {}
 
   void getDocumentsList() async {
     final database = Provider.of<Database>(context, listen: false);
@@ -70,12 +73,12 @@ class _CalendarState extends State<Calendar> {
     List<ProjectDeadline> projects = new List();
     for (var taskEle in _task) {
       ProjectDeadline pd = new ProjectDeadline(
-        title: taskEle['projectTitle'], 
-        id: taskEle['projectId'], 
+        title: taskEle['projectTitle'],
+        id: taskEle['projectId'],
         date: _convert(taskEle['taskDeadline']),
         type: 2,
         subtypeTitle: taskEle['taskTitle'],
-        subtypeId: taskEle['taskId'], 
+        subtypeId: taskEle['taskId'],
         details: null,
         time: null,
       );
@@ -90,12 +93,12 @@ class _CalendarState extends State<Calendar> {
     print(_meeting);
     for (var meetingEle in _meeting) {
       ProjectDeadline pd = new ProjectDeadline(
-        title: meetingEle['projectTitle'], 
-        id: meetingEle['projectId'], 
+        title: meetingEle['projectTitle'],
+        id: meetingEle['projectId'],
         date: _convert(meetingEle['meetingDate']),
         type: 3,
         subtypeTitle: meetingEle['meetingTitle'],
-        subtypeId: meetingEle['meetingId'], 
+        subtypeId: meetingEle['meetingId'],
         details: meetingEle['attendance'],
         time: meetingEle['meetingTime'],
       );
@@ -112,12 +115,12 @@ class _CalendarState extends State<Calendar> {
     print(_project);
     for (var projectEle in _project) {
       ProjectDeadline pd = new ProjectDeadline(
-        title: projectEle['projectTitle'], 
-        id: projectEle['projectId'], 
+        title: projectEle['projectTitle'],
+        id: projectEle['projectId'],
         date: _convert(projectEle['projectDeadline']),
         type: 1,
         subtypeTitle: null,
-        subtypeId: null, 
+        subtypeId: null,
         details: null,
         time: null,
       );
@@ -126,6 +129,7 @@ class _CalendarState extends State<Calendar> {
     if (this.mounted) {
       setState(() {
         _projectsList = projects;
+        onStart = false;
       });
     }
   }
@@ -238,9 +242,7 @@ class _CalendarState extends State<Calendar> {
 
   @override
   Widget build(BuildContext context) {
-    if (_projectsList == null) {
-      getDocumentsList();
-    }
+    onStart ? getDocumentsList() : doNothing();
     return Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
       appBar: CustomAppbar.appBar('Calendar'),
@@ -260,7 +262,7 @@ class _CalendarState extends State<Calendar> {
               child: TableCalendar(
                 //TODO: This _deadlines object has a Map of DateTimes matching with a list of events.
                 //Adding to these deadlines would show the dates.
-                //Few things to note: 
+                //Few things to note:
                 //- Make sure the deadline for the current day load on the start of this page.
                 //  Reason I'm saying this is because they could need a refresh instead of loading automatically on start, which is bad.
                 //- Need to change a bit of UI if we want to add more data inputs, because now it just says "project deadlines:"
@@ -324,7 +326,6 @@ class ProjectDeadline {
   String time; //Only applicable to type 3
   String details; //Only applicable to type 3
   int type; //1: Project, 2: Task, 3: Meeting
-
 
   ProjectDeadline({
     @required this.id,

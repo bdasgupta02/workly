@@ -33,17 +33,22 @@ class _AllProjectsState extends State<AllProjects> {
   List<Project> _projects;
   bool _loading = false;
 
+  bool onStart;
+
   @override
   void initState() {
     super.initState();
     _date = null;
     _projects = null;
+    onStart = true;
   }
+
+  void doNothing() {}
 
   @override
   Widget build(BuildContext context) {
     final database = Provider.of<Database>(context, listen: false);
-    getDocumentsList();
+    onStart ? getDocumentsList() : doNothing();
     return Scaffold(
       appBar: CustomAppbar.appBar('Projects'),
       backgroundColor: Color(0xFFE9E9E9),
@@ -543,7 +548,7 @@ class _AllProjectsState extends State<AllProjects> {
     } else if (_projects.isEmpty) {
       return Center(
         child: Text(
-          "No projects found. \n \n Create one or Join one!",
+          "Create a project or join one!",
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'Roboto',
@@ -597,6 +602,7 @@ class _AllProjectsState extends State<AllProjects> {
     if (this.mounted) {
       setState(() {
         _projects = _projectList;
+        onStart = false;
       });
     }
   }

@@ -69,14 +69,15 @@ class _ProjectSettingsState extends State<ProjectSettings> {
         SizedBox(height: 30),
         headingText('Project Settings'),
         uniqueCode(db.getProjectId()),
-        buttonTile(() => showProjectLog(), 'Project Logs', 'View', Colors.blueAccent),
+        buttonTile(
+            () => showProjectLog(), 'Project Logs', 'View', Colors.blueAccent),
         lastAdmin && numMember == 1
             ? SizedBox()
-            : buttonTile(() => showExitDialog("leave"), 'Leave Project', 'Leave',
-                Colors.orangeAccent),
+            : buttonTile(() => showExitDialog("leave"), 'Leave Project',
+                'Leave', Colors.orangeAccent),
         admin && numMember == 1
-            ? buttonTile(() => showExitDialog("delete"), 'Delete Project', 'Delete',
-                Colors.redAccent)
+            ? buttonTile(() => showExitDialog("delete"), 'Delete Project',
+                'Delete', Colors.redAccent)
             : SizedBox(),
         SizedBox(height: 20),
       ],
@@ -215,11 +216,13 @@ class _ProjectSettingsState extends State<ProjectSettings> {
     List userNameList = userMapList['userNameList'];
     List userImageUrlList = userMapList['userImageUrlList'];
     List<Member> memberListName = List<Member>();
-    for (int idx = 0; idx < userUidList.length; idx ++) {
+    for (int idx = 0; idx < userUidList.length; idx++) {
       memberListName.add(Member(
           name: userNameList[idx],
           uid: userUidList[idx],
-          image: userImageUrlList[idx].toString() == "null" ? null : NetworkImage(userImageUrlList[idx].toString()),
+          image: userImageUrlList[idx].toString() == "null"
+              ? null
+              : NetworkImage(userImageUrlList[idx].toString()),
           admin: adminList.contains(userUidList[idx])));
     }
     if (mounted) {
@@ -300,24 +303,26 @@ class _ProjectSettingsState extends State<ProjectSettings> {
   Widget _exitDialog(String action) {
     String verb = action == "leave" ? "leaving" : "deleting";
     return AlertDialog(
-      title: Text("Wait..."),
-      content: Text(
-          "Are you really $verb this project group?"),
+      title: Text("Are you sure?"),
+      content: Text("You will lose this $verb forever."),
       actions: <Widget>[
         FlatButton(
-          child: Text("Cancel"),
+          child: Text("No"),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         FlatButton(
-          child: Text("Yes, $action project group"),
+          child: Text("Yes"),
           onPressed: () => {
             action == "leave" ? leaveProject() : deleteProject(),
             Navigator.of(context).pop(),
           },
         ),
       ],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
     );
   }
 
@@ -434,8 +439,8 @@ class _ProjectSettingsState extends State<ProjectSettings> {
   void showProjectLog() {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
     Navigator.of(context).push(MaterialPageRoute<void>(
-      fullscreenDialog: true,
-      builder: (context) => ProjectLog(database: database)));
+        fullscreenDialog: true,
+        builder: (context) => ProjectLog(database: database)));
   }
 }
 

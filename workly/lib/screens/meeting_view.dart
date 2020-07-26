@@ -69,6 +69,12 @@ class _MeetingViewState extends State<MeetingView> {
   Function onPostAlternative = () => null;
 
   @override
+  void setState(fn) {
+    // TODO: implement setState
+    if (mounted) super.setState(fn);
+  }
+
+  @override
   void initState() {
     super.initState();
     getAlternative();
@@ -87,13 +93,18 @@ class _MeetingViewState extends State<MeetingView> {
       notAttending: widget.notAttending.length,
       attending: widget.attending.length,
       maybe: widget.maybe.length,
-      attendingState: 
-        widget.attending.contains(widget.database.getUid()) ? Meeting.ATTENDING :
-          (widget.notAttending.contains(widget.database.getUid()) ? Meeting.NOT_ATTENDING : 
-            (widget.maybe.contains(widget.database.getUid()) ? Meeting.MAYBE : Meeting.UNSELECTED)),
+      attendingState: widget.attending.contains(widget.database.getUid())
+          ? Meeting.ATTENDING
+          : (widget.notAttending.contains(widget.database.getUid())
+              ? Meeting.NOT_ATTENDING
+              : (widget.maybe.contains(widget.database.getUid())
+                  ? Meeting.MAYBE
+                  : Meeting.UNSELECTED)),
       onDelete: () => showDeleteDialog(null),
       onEdit: () => editMeeting(),
-      onSave: (String title, String desc, String location, String date, String time) => saveMeeting(title, desc, location, date, time),
+      onSave: (String title, String desc, String location, String date,
+              String time) =>
+          saveMeeting(title, desc, location, date, time),
       onAttend: (Meeting meet) => updateMeetingAttending(meet, 1),
       onNotAttend: (Meeting meet) => updateMeetingAttending(meet, 2),
       onMaybe: (Meeting meet) => updateMeetingAttending(meet, 3),
@@ -106,7 +117,8 @@ class _MeetingViewState extends State<MeetingView> {
 
   void getAlternative() async {
     List<Alternative> _alternatives = new List();
-    List<MeetingAlt> alt = await widget.database.meetingAltList(widget.meetingId);
+    List<MeetingAlt> alt =
+        await widget.database.meetingAltList(widget.meetingId);
     for (var ele in alt) {
       Alternative newAlt = Alternative(
         alternativeId: ele.meetingAltId,
@@ -114,7 +126,10 @@ class _MeetingViewState extends State<MeetingView> {
         name: userNameList[userUidList.indexOf(ele.user)],
         dateString: ele.date,
         timeString: ele.time,
-        image: userImageUrlList[userUidList.indexOf(ele.user)] == null ? null : NetworkImage(userImageUrlList[userUidList.indexOf(ele.user)].toString()),
+        image: userImageUrlList[userUidList.indexOf(ele.user)] == null
+            ? null
+            : NetworkImage(
+                userImageUrlList[userUidList.indexOf(ele.user)].toString()),
         onPress: (Alternative alt) => showDeleteDialog(alt),
         onVote: (Alternative alt) => updateAlternativeVote(alt),
         onAcceptAlternative: (Alternative alt) => updateAlternative(alt),
@@ -165,7 +180,8 @@ class _MeetingViewState extends State<MeetingView> {
     meeting.setAttendingNumbers(votes, 0, 0);
     meeting.setAttendingState(true);
     refresh();
-    widget.database.acceptAltMeetingDetails(alt.alternativeId, widget.title, widget.meetingId, {
+    widget.database.acceptAltMeetingDetails(
+        alt.alternativeId, widget.title, widget.meetingId, {
       'date': alt.date,
       'time': alt.time,
       'dateSort': _convertFromString(alt.date, alt.time),
@@ -173,7 +189,8 @@ class _MeetingViewState extends State<MeetingView> {
   }
 
   void updateAlternative(Alternative alt) {
-    widget.database.updateAltMeetingDetails(alt.alternativeId, widget.title, widget.meetingId, {
+    widget.database.updateAltMeetingDetails(
+        alt.alternativeId, widget.title, widget.meetingId, {
       'date': alt.dateString,
       'time': alt.timeString,
       'acceptState': alt.acceptState,
@@ -181,11 +198,13 @@ class _MeetingViewState extends State<MeetingView> {
   }
 
   void updateAlternativeVote(Alternative alt) {
-    widget.database.updateAltMeetingVotes(alt.alternativeId, alt.dateString, alt.timeString, widget.title, widget.meetingId);
+    widget.database.updateAltMeetingVotes(alt.alternativeId, alt.dateString,
+        alt.timeString, widget.title, widget.meetingId);
   }
 
   void updateMeetingAttending(Meeting meet, int state) {
-    widget.database.updateMeetingAttending(state, meet.attendingState, widget.title, widget.meetingId);
+    widget.database.updateMeetingAttending(
+        state, meet.attendingState, widget.title, widget.meetingId);
   }
 
   void showDeleteDialog(Alternative alt) {
@@ -199,26 +218,29 @@ class _MeetingViewState extends State<MeetingView> {
   }
 
   Widget _deleteDialog(Alternative alt) {
-    String verb = alt == null ? "scheduled meeting" : "alternative proposed meeting";
+    String verb =
+        alt == null ? "scheduled meeting" : "alternative proposed meeting";
     return AlertDialog(
-      title: Text("Wait..."),
-      content: Text(
-          "Do you really want to delete this $verb?"),
+      title: Text("Are you sure?"),
+      content: Text("This $verb? will be lost forever."),
       actions: <Widget>[
         FlatButton(
-          child: Text("Cancel"),
+          child: Text("No"),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         FlatButton(
-          child: Text("Yes, delete $verb"),
+          child: Text("Yes"),
           onPressed: () => {
             deleteMeeting(alt),
             Navigator.of(context).pop(),
           },
         ),
       ],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
     );
   }
 
@@ -227,15 +249,17 @@ class _MeetingViewState extends State<MeetingView> {
       widget.database.deleteMeeting(widget.title, widget.meetingId);
       Navigator.of(context).pop();
     } else {
-      widget.database.deleteMeetingAlt(widget.title, widget.meetingId, alt.alternativeId, alt.dateString, alt.timeString);
+      widget.database.deleteMeetingAlt(widget.title, widget.meetingId,
+          alt.alternativeId, alt.dateString, alt.timeString);
       getAlternative();
     }
   }
 
-  void saveMeeting(String title, String desc, String location, String date, String time) {
+  void saveMeeting(
+      String title, String desc, String location, String date, String time) {
     widget.database.updateMeetingDetails(widget.meetingId, {
       'title': title,
-      'description': desc, 
+      'description': desc,
       'location': location,
       'date': date,
       'time': time,
@@ -245,16 +269,17 @@ class _MeetingViewState extends State<MeetingView> {
       _readOnly = true;
     });
   }
- 
-  Timestamp _convertFromString(String date, String time) {
-    String dd = date.substring(8,10);
-    String mm = date.substring(5,7);
-    String yyyy = date.substring(0,4);
 
-    String hh = time.substring(0,2);
-    String min = time.substring(3,5);
-    
-    return Timestamp.fromDate(DateTime.parse(yyyy + mm + dd + "T" + hh + min + "00"));
+  Timestamp _convertFromString(String date, String time) {
+    String dd = date.substring(8, 10);
+    String mm = date.substring(5, 7);
+    String yyyy = date.substring(0, 4);
+
+    String hh = time.substring(0, 2);
+    String min = time.substring(3, 5);
+
+    return Timestamp.fromDate(
+        DateTime.parse(yyyy + mm + dd + "T" + hh + min + "00"));
   }
 
   @override
@@ -487,7 +512,13 @@ class _MeetingViewState extends State<MeetingView> {
         alternativeId: meetingAltId,
         uid: widget.database.getUid(),
         isMeetingCreator: widget.database.getUid() == widget.user,
-        image: userImageUrlList[userUidList.indexOf(widget.database.getUid())] == null ? null : NetworkImage(userImageUrlList[userUidList.indexOf(widget.database.getUid())].toString()),
+        image: userImageUrlList[
+                    userUidList.indexOf(widget.database.getUid())] ==
+                null
+            ? null
+            : NetworkImage(
+                userImageUrlList[userUidList.indexOf(widget.database.getUid())]
+                    .toString()),
         hasVoted: false,
         votes: 0,
         name: userNameList[userUidList.indexOf(widget.database.getUid())],
@@ -495,26 +526,27 @@ class _MeetingViewState extends State<MeetingView> {
         onAcceptAlternative: (Alternative alt) => updateAlternative(alt),
         onPress: (Alternative alt) => showDeleteDialog(alt),
         onRejectAlternative: (Alternative alt) => updateAlternative(alt),
-        
+
         //SHOULD BE LIKE THIS WHEN STORING THE STRING TO DB TOO
         //This is correct unlike the other hard-coded stuff around it
         //KEEP THIS for new entry into DB
-        timeString: _alternativeFormTime.toString().substring(10,15),
+        timeString: _alternativeFormTime.toString().substring(10, 15),
         dateString: DateFormat('yyyy-MM-dd').format(_alternativeFormDate),
       ),
     );
 
-    widget.database.createMeetingAlt(widget.title, widget.meetingId, meetingAltId, {
+    widget.database
+        .createMeetingAlt(widget.title, widget.meetingId, meetingAltId, {
       'meetingAltId': meetingAltId,
       'user': widget.database.getUid(),
       'isMeetingCreator': widget.database.getUid() == widget.user,
-      'votes': [], 
+      'votes': [],
       'votesCount': 0,
       'date': DateFormat('yyyy-MM-dd').format(_alternativeFormDate),
-      'time': _alternativeFormTime.toString().substring(10,15),
+      'time': _alternativeFormTime.toString().substring(10, 15),
       'acceptState': 0,
-      });
-    
+    });
+
     //KEEP THIS
     _alternativeFormTime = null;
     _alternativeFormDate = null;
@@ -614,7 +646,7 @@ class Meeting {
   }
 
   void setAttendingState(bool attending) {
-     this.attendingState =  attending ? Meeting.ATTENDING : Meeting.UNSELECTED;
+    this.attendingState = attending ? Meeting.ATTENDING : Meeting.UNSELECTED;
   }
 
   Widget toWidgetEdit() {
@@ -1138,11 +1170,11 @@ class Meeting {
             ? onEdit
             : () {
                 onSave.call(
-                  _titleController.text, 
-                  _descController.text, 
-                  _locationController.text, 
-                  DateFormat('yyyy-MM-dd').format(DateTime.parse(this.date)),
-                  this.time);
+                    _titleController.text,
+                    _descController.text,
+                    _locationController.text,
+                    DateFormat('yyyy-MM-dd').format(DateTime.parse(this.date)),
+                    this.time);
                 //[Note] Local cache below.
                 setTitle(_titleController.text);
                 setDesc(_descController.text);
@@ -1279,7 +1311,9 @@ class Alternative {
         minute: int.parse(timeString.split(":")[1]));
 
     return GestureDetector(
-      onLongPress: () {onPress.call(this);},
+      onLongPress: () {
+        onPress.call(this);
+      },
       child: Container(
         margin: EdgeInsets.only(
           top: 10,
@@ -1377,7 +1411,9 @@ class Alternative {
                   child: Container(
                     margin: EdgeInsets.only(right: 10, bottom: 10),
                     child: FlatButton(
-                      color: !hasVoted && acceptState == 0 ? Color(0xFF06D8AE) : Color(0xFFE9E9E9),
+                      color: !hasVoted && acceptState == 0
+                          ? Color(0xFF06D8AE)
+                          : Color(0xFFE9E9E9),
                       onPressed: () {
                         if (acceptState != 0) {
                           return null;
@@ -1402,7 +1438,9 @@ class Alternative {
                                 ? Icons.keyboard_arrow_up
                                 : Icons.keyboard_arrow_down,
                             size: 40,
-                            color: !hasVoted && acceptState == 0 ? Colors.white : Colors.black45,
+                            color: !hasVoted && acceptState == 0
+                                ? Colors.white
+                                : Colors.black45,
                           ),
                           Text(
                             hasVoted ? "Unvote" : "Vote",
@@ -1410,7 +1448,9 @@ class Alternative {
                               fontFamily: 'Roboto',
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
-                              color: !hasVoted && acceptState == 0 ? Colors.white : Colors.black45,
+                              color: !hasVoted && acceptState == 0
+                                  ? Colors.white
+                                  : Colors.black45,
                             ),
                           ),
                           SizedBox(height: 6),

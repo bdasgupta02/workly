@@ -331,7 +331,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
           if (ideas.isEmpty) {
             return Center(
               child: Text(
-                "No ideas added yet. \n \n Be the first to contribute!",
+                "No ideas contributed yet!",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Roboto',

@@ -42,6 +42,12 @@ class _ProjectChatState extends State<ProjectChat> {
     });
   }
 
+  @override
+  void setState(fn) {
+    // TODO: implement setState
+    if (mounted) super.setState(fn);
+  }
+
   void refreshUserListDetails() async {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
     Map _userListDetails = await database.getUserList();

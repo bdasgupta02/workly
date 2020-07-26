@@ -282,7 +282,7 @@ class _MeetingFormState extends State<MeetingForm> {
       decoration: InputDecoration(
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
         labelText: "Meeting title",
-        hintText: "Title of your meeting",
+        hintText: "The title of your meeting",
         errorText: _meetingNameValid ? null : "Please fill in a title",
       ),
       controller: _meetingTitleController,
@@ -299,8 +299,8 @@ class _MeetingFormState extends State<MeetingForm> {
     return TextField(
       decoration: InputDecoration(
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
-        labelText: "Meeting Description",
-        hintText: "Agenda / Description of your meeting",
+        labelText: "Meeting description",
+        hintText: "The agenda of your meeting",
         errorText: _meetingDescValid ? null : "Please fill in some description",
       ),
       controller: _meetingDescriptionController,
@@ -319,8 +319,8 @@ class _MeetingFormState extends State<MeetingForm> {
     return TextField(
       decoration: InputDecoration(
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
-        labelText: "Meeting Location",
-        hintText: "Location of your meeting",
+        labelText: "Meeting location",
+        hintText: "The location of your meeting",
       ),
       controller: _meetingLocationController,
       textInputAction: TextInputAction.next,
