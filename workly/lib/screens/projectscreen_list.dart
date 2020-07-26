@@ -220,6 +220,7 @@ class _AllProjectsState extends State<AllProjects> {
                                 _dateValid = _joinProject
                                     ? true
                                     : (_date != null);
+                                
                               }),
                             }
                           else
@@ -474,6 +475,9 @@ class _AllProjectsState extends State<AllProjects> {
       });
       Navigator.of(context).pop();
     }
+    setState(() {
+      onStart = true;
+    });
   }
 
   // Timestamp _convertFromString(String date) {
