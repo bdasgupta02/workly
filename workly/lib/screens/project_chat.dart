@@ -509,7 +509,7 @@ class Message {
           bottom: sameUserAsNext ? 8 : 25,
         ),
         child: Column(
-          crossAxisAlignment:
+          crossAxisAlignment: 
               user ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: <Widget>[
             user ? SizedBox() : nameText(),

@@ -22,7 +22,7 @@ class LocalNotification {
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
-  Future<void> sendInstantNotification({String title, String body}) async {
+  Future<void> sendInstantNotification({int id, String title, String body}) async {
     // var androidPlatformChannelSpecifics = AndroidNotificationDetails(
     //     'your channel id', 'your channel name', 'your channel description',
     //     importance: Importance.Max, priority: Priority.High, ticker: 'Workly');
@@ -33,13 +33,11 @@ class LocalNotification {
     var platformChannelSpecifics = NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.show(
-        0, title, body, platformChannelSpecifics);
+        id, title, body, platformChannelSpecifics);
   }  
   
-  Future<void> setScheduledNotification({String title, String body, String date, int days, String time}) async {
-    String _time = time == null ? "120000" : time;
-    int _days = days == null ? 1 : days;
-    var scheduledNotificationDateTime = DateTime.parse(date + "T" + _time).subtract(Duration(days: _days));
+  Future<void> setScheduledNotification({int id, String title, String body, DateTime dateTime}) async {
+    var scheduledNotificationDateTime = dateTime;
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
         'Workly', 'Workly', 'Handy project management buddy',
         importance: Importance.Max, priority: Priority.High, ticker: 'Workly');
@@ -48,11 +46,15 @@ class LocalNotification {
     NotificationDetails platformChannelSpecifics = NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.schedule(
-        0,
+        id,
         title,
         body,
         scheduledNotificationDateTime,
         platformChannelSpecifics,
         androidAllowWhileIdle: true);
+  }
+
+  Future<void> cancelNoti(int id) async {
+    id == null ? await flutterLocalNotificationsPlugin.cancelAll() : await flutterLocalNotificationsPlugin.cancel(id);
   }
 }
