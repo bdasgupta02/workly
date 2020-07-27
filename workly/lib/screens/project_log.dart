@@ -6,6 +6,8 @@ import 'package:workly/services/project_database.dart';
 
 _ProjectLogState projectLogState;
 
+//TODO: List pagination
+
 class ProjectLog extends StatefulWidget {
   final ProjectDatabase database;
 

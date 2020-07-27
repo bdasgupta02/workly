@@ -5,6 +5,9 @@ import 'package:workly/resuable_widgets/custom_appbar.dart';
 import 'package:workly/services/database.dart';
 import 'package:intl/intl.dart';
 
+import '../local_noti.dart';
+
+
 class Calendar extends StatefulWidget {
   @override
   _CalendarState createState() => _CalendarState();
@@ -17,6 +20,8 @@ class _CalendarState extends State<Calendar> {
   bool _start;
   List<ProjectDeadline> _projectsList;
   bool onStart;
+  bool setNoti;
+  static LocalNotification _localNoti = new LocalNotification();
 
   @override
   void initState() {
@@ -27,6 +32,7 @@ class _CalendarState extends State<Calendar> {
     _start = true;
     _projectsList = null;
     onStart = true;
+    setNoti = false;
   }
 
   @override
@@ -130,13 +136,74 @@ class _CalendarState extends State<Calendar> {
       setState(() {
         _projectsList = projects;
         onStart = false;
+        setNoti = true;
       });
     }
   }
-
+  
   DateTime _convert(String s) {
     String t = s.substring(6, 10) + s.substring(3, 5) + s.substring(0, 2);
     return DateTime.parse(t);
+  }
+
+  void setLocalNoti() async {
+    _localNoti.configLocalNotification();
+    await _localNoti.cancelNoti(null);
+    for (var ele in _projectsList) {
+      print("RUN NOTI");
+      String _dd = ele.date.day < 10 ? '0' + ele.date.day.toString() : ele.date.day.toString();
+      String _mm = ele.date.month < 10 ? '0' + ele.date.month.toString() : ele.date.month.toString();
+      String _yyyy = ele.date.year.toString();
+      String _date = _yyyy + _mm + _dd;
+      String _hr = ele.time != null ? ele.time.substring(0,2) : "00";
+      String _min = ele.time != null ? ele.time.substring(3,5) : "00";
+      String _title = "Workly • ${ele.title}";
+      String _body1;
+      String _body2;
+      String _body3;
+      DateTime _now = DateTime.now();
+      DateTime _newDateTime1;
+      DateTime _newDateTime2;
+      DateTime _newDateTime3;
+      if (ele.type == 1) {
+        _body1 = "Project is due next week $_dd/$_mm/$_yyyy";
+        _body2 = "Project is due tomorrow";
+        _body3 = "Project is due today";
+        _newDateTime1 = DateTime.parse(_date + "T" + "120000").subtract(Duration(days: 7));
+        _newDateTime2 = DateTime.parse(_date + "T" + "153000").subtract(Duration(days: 1));
+        _newDateTime3 = DateTime.parse(_date + "T" + "153000").subtract(Duration(days: 0));
+      } else if (ele.type == 2) {
+        _body1 = "Task '${ele.subtypeTitle}' is due in 3 days";
+        _body2 = "Task '${ele.subtypeTitle}' is due tomorrow";
+        _body3 = "Task '${ele.subtypeTitle}' is due today";
+        _newDateTime1 = DateTime.parse(_date + "T" + "120000").subtract(Duration(days: 3));
+        _newDateTime2 = DateTime.parse(_date + "T" + "153000").subtract(Duration(days: 1));
+        _newDateTime3 = DateTime.parse(_date + "T" + "153000").subtract(Duration(days: 0));
+      } else if (ele.type == 3) {
+        _body1 = "Meeting '${ele.subtypeTitle}' tomorrow at ${ele.time}";
+        _body2 = "Meeting '${ele.subtypeTitle}' in 15 mins";
+        _body3 = "Meeting '${ele.subtypeTitle}' starting now";
+        _newDateTime1 = DateTime.parse(_date + "T" + "153000").subtract(Duration(days: 1));
+        _newDateTime2 = DateTime.parse(_date + "T" + _hr + _min + "00").subtract(Duration(minutes: 15));
+        _newDateTime3 = DateTime.parse(_date + "T" + _hr + _min + "00");
+      } else {
+        continue;
+      }
+      if (_newDateTime1.compareTo(_now) >= 0) {
+        _localNoti.setScheduledNotification(id: _projectsList.indexOf(ele), title: _title, body: _body1, dateTime: _newDateTime1);
+      } else if (_newDateTime2.compareTo(_now) >= 0) {
+        _localNoti.setScheduledNotification(id: _projectsList.indexOf(ele) + 100, title: _title, body: _body2,  dateTime: _newDateTime2);
+      } else if (_newDateTime3.compareTo(_now) >= 0) {
+        _localNoti.setScheduledNotification(id: _projectsList.indexOf(ele) + 1000, title: _title, body: _body3,  dateTime: _newDateTime3);
+      } else {
+        continue;
+      }
+    }
+    if (this.mounted) {
+      setState(() {
+        setNoti = false;
+      });
+    }
   }
 
   void _toMap(List<ProjectDeadline> projects) {
@@ -243,6 +310,7 @@ class _CalendarState extends State<Calendar> {
   @override
   Widget build(BuildContext context) {
     onStart ? getDocumentsList() : doNothing();
+    setNoti ? setLocalNoti() : doNothing();
     return Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
       appBar: CustomAppbar.appBar('Calendar'),

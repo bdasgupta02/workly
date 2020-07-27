@@ -444,6 +444,7 @@ class _TaskFormState extends State<TaskForm> {
         // _assign = widget.taskAssign;
         _taskId = widget.taskId;
         _calledEdit = true;
+        _date = _convert(widget.taskDeadline);
       });
     }
   }
@@ -548,6 +549,13 @@ class _TaskFormState extends State<TaskForm> {
       String newMonth = date.month < 10 ? "0${date.month}" : "${date.month}";
       String newDay = date.day < 10 ? "0${date.day}" : "${date.day}";
       return '$newDay/$newMonth/${date.year}';
+  }
+
+  DateTime _convert(String s) {
+    print(s);
+    String t = s.split("/")[2] + s.split("/")[1] + s.split("/")[0];
+    //String t = s.substring(6, 10) + s.substring(3, 5) + s.substring(0, 2);
+    return DateTime.parse(t);
   }
 
   void _updateState() {
