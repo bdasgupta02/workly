@@ -201,10 +201,11 @@ class FirestoreProjectDatabase implements ProjectDatabase {
 
   Future<void> createNewLog(String description, bool task) async {
     String _time = DateTime.now().toString();
+    String _description = description == null ? ". . . " : description;
     await _setData('projects/$projectId/log/$_time', {
       'name': userName,
       'user': uid,
-      'description': description,
+      'description': _description,
       'date': FieldValue.serverTimestamp(),
       'task': task,    
     });
@@ -214,7 +215,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
   Future<void> updateIdeaDetails(String ideaId, String ideaName, String ideaDescription) async {
     String _title;
     String _description;
-    String logDescription;
+    String logDescription = "";
     await Firestore.instance.collection('projects').document(projectId).collection('idea').document(ideaId).get().then((value) {
       _title = value.data['title'];
       _description = value.data['description'];
@@ -251,7 +252,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     int _state;
     Timestamp _deadline;
     List<String> listLog = List();
-    String logDescription;
+    String logDescription = "";
     bool runLoop = false;
     await Firestore.instance.collection('projects').document(projectId).collection('task').document(taskId).get().then((value) {
       // _assignedUid = value.data['assignedUid'];
@@ -310,7 +311,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     String _date;
     String _time;
     List<String> listLog = List();
-    String logDescription;
+    String logDescription = "";
     bool runLoop = false;
     await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).get().then((value) {
       // _assignedUid = value.data['assignedUid'];
@@ -366,7 +367,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     List _attending;
     List _maybe;
     List _notAttending;
-    String logDescription;
+    String logDescription = "";
     await Firestore.instance.collection('projects').document(projectId).collection('meeting').document(meetingId).get().then((value) {
       _attending = value.data['attending'];
       _maybe = value.data['maybe'];
@@ -433,12 +434,12 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       _containUser = _votes.contains(uid);
     });
     if (_containUser) {
-      print('CONTAINS');
+      print('Removing user\'s vote now');
       _votes.remove(uid);
       _voteCount = _voteCount - 1;
       _voted = 'unvoted';
     } else {
-      print('DOES NOT CONTAINS');
+      print('Adding user\'s vote now');
       _votes.add(uid);
       _voteCount = _voteCount + 1;
       _voted = 'voted for';
@@ -516,7 +517,6 @@ class FirestoreProjectDatabase implements ProjectDatabase {
 
   @override
   Future<void> updateVotes(String ideaId) async {
-    print('CALL UPDATE');
     bool _containUser;
     List _votes;
     int _voteCount;
@@ -529,12 +529,12 @@ class FirestoreProjectDatabase implements ProjectDatabase {
       _containUser = _votes.contains(uid);
     });
     if (_containUser) {
-      print('CONTAINS');
+      print('Removing user\'s vote now');
       _votes.remove(uid);
       _voteCount = _voteCount - 1;
       _voted = 'unvoted';
     } else {
-      print('DOES NOT CONTAINS');
+      print('Adding user\'s vote now');
       _votes.add(uid);
       _voteCount = _voteCount + 1;
       _voted = 'voted for';
@@ -973,7 +973,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
 
   Future<void> _setData(String path, Map<String, dynamic> data) async {
     final reference = Firestore.instance.document(path);
-    print('$path: $data');
+    print('Writing new data to DB: $path: $data');
     await reference.setData(data);
   }
 
@@ -1040,7 +1040,7 @@ class ChatStreamPagination {
   bool _hasMoreData = true;
 
   Stream listenToChatsRealTime() {
-    print('LISTEN TO CHAT');
+    print('Listening to Chat from DB');
     _requestChats();
     return _chatController.stream;
   }
@@ -1049,7 +1049,6 @@ class ChatStreamPagination {
     var pagechatQuery = Firestore.instance.collection('projects/$projectId/chat')
         .orderBy('timesort', descending: true)
         .limit(chatLimit);
-    print(pagechatQuery);
     if (_lastDocument != null) {
       pagechatQuery =
           pagechatQuery.startAfterDocument(_lastDocument);
@@ -1065,8 +1064,7 @@ class ChatStreamPagination {
               .map((snapshot) => ChatMessage.fromMap(snapshot.data))
               .toList();
           generalChats.sort((x,y) => x.timesort.compareTo(y.timesort));
-          print('PRINT CHAT');
-          print(generalChats);
+          print("Chat querying: $generalChats");
           var pageExists = currentRequestIndex < _allPagedResults.length;
 
           if (pageExists) {

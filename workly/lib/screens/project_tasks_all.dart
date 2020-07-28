@@ -91,7 +91,7 @@ class _ProjectTasksAllState extends State<ProjectTasksAll> {
           } 
           return TaskListConstructor(tasks: tasks, unassigned: unassigned).construct();
         } else if (snapshot.hasError) {
-          print(snapshot.error);
+          print("Task DB Stream error: ${snapshot.error}");
           return Center(child: CircularProgressIndicator());
         } else {
           return TaskListConstructor(tasks: [], unassigned: 0).construct();//Center(child: CircularProgressIndicator());

@@ -189,7 +189,7 @@ class _MainSettingsState extends State<MainSettings> {
   }
 
   void _submit(bool pw) async {
-    print(_nameController.text);
+    print("Main settings name: ${_nameController.text}");
     if (!pw && (_nameController.text == null || _nameController.text == "")) {
       setState(() {
         _nameBlank = true;
@@ -1000,7 +1000,7 @@ class _MainSettingsState extends State<MainSettings> {
       final auth = Provider.of<AuthBase>(context, listen: false);
       await auth.signOut();
     } catch (e) {
-      print(e.toString);
+      print("Sign out error: ${e.toString}");
     }
   }
 

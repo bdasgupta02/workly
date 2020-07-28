@@ -81,7 +81,7 @@ class _MeetingListState extends State<MeetingList> {
           }
           return construct(meetings);
         } else if (snapshot.hasError) {
-          print(snapshot.error);
+          print("Meeting DB Stream error: ${snapshot.error}");
           return Center(child: CircularProgressIndicator());
         } else {
           return Center(child: CircularProgressIndicator());

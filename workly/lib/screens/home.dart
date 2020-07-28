@@ -40,27 +40,27 @@ class _HomeState extends State<Home> {
     firebaseMessaging.requestNotificationPermissions();
 
     firebaseMessaging.configure(onMessage: (Map<String, dynamic> message) {
-      print('onMessage: $message');
+      print('Notification onMessage: $message');
       Platform.isAndroid
           ? showNotification(message['notification'])
           : showNotification(message['aps']['alert']);
       return;
     }, onResume: (Map<String, dynamic> message) {
-      print('onResume: $message');
+      print('Notification onResume: $message');
       return;
     }, onLaunch: (Map<String, dynamic> message) {
-      print('onLaunch: $message');
+      print('Notification onLaunch: $message');
       return;
     });
 
     firebaseMessaging.getToken().then((token) {
-      print('token: $token');
+      print('Phone token: $token');
       database.updateUserToken({'pushToken': token});
       setState(() {
         _token = token;
       });
     }).catchError((err) {
-      print(err.message.toString());
+      print("Retrieve phone token errror: ${err.message.toString()}");
     });
   }
 
@@ -87,7 +87,7 @@ class _HomeState extends State<Home> {
     var platformChannelSpecifics = new NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
 
-    print(message);
+    print("Notification: $message");
     // print(message['body'].toString());
     // print(json.encode(message));
 
@@ -235,7 +235,7 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
     List<String> newNotiList = new List();
     final database = Provider.of<Database>(context, listen: false);
     List<Map> _meeting = await database.userMeetingDocuments();
-    print(_meeting);
+    print("Home DB pull meeting: $_meeting");
     for (var meetingEle in _meeting) {
       String newNotiT = "";
       DateTime meetingDate = _convert(meetingEle['meetingDate']);
@@ -247,7 +247,7 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
       }
     }
     List<Map> _task = await database.userTaskDocuments();
-    print(_task);
+    print("Home DB pull task: $_task");
     for (var taskEle in _task) {
       String newNotiT = "";
       DateTime taskDate = _convert(taskEle['taskDeadline']);
@@ -396,7 +396,7 @@ class _BackBoxButtonsState extends State<BackBoxButtons> {
     int _missed = 0;
     int _dueSoon = 0;
     List<Map> _project = await widget.database.userProjectDocuments();
-    print("GET PROJECT" + '$_project');
+    print("Home DB pull project: $_project");
     List<DateTime> deadline = new List();
     for (var projectEle in _project) {
       deadline.add(_convert(projectEle['projectDeadline']));
@@ -555,7 +555,6 @@ class _BackBoxButtonsState extends State<BackBoxButtons> {
 
 DateTime _convert(String s) {
   if (s != null) {
-    print(s);
     String t = s.split("/")[2] + s.split("/")[1] + s.split("/")[0];
     //String t = s.substring(6, 10) + s.substring(3, 5) + s.substring(0, 2);
     return DateTime.parse(t);

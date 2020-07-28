@@ -277,7 +277,7 @@ class _IdeaViewState extends State<IdeaView> {
               .toList();
           return commentColBuilder(comments);
         } else if (snapshot.hasError) {
-          print(snapshot.error);
+          print("Idea comments DB Stream error: ${snapshot.error}");
           return Center(child: CircularProgressIndicator());
         } else {
           return Center(child: CircularProgressIndicator());

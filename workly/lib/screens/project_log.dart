@@ -75,7 +75,6 @@ class _ProjectLogState extends State<ProjectLog> {
   }
 
   Widget _buildLogList() {
-    print("called");
     return StreamBuilder<List<Log>>(
       stream: mine ? widget.database.myLogStream() : widget.database.logStream(),
       builder: (context, snapshot) {
@@ -99,7 +98,7 @@ class _ProjectLogState extends State<ProjectLog> {
           }
           return makeList(logs);
         } else if (snapshot.hasError) {
-          print(snapshot.error);
+          print("Logs DB Stream error: ${snapshot.error}");
           return Center(child: CircularProgressIndicator());
         } else {
           return Center(child: CircularProgressIndicator());

@@ -165,10 +165,10 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
 
   void _updateEmailErrorMsg() {
     if (_incorrectEmailFormat) {
-      print("B");
+      print("Email error: Invalid email format");
       _emailErrorMsg = "Invalid email format";
     } else if (_emailDoesNotExist) {
-      print("A");
+      print("Email error: $_email does not exist");
       _emailErrorMsg = "$_email does not exist";
     } else {
       _emailErrorMsg = "";
@@ -206,7 +206,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
         }
         break;
       }
-      print(e.code);
+      print("Email password reset error: ${e.code}");
     } finally {
       setState(() {
         _isLoading = false;

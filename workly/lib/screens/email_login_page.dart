@@ -548,7 +548,7 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
           break;
         default:
           {
-            print(e.toString());
+            print("Email login/sign in error: ${e.toString()}");
             setState(() {
               _incorrectEmailOrPassword = true;
             });
@@ -585,11 +585,10 @@ class _EmailLoginFormState extends State<EmailLoginForm> {
     StorageTaskSnapshot _snapshot = await _upload.onComplete;
     if (_snapshot.error == null) {
       String _url = await _snapshot.ref.getDownloadURL();
-      print("URL");
-      print(_url);
+      print("Image profile URL: $_url");
       return _url;
     } else {
-      print(_snapshot.error.toString());
+      print("Image profile upload error: ${_snapshot.error.toString()}");
       return null;
     }
   }

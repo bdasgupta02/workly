@@ -101,7 +101,7 @@ class FirestoreDatabase implements Database {
     try {
       await Firestore.instance.collection('users').document(uid).updateData(userToken);
     } catch (e) {
-      print(e.toString());
+      print("Update user phone token error: ${e.toString()}");
     }
   }
 
@@ -119,7 +119,7 @@ class FirestoreDatabase implements Database {
   Future<int> joinProject(String projectId) async {
     var _isUserPresent = await Firestore.instance.collection('users').document(uid).get();
     if (!_isUserPresent.data['project'].contains(projectId)) {
-      print("ADDING NEW USER TO PROJECT");
+      print("Join Project valid, adding user to project: [$projectId]");
       String _code;
       String _title;
       String _description;
@@ -147,7 +147,7 @@ class FirestoreDatabase implements Database {
         return 1;
       }
     } else {
-      print("USER ALREADY EXIST");
+      print("User already belongs to project: [$projectId]");
       return 2;
     }
     return 3;
@@ -181,7 +181,6 @@ class FirestoreDatabase implements Database {
       projectId = element.data['code'];
       int idIdx = userUid.indexOf(uid);
       userName[idIdx] = name;
-      print(userImage);
       if (imgUrl != null) {
         userImage[idIdx] = imgUrl;
       }
@@ -410,7 +409,6 @@ class FirestoreDatabase implements Database {
     var lenCode;
     await Firestore.instance.collection('codes').where("code", isEqualTo: code).getDocuments().then((value) {
       lenCode = value.documents.toList().length;
-      print(value.documents.toList().length);
     });
     if (lenCode == 0) {
       _addCode({'code': code}, code);
@@ -426,7 +424,7 @@ class FirestoreDatabase implements Database {
 
   Future<void> _setData(String path, Map<String, dynamic> data) async {
     final reference = Firestore.instance.document(path);
-    print('$path: $data');
+    print('Writing new data to DB: $path: $data');
     await reference.setData(data);
   }
 

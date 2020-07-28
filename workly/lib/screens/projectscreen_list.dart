@@ -209,7 +209,6 @@ class _AllProjectsState extends State<AllProjects> {
                               : (_projectName.isEmpty ||
                                   _date == null))
                             {
-                              print("CHECK"),
                               setState(() {
                                 _codeValid = _joinProject
                                     ? _projectCode.isNotEmpty
@@ -434,7 +433,7 @@ class _AllProjectsState extends State<AllProjects> {
 
   Future<void> _createProject(Database database) async {
     if (_joinProject) {
-      print("joinproject");
+      print("Trying to Join Project");
       var results = await database.joinProject(_projectCode);
       if (results != 1) {
         String msg = results == 2 ? "You are already in the project" : "The project code is invalid";
@@ -455,12 +454,12 @@ class _AllProjectsState extends State<AllProjects> {
         Navigator.of(context).pop();
       }
     } else {
-      print("createproject");
+      print("Trying to Create Project");
       String code = generateProjectId;
       while (await database.checkCode(code)) {
         code = generateProjectId;
       }
-      print(code);
+      print("New Project Code generated: $code");
       String _userName = await database.getName();
       String _userImageUrl = await database.getImageUrl();
       await database.createUserProject(code, {
@@ -593,7 +592,7 @@ class _AllProjectsState extends State<AllProjects> {
     final database = Provider.of<Database>(context, listen: false);
     List<Map> _projectMap = await database.userProjectDocuments();
     List<Project> _projectList = new List();
-    print(_projectMap);
+    print("Project DB pull: $_projectMap");
     for (var projectEle in _projectMap) {
       Project pd = new Project(
         name: projectEle['projectTitle'], 

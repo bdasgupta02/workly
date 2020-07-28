@@ -210,7 +210,6 @@ class _ProjectSettingsState extends State<ProjectSettings> {
   }
 
   void getUserList(ProjectDatabase db) async {
-    print("GET USER LIST");
     Map userMapList = await db.getUserList();
     List userUidList = userMapList['userUidList'];
     List userNameList = userMapList['userNameList'];
@@ -235,7 +234,6 @@ class _ProjectSettingsState extends State<ProjectSettings> {
 
   void getAdminUserList(ProjectDatabase db) async {
     List adminUserList = await db.getAdminUserList();
-    print("GET ADMIN USER LIST");
     setState(() {
       adminList = adminUserList;
       admin = adminUserList.contains(db.getUid());

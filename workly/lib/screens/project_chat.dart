@@ -227,7 +227,7 @@ class _ProjectChatState extends State<ProjectChat> {
             cacheChat = chatList;
             return constructChatList(chatList);
           } else if (snapshot.hasError) {
-            print(snapshot.error);
+            print("Chat DB Stream error: ${snapshot.error}");
             return addCache();
           } else {
             return addCache();

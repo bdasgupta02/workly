@@ -273,7 +273,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
 
   void updateVote(String ideaId) async {
     final database = Provider.of<ProjectDatabase>(context, listen: false);
-    await database.updateVotes(ideaId); //"2020-06-17 14:56:53.873491"
+    database.updateVotes(ideaId); //"2020-06-17 14:56:53.873491"
   }
 
   void openEditor(String ideaId, String ideaTitle, String ideaDescription, int votes, String userId, bool hasVoted) {
@@ -344,7 +344,7 @@ class _ProjectIdeasState extends State<ProjectIdeas> {
           }
           return IdeaList(ideas: ideas).makeList();
         } else if (snapshot.hasError) {
-          print(snapshot.error);
+          print("Idea DB Stream error: ${snapshot.error}");
           return Center(child: CircularProgressIndicator());
         } else {
           return Center(child: CircularProgressIndicator());

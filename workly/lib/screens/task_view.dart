@@ -449,7 +449,7 @@ class _TaskViewState extends State<TaskView> {
 
   void _stateUpdate(bool upgrade, int upStateIndex, int downStateIndex) async {
     int newStateIndex = upgrade ? upStateIndex : downStateIndex;
-    await widget.database.updateTaskDetails(widget.taskId, {
+    widget.database.updateTaskDetails(widget.taskId, {
       "state": newStateIndex,
     });
     setState(() {
@@ -465,7 +465,7 @@ class _TaskViewState extends State<TaskView> {
       int memberIdx = _memberListId.indexOf(widget.database.getUid());
       _memberListId.removeAt(memberIdx);
       // _memberList.removeAt(memberIdx);
-      await widget.database.updateTaskDetails(widget.taskId, {
+      widget.database.updateTaskDetails(widget.taskId, {
         "assignedUid": _memberListId,
         // "assignedName": _memberList,
       });
@@ -473,7 +473,7 @@ class _TaskViewState extends State<TaskView> {
       //join
       _memberListId.add(widget.database.getUid());
       // _memberList.add(widget.database.getUserName());
-      await widget.database.updateTaskDetails(widget.taskId, {
+      widget.database.updateTaskDetails(widget.taskId, {
         "assignedUid": _memberListId,
         // "assignedName": _memberList,
       });
@@ -514,7 +514,6 @@ class _TaskViewState extends State<TaskView> {
   }
 
   void delete() {
-    print("Call delete 2");
     Navigator.of(context).pop();
   }
 

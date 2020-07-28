@@ -178,7 +178,6 @@ class _TaskFormState extends State<TaskForm> {
   Widget build(BuildContext context) {
     // getUserList();
     if (widget.edit && !_calledEdit) {
-      print("CALL SET STATE EDIT");
       setStateEdit();
     }
     return Padding(
@@ -471,7 +470,7 @@ class _TaskFormState extends State<TaskForm> {
   void _addTask() async {
     checkFormValid();
     if (_formValid) {
-      print("VALID");
+      print("Task form is valid, writing to DB now");
       String newTaskId = DateTime.now().toString();
       // int userIndex = _userNameList.indexOf(_assign);
       int priorityIndex = _priorityList.indexOf(_priority) + 1;
@@ -510,14 +509,13 @@ class _TaskFormState extends State<TaskForm> {
         Navigator.of(context).pop();
       }
     } else {
-      print("INVALID");
+      print("Task form is not valid");
     }
   }
 
   void _deleteTask() async {
     await widget.database.deleteTask(_taskTitle, _taskId);
     taskViewState.delete();
-    print("Call delete");
     Navigator.of(context).pop();
   }
 
@@ -552,7 +550,6 @@ class _TaskFormState extends State<TaskForm> {
   }
 
   DateTime _convert(String s) {
-    print(s);
     String t = s.split("/")[2] + s.split("/")[1] + s.split("/")[0];
     //String t = s.substring(6, 10) + s.substring(3, 5) + s.substring(0, 2);
     return DateTime.parse(t);
@@ -748,7 +745,6 @@ class _TaskFormState extends State<TaskForm> {
                   hint: Text("Task State"),
                   value: _state,
                   onChanged: (selected) {
-                    print("SETSTATE");
                     setState(() {
                       _state = selected;
                     });

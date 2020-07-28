@@ -75,7 +75,7 @@ class _CalendarState extends State<Calendar> {
   void getDocumentsList() async {
     final database = Provider.of<Database>(context, listen: false);
     List<Map> _task = await database.userTaskDocuments();
-    print(_task);
+    print("Calendar DB pull task: " + _task.toString());
     List<ProjectDeadline> projects = new List();
     for (var taskEle in _task) {
       ProjectDeadline pd = new ProjectDeadline(
@@ -96,7 +96,7 @@ class _CalendarState extends State<Calendar> {
       });
     }
     List<Map> _meeting = await database.userMeetingDocuments();
-    print(_meeting);
+    print("Calendar DB pull meeting: " + _meeting.toString());
     for (var meetingEle in _meeting) {
       ProjectDeadline pd = new ProjectDeadline(
         title: meetingEle['projectTitle'],
@@ -118,7 +118,7 @@ class _CalendarState extends State<Calendar> {
       });
     }
     List<Map> _project = await database.userProjectDocuments();
-    print(_project);
+    print("Calendar DB pull project: " + _project.toString());
     for (var projectEle in _project) {
       ProjectDeadline pd = new ProjectDeadline(
         title: projectEle['projectTitle'],
@@ -150,7 +150,7 @@ class _CalendarState extends State<Calendar> {
     _localNoti.configLocalNotification();
     await _localNoti.cancelNoti(null);
     for (var ele in _projectsList) {
-      print("RUN NOTI");
+      print("Calendar Local Noti scheduling [${_projectsList.indexOf(ele)}]");
       String _dd = ele.date.day < 10 ? '0' + ele.date.day.toString() : ele.date.day.toString();
       String _mm = ele.date.month < 10 ? '0' + ele.date.month.toString() : ele.date.month.toString();
       String _yyyy = ele.date.year.toString();

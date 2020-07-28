@@ -234,7 +234,7 @@ class _MeetingFormState extends State<MeetingForm> {
   void _addmeeting() async {
     checkFormValid();
     if (_formValid) {
-      print("VALID");
+      print("Meeting form is valid, writing to DB now");
       String meetingId = DateTime.now().toString();
       await widget.database.createMeeting(meetingId, {
       'user': widget.database.getUid(),
@@ -251,7 +251,7 @@ class _MeetingFormState extends State<MeetingForm> {
       });
       Navigator.of(context).pop(true);
     } else {
-      print("INVALID");
+      print("Meeting form is not valid");
     }
   }
 
