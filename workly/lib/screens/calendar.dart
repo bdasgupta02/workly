@@ -170,20 +170,20 @@ class _CalendarState extends State<Calendar> {
         _body2 = "Project is due tomorrow";
         _body3 = "Project is due today";
         _newDateTime1 = DateTime.parse(_date + "T" + "120000").subtract(Duration(days: 7));
-        _newDateTime2 = DateTime.parse(_date + "T" + "153000").subtract(Duration(days: 1));
-        _newDateTime3 = DateTime.parse(_date + "T" + "153000").subtract(Duration(days: 0));
+        _newDateTime2 = DateTime.parse(_date + "T" + "120000").subtract(Duration(days: 1));
+        _newDateTime3 = DateTime.parse(_date + "T" + "080000").subtract(Duration(days: 0));
       } else if (ele.type == 2) {
         _body1 = "Task '${ele.subtypeTitle}' is due in 3 days";
         _body2 = "Task '${ele.subtypeTitle}' is due tomorrow";
         _body3 = "Task '${ele.subtypeTitle}' is due today";
         _newDateTime1 = DateTime.parse(_date + "T" + "120000").subtract(Duration(days: 3));
-        _newDateTime2 = DateTime.parse(_date + "T" + "153000").subtract(Duration(days: 1));
-        _newDateTime3 = DateTime.parse(_date + "T" + "153000").subtract(Duration(days: 0));
+        _newDateTime2 = DateTime.parse(_date + "T" + "120000").subtract(Duration(days: 1));
+        _newDateTime3 = DateTime.parse(_date + "T" + "080000").subtract(Duration(days: 0));
       } else if (ele.type == 3) {
         _body1 = "Meeting '${ele.subtypeTitle}' tomorrow at ${ele.time}";
         _body2 = "Meeting '${ele.subtypeTitle}' in 15 mins";
         _body3 = "Meeting '${ele.subtypeTitle}' starting now";
-        _newDateTime1 = DateTime.parse(_date + "T" + "153000").subtract(Duration(days: 1));
+        _newDateTime1 = DateTime.parse(_date + "T" + "120000").subtract(Duration(days: 1));
         _newDateTime2 = DateTime.parse(_date + "T" + _hr + _min + "00").subtract(Duration(minutes: 15));
         _newDateTime3 = DateTime.parse(_date + "T" + _hr + _min + "00");
       } else {

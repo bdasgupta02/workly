@@ -236,13 +236,19 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
     final database = Provider.of<Database>(context, listen: false);
     List<Map> _meeting = await database.userMeetingDocuments();
     print("Home DB pull meeting: $_meeting");
+    DateTime now = DateTime.now();
+    DateTime tomorrow = DateTime.now().add(new Duration(days: 1));
     for (var meetingEle in _meeting) {
       String newNotiT = "";
-      DateTime meetingDate = _convert(meetingEle['meetingDate']);
-      DateTime now = DateTime.now();
-      if (meetingDate.compareTo(now) <= 0) {
+      DateTime meetingDate = _convert(meetingEle['meetingDate'], meetingEle['meetingTime']);
+      if (meetingDate.compareTo(now) >= 0 && meetingDate.compareTo(tomorrow) < 0) {
         newNotiT =
-            "[${meetingEle['projectTitle']}]: There is a meeting '${meetingEle['meetingTitle']}' today";
+            "[${meetingEle['projectTitle']}]: Meeting '${meetingEle['meetingTitle']}' today at ${meetingEle['meetingTime']}";
+        newNotiList.add(newNotiT);
+      }
+      if (meetingDate.compareTo(now) == 0 ) {
+        newNotiT =
+            "[${meetingEle['projectTitle']}]: Meeting '${meetingEle['meetingTitle']}' is starting now";
         newNotiList.add(newNotiT);
       }
     }
@@ -250,7 +256,7 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
     print("Home DB pull task: $_task");
     for (var taskEle in _task) {
       String newNotiT = "";
-      DateTime taskDate = _convert(taskEle['taskDeadline']);
+      DateTime taskDate = _convert(taskEle['taskDeadline'], null);
       DateTime nextTwoDays = DateTime.now().add(new Duration(days: 2));
       if (taskDate.compareTo(nextTwoDays) <= 0) {
         newNotiT =
@@ -399,7 +405,7 @@ class _BackBoxButtonsState extends State<BackBoxButtons> {
     print("Home DB pull project: $_project");
     List<DateTime> deadline = new List();
     for (var projectEle in _project) {
-      deadline.add(_convert(projectEle['projectDeadline']));
+      deadline.add(_convert(projectEle['projectDeadline'], null));
     }
     for (var deadlineEle in deadline) {
       DateTime today = DateTime.now();
@@ -553,11 +559,12 @@ class _BackBoxButtonsState extends State<BackBoxButtons> {
   }
 }
 
-DateTime _convert(String s) {
+DateTime _convert(String s, String time) {
   if (s != null) {
     String t = s.split("/")[2] + s.split("/")[1] + s.split("/")[0];
-    //String t = s.substring(6, 10) + s.substring(3, 5) + s.substring(0, 2);
-    return DateTime.parse(t);
+    String _hr = time != null ? time.substring(0,2) : "00";
+    String _min = time != null ? time.substring(3,5) : "00";
+    return DateTime.parse(t + "T" + _hr + _min + "00");
   }
   return null;
 }
