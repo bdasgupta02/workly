@@ -591,7 +591,7 @@ class FirestoreProjectDatabase implements ProjectDatabase {
     removeIdeasVoting(_uid, _name);
     removeMeetingAttendance(_uid, _name);
     removeMeetingAlt(_uid, _name);
-    removeProjectRelatedFields(_uid, _name);
+    await removeProjectRelatedFields(_uid, _name);
   }
 
   @override
@@ -1091,4 +1091,76 @@ class ChatStreamPagination {
   }
 
   void requestMoreData() => _requestChats();
+}
+
+class LogStreamPagination {
+  final String projectId;
+
+  LogStreamPagination({@required this.projectId});
+
+  // static final CollectionReference _chatCollectionReference =
+      // Firestore.instance.collection('projects/$projectId/chat');//aW9Ti7
+
+  final StreamController<List<Log>> _logController =
+      StreamController<List<Log>>.broadcast();
+
+  List<List<Log>> _allPagedResults = List<List<Log>>();
+
+  static const int logLimit = 20;
+  DocumentSnapshot _lastDocument;
+  bool _hasMoreData = true;
+
+  Stream listenToLogsRealTime() {
+    print('Listening to Log from DB');
+    _requestLogs();
+    return _logController.stream;
+  }
+
+  void _requestLogs() {
+    var pagechatQuery = Firestore.instance.collection('projects/$projectId/log')
+        .orderBy('date', descending: true)
+        .limit(logLimit);
+    
+    if (_lastDocument != null) {
+      pagechatQuery =
+          pagechatQuery.startAfterDocument(_lastDocument);
+    }
+    if (!_hasMoreData) return;
+
+    var currentRequestIndex = _allPagedResults.length;
+
+    pagechatQuery.snapshots().listen(
+      (snapshot) {
+        if (snapshot.documents.isNotEmpty) {
+          var generalLogs = snapshot.documents
+              .map((snapshot) => Log.fromMap(snapshot.data))
+              .toList();
+          // generalLogs.sort((x,y) => x.timesort.compareTo(y.timesort));
+          print("Log querying: $generalLogs");
+          var pageExists = currentRequestIndex < _allPagedResults.length;
+
+          if (pageExists) {
+            _allPagedResults[currentRequestIndex] = generalLogs;
+          } else {
+            _allPagedResults.add(generalLogs);
+          }
+          
+          var allLogs = _allPagedResults.fold<List<Log>>(
+              List<Log>(),
+              (initialValue, pageItems) => initialValue..addAll(pageItems));
+              // (initialValue, pageItems) => initialValue..insertAll(0, pageItems));
+          
+          _logController.add(allLogs);
+          
+          if (currentRequestIndex == _allPagedResults.length - 1) {
+            _lastDocument = snapshot.documents.last;
+          }
+          
+          _hasMoreData = generalLogs.length == logLimit;
+        }
+      },
+    );
+  }
+
+  void requestMoreData() => _requestLogs();
 }

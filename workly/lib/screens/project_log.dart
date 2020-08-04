@@ -6,8 +6,6 @@ import 'package:workly/services/project_database.dart';
 
 _ProjectLogState projectLogState;
 
-//TODO: List pagination
-
 class ProjectLog extends StatefulWidget {
   final ProjectDatabase database;
 
@@ -22,6 +20,8 @@ class ProjectLog extends StatefulWidget {
 
 class _ProjectLogState extends State<ProjectLog> {
   bool mine = false;
+  LogStreamPagination _logStreamPagination;
+  final ScrollController _listScrollController = new ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -74,14 +74,30 @@ class _ProjectLogState extends State<ProjectLog> {
     );
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _logStreamPagination =
+        LogStreamPagination(projectId: widget.database.getProjectId());
+    _listScrollController.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    if (_listScrollController.offset >=
+            _listScrollController.position.maxScrollExtent &&
+        !_listScrollController.position.outOfRange) {
+      _logStreamPagination.requestMoreData();
+    }
+  }
+
   Widget _buildLogList() {
     return StreamBuilder<List<Log>>(
-      stream: mine ? widget.database.myLogStream() : widget.database.logStream(),
+      stream: _logStreamPagination.listenToLogsRealTime(),//mine ? widget.database.myLogStream() : widget.database.logStream(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final logItem = snapshot.data;
           final logs = logItem
-              .map((log) => LogTile(date: log.date, task: log.task, userName: log.name, description: log.description)).toList();
+              .map((log) => LogTile(date: log.date, task: log.task, userName: log.name, description: log.description, user: log.user)).toList();
           if (logs.isEmpty) {
             return Center(
               child: Text(
@@ -111,9 +127,15 @@ class _ProjectLogState extends State<ProjectLog> {
     List<Widget> list = [];
     list.add(SizedBox(height: 20));
     for (LogTile i in logs) {
-      list.add(i.makeLogTile());
+      if (mine) {
+        if (i.user == widget.database.getUid()) {
+          list.add(i.makeLogTile());
+        }
+      } else {
+        list.add(i.makeLogTile());
+      }
     }
-    return ListView(children: list);
+    return ListView(children: list, controller: _listScrollController,);
   }
 }
 
@@ -124,12 +146,14 @@ class LogTile {
   var userName;
   var description;
   var task;
+  var user;
 
   LogTile(
       {@required this.date,
       @required this.userName,
       @required this.description,
-      @required this.task});
+      @required this.task,
+      @required this.user});
 
   Widget makeLogTile() {
     return Container(
@@ -240,21 +264,21 @@ class LogTile {
 class Tester {
   static Widget test() {
     var logs = [
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test2 have created a new task: Add project logs", date: "10/10/2010", task: false),
-      LogTile(userName:"A", description: "TESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
-      LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test2 have created a new task: Add project logs", date: "10/10/2010", task: false),
+      // LogTile(userName:"A", description: "TESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING TESTINGTESTING", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
+      // LogTile(userName:"A", description: "Test1 have added a new idea: Project logs", date: "10/10/2010", task: true),
     ];
     return projectLogState.makeList(logs);
   }

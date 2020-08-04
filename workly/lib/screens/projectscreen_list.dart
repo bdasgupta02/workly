@@ -529,6 +529,7 @@ class _AllProjectsState extends State<AllProjects> {
   //For reading streamdata for projects
   Widget _buildProjectList(BuildContext context) {
     if (_projects == null) {
+      getDocumentsList();
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[

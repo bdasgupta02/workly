@@ -118,7 +118,7 @@ class FirestoreDatabase implements Database {
   @override
   Future<int> joinProject(String projectId) async {
     var _isUserPresent = await Firestore.instance.collection('users').document(uid).get();
-    if (!_isUserPresent.data['project'].contains(projectId)) {
+    if (_isUserPresent.data['project'] == null || !_isUserPresent.data['project'].contains(projectId)) {
       print("Join Project valid, adding user to project: [$projectId]");
       String _code;
       String _title;
@@ -141,7 +141,7 @@ class FirestoreDatabase implements Database {
         //   "description": _description,
         //   "deadline": _deadline,
         // });
-        addProjectToUser(projectId);
+        await addProjectToUser(projectId);
         addUserToProject(projectId);
         addMeetingsToUser(projectId);
         return 1;
