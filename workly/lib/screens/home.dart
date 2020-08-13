@@ -257,8 +257,9 @@ class _BackBoxNotifsState extends State<BackBoxNotifs> {
     for (var taskEle in _task) {
       String newNotiT = "";
       DateTime taskDate = _convert(taskEle['taskDeadline'], null);
-      DateTime nextTwoDays = DateTime.now().add(new Duration(days: 2));
-      if (taskDate.compareTo(nextTwoDays) <= 0) {
+      DateTime nextThreeDays = DateTime.now().add(new Duration(days: 3));
+      DateTime yesterday = DateTime.now().subtract(new Duration(days: 1));
+      if (taskDate.compareTo(nextThreeDays) <= 0 && taskDate.compareTo(yesterday) > 0) {
         newNotiT =
             "[${taskEle['projectTitle']}]: Task '${taskEle['taskTitle']}' due soon";
         newNotiList.add(newNotiT);

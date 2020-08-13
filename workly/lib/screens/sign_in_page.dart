@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:workly/screens/email_login_page.dart';
+import 'package:workly/services/auth.dart';
 
 //[Action] We need to have privacy policy somewhere
 
@@ -99,7 +101,7 @@ class SignInPage extends StatelessWidget {
                   //[Action] These buttons have onPressed placeholders for social media login
                   Expanded(
                     child: FlatButton(
-                      onPressed: null,
+                      onPressed: () => _signInWithGoogle(context),
                       child: Image(
                         image: AssetImage('assets/google_icon.png'),
                         height: 45,
@@ -107,16 +109,16 @@ class SignInPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: null,
-                      child: Image(
-                        image: AssetImage('assets/fb_icon.png'),
-                        height: 45,
-                        width: 45,
-                      ),
-                    ),
-                  ),
+                  // Expanded(
+                  //   child: FlatButton(
+                  //     onPressed: null,
+                  //     child: Image(
+                  //       image: AssetImage('assets/fb_icon.png'),
+                  //       height: 45,
+                  //       width: 45,
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -137,5 +139,14 @@ class SignInPage extends StatelessWidget {
       fullscreenDialog: true,
       builder: (context) => EmailLoginPage(),
     ));
+  }
+
+  Future<void> _signInWithGoogle(BuildContext context) async {
+    final auth = Provider.of<AuthBase>(context, listen: false);
+    try {
+      await auth.signInWithGoogle();
+    } catch (e) {
+      print(e.toString());
+    }
   }
 }
